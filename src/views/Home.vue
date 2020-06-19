@@ -1,15 +1,18 @@
 <template>
   <div class="home">
-    <Canvas2></Canvas2>
+    <!-- <Canvas2></Canvas2> -->
+    <GoBang></GoBang>
   </div>
 </template>
 
 <script>
 import Canvas2 from './Canvas2'
+import GoBang from './gobang'
 export default {
   name: 'Home',
   components: {
-    Canvas2
+    Canvas2,
+    GoBang
   }
 }
 
