@@ -50,7 +50,7 @@ export default {
   created(){
     this.value = {...this.config}
     this.num = this.table.wd / this.cell.wd + 1
-    this.table.wd = this.table.wd + this.num
+    this.table.wd = this.table.wd + this.num - 2
     this.rcwd = this.cell.wd + this.lineWidth
 
     let arr = []
@@ -111,7 +111,7 @@ export default {
           let x = i % this.config.boxSize
           let y = Math.floor(i / this.config.boxSize)
           ctx.beginPath();
-          ctx.arc(x * this.rcwd + this.cell.wd / 2 + this.lineWidth,y * this.rcwd + this.cell.wd / 2 + this.lineWidth,this.cell.wd / 2, 0, 360 * this.deg);
+          ctx.arc(x * this.rcwd + this.cell.wd / 2,y * this.rcwd + this.cell.wd / 2,this.cell.wd / 2, 0, 360 * this.deg);
           ctx.closePath();
           if(this.datas[i].colorType === 1){
             ctx.fillStyle = "#000";
