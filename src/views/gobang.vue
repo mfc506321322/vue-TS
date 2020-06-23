@@ -44,6 +44,13 @@ export default {
         cellSize:20,
         boxSize:25,
         speed:100
+      },
+      nowPieces:{
+        index:null,
+        data:{
+          colorType:0,
+          value:0
+        }
       }
     }
   },
@@ -121,6 +128,7 @@ export default {
           ctx.fill();
         }
       }
+      this.gettingData()
     },
     clickCanvas(e){
       let xnum = Math.floor(e.offsetX / this.rcwd)
@@ -128,20 +136,86 @@ export default {
 
       let index = ynum * this.config.boxSize + xnum
       ++this.pieces
+      let colorType = this.pieces % 2 === 0 ? 1 : 2
       if(this.datas[index].value){
         this.datas[index] = {
-          colorType:this.pieces % 2 === 0 ? 1 : 2,
+          colorType,
           value:0
         }
         this.init--
       }else{
         this.datas[index] = {
-          colorType:this.pieces % 2 === 0 ? 1 : 2,
+          colorType,
           value:1
         }
         this.init++
+        this.nowPieces = {
+          index,
+          data:{
+            colorType,
+            value:1
+          }
+        }
       }
       this.datas = _.cloneDeep(this.datas)
+    },
+    gettingData(){
+      let transverse = [],
+      longitudinal = [],
+      leftOblique= [],
+      rightOblique= []
+      if(this.nowPieces.index !== null){
+        this.datas.forEach((item,idx) => {
+          if(Math.abs(this.nowPieces.index - idx) < 5){
+            if(Math.floor(idx / this.config.boxSize) === Math.floor(this.nowPieces.index / this.config.boxSize)){
+              transverse.push(item)
+            }
+          }
+
+          if((this.nowPieces.index - idx) % this.config.boxSize === 0 && Math.abs(this.nowPieces.index - idx) / this.config.boxSize < 5){
+            longitudinal.push(item)
+          }
+
+          if(Math.abs(this.nowPieces.index - idx) % (this.config.boxSize + 1) === 0 && Math.abs(this.nowPieces.index - idx) / (this.config.boxSize + 1) < 5){
+            if(Math.abs(this.nowPieces.index % this.config.boxSize - idx % this.config.boxSize) < 5){
+              leftOblique.push(item)
+            }
+          }
+
+          if(Math.abs(this.nowPieces.index - idx) % (this.config.boxSize - 1) === 0 && Math.abs(this.nowPieces.index - idx) / (this.config.boxSize - 1) < 5){
+            if(Math.abs(this.nowPieces.index % this.config.boxSize - idx % this.config.boxSize) < 5){
+              rightOblique.push(item)
+            }
+          }
+        })
+      }
+      // console.log('transverse',transverse,transverse.length)
+      // console.log('longitudinal',longitudinal,longitudinal.length)
+      // console.log('leftOblique',leftOblique,leftOblique.length)
+      // console.log('rightOblique',rightOblique,rightOblique.length)
+      this.checkWin([
+        transverse,
+        longitudinal,
+        leftOblique,
+        rightOblique
+      ])
+    },
+    checkWin(arr){
+      arr.forEach(item => {
+        let connectNum = 0
+        item.forEach(val => {
+          if(val.value && val.colorType === this.nowPieces.data.colorType){
+            ++connectNum
+          }else{
+            connectNum = 0
+          }
+          if(connectNum === 5){
+            setTimeout(() => {
+              alert(`${this.nowPieces.data.colorType === 1 ? '黑子' : '白子 '}胜利！！！`)
+            })
+          }
+        })
+      })
     }
   }
 }
