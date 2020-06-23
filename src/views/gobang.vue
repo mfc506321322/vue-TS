@@ -15,6 +15,10 @@
       ref="canvasBackground"
       ></canvas>
     </div>
+    <div class="text">
+      <span>总步数:{{init}}</span>
+      <button @click="resetGame">重制棋盘</button>
+    </div>
   </div>
 </template>
 
@@ -216,6 +220,19 @@ export default {
           }
         })
       })
+    },
+    resetGame(){
+      this.pieces = 0
+      this.value = {}
+      this.init = 0
+      this.nowPieces = {
+        index:null,
+        data:{
+          colorType:0,
+          value:0
+        }
+      }
+      this.datas = []
     }
   }
 }

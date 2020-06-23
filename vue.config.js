@@ -6,7 +6,7 @@ function resolve(dir) {
 }
 const webpack = require('webpack')
 module.exports = {
-  publicPath: '/',
+  publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
   chainWebpack: (config) => {
     config.plugin('define').use(webpack.DefinePlugin, [{
       'NODE_ENV': JSON.stringify(process.env.NODE_ENV),
