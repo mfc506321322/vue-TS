@@ -16,7 +16,9 @@
       ></canvas>
     </div>
     <div class="text">
-      <span>总步数:{{init}}</span>
+      <p>{{pieces % 2 === 0 ? '当前请白子落子' : '当前请黑子落子'}}</p>
+      <p>总步数:{{init}}</p>
+      <p>用时:{{timeData}}</p>
       <button @click="resetGame">重制棋盘</button>
     </div>
   </div>
@@ -24,6 +26,8 @@
 
 <script>
 import _ from 'lodash'
+import dayjs from 'dayjs'
+
 export default {
   name: 'GoBang',
   data () {
@@ -44,6 +48,8 @@ export default {
       value:{},
       datas:[],
       init:0,
+      initialTime:0,
+      timeData:'00:00:00',
       config:{
         cellSize:20,
         boxSize:25,
@@ -135,6 +141,10 @@ export default {
       this.gettingData()
     },
     clickCanvas(e){
+      if(this.pieces === 0){
+        this.initialTime = dayjs().valueOf()
+      }
+
       let xnum = Math.floor(e.offsetX / this.rcwd)
       let ynum = Math.floor(e.offsetY / this.rcwd)
 
@@ -162,6 +172,8 @@ export default {
         }
       }
       this.datas = _.cloneDeep(this.datas)
+
+      this.timeData = dayjs(dayjs().valueOf() - this.initialTime).format('mm:ss')
     },
     gettingData(){
       let transverse = [],
@@ -216,14 +228,13 @@ export default {
           if(connectNum === 5){
             setTimeout(() => {
               alert(`${this.nowPieces.data.colorType === 1 ? '黑子' : '白子 '}胜利！！！`)
-            })
+            },50)
           }
         })
       })
     },
     resetGame(){
       this.pieces = 0
-      this.value = {}
       this.init = 0
       this.nowPieces = {
         index:null,
@@ -232,7 +243,14 @@ export default {
           value:0
         }
       }
-      this.datas = []
+      this.timeData = '00:00:00'
+      let arr = []
+      arr.length = Math.pow(this.config.boxSize,2)
+      arr.fill({
+        colorType:0,
+        value:0
+      })
+      this.datas = arr
     }
   }
 }
