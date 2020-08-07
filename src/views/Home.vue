@@ -2,17 +2,20 @@
   <div class="home">
     <!-- <Canvas2></Canvas2> -->
     <GoBang></GoBang>
+    <!-- <RouterTable></RouterTable> -->
   </div>
 </template>
 
 <script>
 import Canvas2 from './Canvas2'
 import GoBang from './gobang'
+import RouterTable from './routerTable'
 export default {
   name: 'Home',
   components: {
     Canvas2,
-    GoBang
+    GoBang,
+    RouterTable
   }
 }
 
