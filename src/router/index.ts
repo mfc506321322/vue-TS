@@ -8,16 +8,38 @@ Vue.use(VueRouter)
   {
     path: '/',
     name: 'Home',
-    component: Home
-  },
-  // {
-  //   path: '/about',
-  //   name: 'About',
-  //   // route level code-splitting
-  //   // this generates a separate chunk (about.[hash].js) for this route
-  //   // which is lazy-loaded when the route is visited.
-  //   component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-  // }
+    component: Home,
+    children: [
+      {
+        path: '/canvas2',
+        name: 'canvas2',
+        components: {
+          content: () => import('@/views/Canvas2.vue'),
+        }
+      },
+      {
+        path: '/gobang',
+        name: 'gobang',
+        components: {
+          content: () => import('@/views/gobang.vue'),
+        }
+      },
+      {
+        path: '/routerTable',
+        name: 'routerTable',
+        components: {
+          content: () => import('@/views/routerTable.vue'),
+        }
+      },
+      {
+        path: '/konva',
+        name: 'konva',
+        components: {
+          content: () => import('@/views/konva.vue'),
+        }
+      },
+    ]
+  }
 ]
 
 const router = new VueRouter({

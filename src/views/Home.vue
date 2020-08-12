@@ -1,8 +1,6 @@
 <template>
   <div class="home">
-    <!-- <Canvas2></Canvas2> -->
-    <GoBang></GoBang>
-    <!-- <RouterTable></RouterTable> -->
+    <router-view class="content" name="content" ></router-view>
   </div>
 </template>
 
@@ -10,12 +8,10 @@
 import Canvas2 from './Canvas2'
 import GoBang from './gobang'
 import RouterTable from './routerTable'
+import Konva from './konva'
 export default {
   name: 'Home',
   components: {
-    Canvas2,
-    GoBang,
-    RouterTable
   }
 }
 
