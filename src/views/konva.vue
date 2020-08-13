@@ -20,6 +20,19 @@
               strokeWidth: 2,
             }"
           />
+          <v-text
+            :config="{
+              x: item.x,
+              y: item.y,
+              width: mapRenderParams.cellSize.w,
+              height: mapRenderParams.cellSize.h,
+              text: item.text,
+              fontSize: 12,
+              fill: '#000000',
+              align: 'center',
+              verticalAlign: 'middle'
+            }"
+          />
           <v-line
             v-for="(val, idx) in item.points"
             :key="idx"
@@ -38,6 +51,7 @@
 <script>
 import _ from 'lodash'
 import map from '@/common/json/map.json'
+import mapColor from '@/common/json/mapColor.json'
 const width = window.innerWidth;
 const height = window.innerHeight;
 export default {
@@ -72,14 +86,25 @@ export default {
       this.mapList = map.map((item, index) => {
         let obj = {}
         let coordinates = this.coordinatesComputed(item.id)
-        let points = this.drawLine(item.id, coordinates)
+        let bgColor = this.mapColorHandle(item)
+        let points = this.drawLine(item.id, coordinates, item.passage)
         obj = { 
-          ...item, 
+          ...item,
+          bgColor,
           ...coordinates,
           points
         }
         return obj
       })
+    },
+    mapColorHandle(item){
+      let bgColor = '#FFFFFF'
+      if(mapColor[item.species][item.type] instanceof Array){
+        bgColor = mapColor[item.species][item.type][item.config.lock]
+      }else{
+        bgColor = mapColor[item.species][item.type]
+      }
+      return bgColor
     },
     coordinatesComputed(id){
       let {
@@ -104,14 +129,14 @@ export default {
         y:y + this.mapRenderParams.start.y
       }
     },
-    drawLine(id, coordinates){
+    drawLine(id, coordinates, passage){
       let {
         w,
         h,
         i
       } = this.mapRenderParams.cellSize
       let arr = []
-      if(id.length >= 1){
+      if(id.length >= 1 && passage.after){
         arr.push([
           coordinates.x + w, 
           coordinates.y + h / 2, 
@@ -119,7 +144,7 @@ export default {
           coordinates.y + h / 2
         ])
       }
-      if(id.length >= 2){
+      if(id.length >= 2 && passage.side){
         if(id[1] > 0){
           arr.push([
             coordinates.x + w / 2, 

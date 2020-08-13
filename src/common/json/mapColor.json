@@ -1,0 +1,11 @@
+{
+  "build":{
+    "door":[
+      "#FFFFFF",
+      "#DEB887",
+      "#D2B48C",
+      "#BC8F8F"
+    ],
+    "room":"#C0C0C0"
+  }
+}

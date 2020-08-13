@@ -1,32 +1,53 @@
 [
   {
     "id": [1],
-    "text": "门",
-    "bgColor": "#B8860B",
+    "passage": {
+      "after": 1
+    },
+    "text": "宅门",
     "species": "build",
     "type": "door",
     "config": {
-      "lock": 2,
+      "lock": 0,
       "hp": 100
     }
   },
   {
     "id": [2],
+    "passage": {
+      "after": 1
+    },
     "text": "大厅",
-    "bgColor": "#A9A9A9",
     "species": "build",
     "type": "room",
     "config": {
       "furniture": {
-        "bed": 1,
-        "box": 3
+        "box": 1
       }
     }
   },
   {
     "id": [2, 1],
-    "text": "走廊1",
-    "bgColor": "#C0C0C0",
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "走廊",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+        "box": 1
+      }
+    }
+  },
+  {
+    "id": [2, 2],
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "厨房",
     "species": "build",
     "type": "room",
     "config": {
@@ -37,8 +58,99 @@
   },
   {
     "id": [2, -1],
-    "text": "走廊2",
-    "bgColor": "#C0C0C0",
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "走廊",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+      }
+    }
+  },
+  {
+    "id": [2, -2],
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "仓库",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+        "box": 3
+      }
+    }
+  },
+  {
+    "id": [3],
+    "passage": {
+      "after": 1
+    },
+    "text": "中庭",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+      }
+    }
+  },
+  {
+    "id": [3, 1],
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "右侧房",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+        "bed": 1,
+        "box": 2
+      }
+    }
+  },
+  {
+    "id": [3, 2],
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "密室",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+        "box": 3
+      }
+    }
+  },
+  {
+    "id": [3, -1],
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "左侧房",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+        "bed": 1,
+        "box": 1
+      }
+    }
+  },
+  {
+    "id": [4],
+    "passage": {
+      "after": 0
+    },
+    "text": "后院",
     "species": "build",
     "type": "room",
     "config": {
