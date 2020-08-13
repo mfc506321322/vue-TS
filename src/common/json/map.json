@@ -1,0 +1,49 @@
+[
+  {
+    "id": [1],
+    "text": "门",
+    "bgColor": "#B8860B",
+    "species": "build",
+    "type": "door",
+    "config": {
+      "lock": 2,
+      "hp": 100
+    }
+  },
+  {
+    "id": [2],
+    "text": "大厅",
+    "bgColor": "#A9A9A9",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+        "bed": 1,
+        "box": 3
+      }
+    }
+  },
+  {
+    "id": [2, 1],
+    "text": "走廊1",
+    "bgColor": "#C0C0C0",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+        "box": 1
+      }
+    }
+  },
+  {
+    "id": [2, -1],
+    "text": "走廊2",
+    "bgColor": "#C0C0C0",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": {
+      }
+    }
+  }
+]
