@@ -5,11 +5,13 @@
       "after": 1
     },
     "text": "宅门",
+    "describe": "宅子的大门半敞着，透过门缝能看到大厅的景象",
     "species": "build",
     "type": "door",
     "config": {
       "lock": 0,
-      "hp": 100
+      "hp": 100,
+      "furniture": []
     }
   },
   {
@@ -18,12 +20,17 @@
       "after": 1
     },
     "text": "大厅",
+    "describe": "整洁、肃穆，但是透出一股不安的感觉",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-        "box": 1
-      }
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 1
+        }
+      ]
     }
   },
   {
@@ -33,12 +40,17 @@
       "side": 1
     },
     "text": "走廊",
+    "describe": "大厅通往厨房的走廊，能看到中庭的景色",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-        "box": 1
-      }
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 1
+        }
+      ]
     }
   },
   {
@@ -48,12 +60,17 @@
       "side": 1
     },
     "text": "厨房",
+    "describe": "大宅的厨屋，灶台上的积灰表明已经有一段时日没有开伙了",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-        "box": 1
-      }
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 1
+        }
+      ]
     }
   },
   {
@@ -63,11 +80,11 @@
       "side": 1
     },
     "text": "走廊",
+    "describe": "大厅通往仓库的走廊，能看到中庭的景色",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-      }
+      "furniture": []
     }
   },
   {
@@ -77,12 +94,17 @@
       "side": 1
     },
     "text": "仓库",
+    "describe": "大宅的仓库，里面摆放着大量的木箱和杂物",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-        "box": 3
-      }
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 3
+        }
+      ]
     }
   },
   {
@@ -91,11 +113,11 @@
       "after": 1
     },
     "text": "中庭",
+    "describe": "常见的庭院风格，中间有一个小水潭",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-      }
+      "furniture": []
     }
   },
   {
@@ -105,13 +127,22 @@
       "side": 1
     },
     "text": "右侧房",
+    "describe": "主人的卧房",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-        "bed": 1,
-        "box": 2
-      }
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 2
+        },
+        {
+          "text": "床",
+          "label": "bed",
+          "level": 1
+        }
+      ]
     }
   },
   {
@@ -121,12 +152,17 @@
       "side": 1
     },
     "text": "密室",
+    "describe": "通过右侧房梳妆台铜镜后的密道进入，里面只有一些简单的摆设",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-        "box": 3
-      }
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 3
+        }
+      ]
     }
   },
   {
@@ -136,13 +172,22 @@
       "side": 1
     },
     "text": "左侧房",
+    "describe": "卧房",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-        "bed": 1,
-        "box": 1
-      }
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 1
+        },
+        {
+          "text": "床",
+          "label": "bed",
+          "level": 1
+        }
+      ]
     }
   },
   {
@@ -151,11 +196,11 @@
       "after": 0
     },
     "text": "后院",
+    "describe": "宅子的后院，种了大量的竹子",
     "species": "build",
     "type": "room",
     "config": {
-      "furniture": {
-      }
+      "furniture": []
     }
   }
 ]

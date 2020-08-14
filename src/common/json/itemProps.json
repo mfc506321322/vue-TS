@@ -1,0 +1,24 @@
+{
+	"weaponTemplate": {
+		"type": [
+			"knife",
+			"sword",
+			"lance",
+			"hammer",
+			"katana"
+		]
+	},
+	"armorTemplate": {
+		"type": [
+			"leather",
+			"wooden",
+			"copper",
+			"plate"
+		]
+  },
+  "medicineTemplate": {
+    "type": [
+			"tonic"
+		]
+  }
+}
