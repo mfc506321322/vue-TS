@@ -76,6 +76,40 @@
         <li class="cell_content_list_empty" v-if="selectCell.itemsList.length === 0">空</li>
       </ul>
     </div>
+    <div class="protagonist_info_area">
+      <div class="info_block">
+        <ul class="states">
+          <li class="name">角色名: {{protagonist.name}}</li>
+          <li>等级: {{protagonist.level}}</li>
+          <li>攻击: {{protagonist.attack}}</li>
+          <li>防御: {{protagonist.defense}}</li>
+          <li>血量: {{protagonist.hp}} / {{protagonist.maxhp}}</li>
+          <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
+        </ul>
+      </div>
+      <div class="info_block">
+        <ul class="cell_content_list">
+          <li
+            v-for="(item,index) in protagonist.box"
+            :key="index"
+            @dblclick="boxItemClick(item)"
+          >
+            <span>{{item.typeDesc}}</span>
+            <span>{{
+              item.species === 'weapon' ? `${item.attack}atk` :
+              item.species === 'armor' ? `${item.defense}def` :
+              item.species === 'medicine' ? `${item.hp}hp` : ''
+            }}</span>
+            <span>{{item.price}}金</span>
+          </li>
+          <li class="cell_content_list_empty" v-if="protagonist.box.length === 0">空</li>
+        </ul>
+      </div>
+      <div class="info_block">
+        <div class="select_equip">装备武器: {{protagonist.selectWeapon.typeDesc}}</div>
+        <div class="select_equip">装备防具: {{protagonist.selectArmor.typeDesc}}</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -107,13 +141,19 @@ export default {
       },
       showBoxList:false,
       protagonist:{
-        name: '一',
+        name: '主角',
         level: 1,
         attack: 2,
+        defense: 10,
+        basisAttack: 2,
+        basisDefense: 10,
         maxhp: 50,
         hp: 50,
         coordinate:[1],
-        box: []
+        maxBox: 20,
+        box: [],
+        selectWeapon: {},
+        selectArmor: {}
       }
     };
   },
@@ -123,6 +163,20 @@ export default {
   watch:{
     'selectCell.id':function(){
       this.showBoxList = false
+    },
+    'protagonist.box':function(val){
+      // val.forEach(item => {
+      //   switch(item.species){
+      //     case 'armor':{
+      //       this.protagonist.defense = this.protagonist.basisAttack + item.defense
+      //       break
+      //     }
+      //     case 'weapon':{
+      //       this.protagonist.attack = this.protagonist.basisDefense + item.attack
+      //       break
+      //     }
+      //   }
+      // })
     }
   },
   methods: {
@@ -269,6 +323,7 @@ export default {
       for(let i=0;i<num;i++){
         let obj = {}
         let id = Math.floor(Math.random() * 899999999 + 100000000)
+        let descRdm = Math.floor(Math.random() * 9999 + 1)
         switch(species){
           case 'medicine':{
             obj = {
@@ -288,7 +343,7 @@ export default {
               species,
               speciesDesc:'防具',
               type:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].name,
-              typeDesc:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].desc,
+              typeDesc:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].desc + descRdm.toString(16),
               defense:this.randomValue({ min:5 * level, max:10 + 5 * level })
             }
             obj.price = Math.floor(obj.defense * 1.5)
@@ -300,7 +355,7 @@ export default {
               species,
               speciesDesc:'武器',
               type:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].name,
-              typeDesc:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].desc,
+              typeDesc:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].desc + descRdm.toString(16),
               attack:this.randomValue({ min:4 * level, max:10 + 4 * level })
             }
             obj.price = Math.floor(obj.attack * 3)
@@ -343,6 +398,20 @@ export default {
       this.selectCell.itemsList.splice(index,1)
       this.mapList = _.cloneDeep(arr)
     },
+    boxItemClick(item){
+      switch(item.species){
+        case 'armor':{
+          this.protagonist.selectArmor = item
+          this.protagonist.defense = this.protagonist.basisAttack + item.defense
+          break
+        }
+        case 'weapon':{
+          this.protagonist.selectWeapon = item
+          this.protagonist.attack = this.protagonist.basisDefense + item.attack
+          break
+        }
+      }
+    },
     randomValue(config={}){
       let configs = Object.assign({
         min:1,
@@ -357,12 +426,13 @@ export default {
 <style lang="scss" scoped>
 .content_box{
   border: 2px solid #000;
-  box-sizing: border-box;
-  position: fixed;
-  display: flex;
+  width: 900px;
   .stage{
+    display: inline-block;
   }
   .info_box{
+    display: inline-block;
+    vertical-align: top;
     box-sizing: border-box;
     width: 300px;
     height: 600px;
@@ -415,6 +485,61 @@ export default {
           margin: 0 10px 0 0;
         }
       }
+    }
+  }
+  .protagonist_info_area{
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 100px;
+    background-color: #FFF5EE;
+    border-top: 2px solid #999;
+    padding: 10px;
+    font-size: 14px;
+    display: flex;
+    .info_block{
+      min-height: 80px;
+      width: 200px;
+      margin-right: 10px;
+    }
+    .states{
+      li{
+        margin-bottom: 5px;
+        &:last-child{
+          margin-bottom: 0;
+        }
+      }
+    }
+    .cell_content_list{
+      background-color: #fff;
+      border: 2px solid #999;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      max-height: 160px;
+      overflow-y: auto;
+      li{
+        cursor: pointer;
+        background-color: #ADD8E6;
+        padding: 5px;
+        border-radius: 4px;
+        line-height: 16px;
+        margin-bottom: 10px;
+        &:last-child{
+          margin-bottom: 0;
+        }
+        &.cell_content_list_empty{
+          background-color: #FFF;
+          text-align: center;
+          margin-bottom: 0;
+        }
+        span{
+          display: inline-block;
+          margin: 0 10px 0 0;
+        }
+      }
+    }
+    .select_equip{
+      margin-bottom: 10px;
     }
   }
 }
