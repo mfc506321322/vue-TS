@@ -153,7 +153,8 @@ export default {
         maxBox: 20,
         box: [],
         selectWeapon: {},
-        selectArmor: {}
+        selectArmor: {},
+        placeCellInfo: {}
       }
     };
   },
@@ -216,6 +217,7 @@ export default {
       }
       if(this.protagonist.coordinate.join('') === item.id.join('')){
         bgColor = '#FFFF00'
+        this.protagonist.placeCellInfo = item
       }
       return bgColor
     },
@@ -371,6 +373,35 @@ export default {
       this.selectCell = obj
     },
     protagonistMove(item){
+      let coordinate = this.protagonist.coordinate,
+      itemId = item.id
+      if(this.protagonist.coordinate.length === 1){
+        coordinate = this.protagonist.coordinate.concat([0])
+      }
+      if(item.id.length === 1){
+        itemId = item.id.concat([0])
+      }
+
+      let xDiff = Math.abs(coordinate[0] - itemId[0]),
+      yDiff = Math.abs(Math.abs(coordinate[1]) - Math.abs(itemId[1]))
+      if( xDiff > 1 || yDiff > 1 || (xDiff === 1 && yDiff === 1) ){
+        this.$message({
+          message:'超过移动距离',
+          type:'error',
+          center:true
+        })
+        return
+      }
+      if(item.id.length > 1 && !item.passage.side || !this.protagonist.placeCellInfo.passage.after){
+        this.$message({
+          message:'不可移动',
+          type:'error',
+          center:true
+        })
+        return
+      }
+
+      this.protagonist.placeCellInfo = item
       this.protagonist.coordinate = item.id
       this.redrawMapColor()
     },
