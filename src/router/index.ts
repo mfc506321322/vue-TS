@@ -1,10 +1,15 @@
 import Vue from 'vue'
-import VueRouter, { RouteConfig } from 'vue-router'
+import VueRouter, { RouteConfig, RawLocation } from 'vue-router'
 import Home from '../views/Home.vue'
+
+const originalPush = VueRouter.prototype.push;
+VueRouter.prototype.push = function(location:RawLocation) {
+  return (originalPush as any).call(this, location).catch((err:any)=> err)
+}
 
 Vue.use(VueRouter)
 
-  const routes: Array<RouteConfig> = [
+const routes: Array<RouteConfig> = [
   {
     path: '/',
     name: 'Home',

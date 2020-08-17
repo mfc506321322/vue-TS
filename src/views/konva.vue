@@ -24,6 +24,7 @@
           />
           <v-text
             @click="cellClick(item)"
+            @dblclick="protagonistMove(item)"
             :config="{
               x: item.x,
               y: item.y,
@@ -62,8 +63,9 @@
         <li
           v-for="(item,index) in selectCell.itemsList"
           :key="index"
+          @click="itemClick(item, selectCell)"
         >
-          <span>物品种类: {{item.species}}-{{item.type}}</span>
+          <span>物品种类: {{item.speciesDesc}}-{{item.typeDesc}}</span>
           <span>{{
             item.species === 'weapon' ? `攻击: ${item.attack}` :
             item.species === 'armor' ? `防御: ${item.defense}` :
@@ -71,6 +73,7 @@
           }}</span>
           <span>价格: {{item.price}}金</span>
         </li>
+        <li class="cell_content_list_empty" v-if="selectCell.itemsList.length === 0">空</li>
       </ul>
     </div>
   </div>
@@ -99,9 +102,19 @@ export default {
       selectCell: {
         config: {
           furniture: []
-        }
+        },
+        itemsList:[]
       },
-      showBoxList:false
+      showBoxList:false,
+      protagonist:{
+        name: '一',
+        level: 1,
+        attack: 2,
+        maxhp: 50,
+        hp: 50,
+        coordinate:[1],
+        box: []
+      }
     };
   },
   mounted() {
@@ -147,7 +160,19 @@ export default {
       }else{
         bgColor = mapColor[item.species][item.type]
       }
+      if(this.protagonist.coordinate.join('') === item.id.join('')){
+        bgColor = '#FFFF00'
+      }
       return bgColor
+    },
+    redrawMapColor(){
+      let arr = this.mapList.map((item, index) => {
+        let obj = {}
+        let bgColor = this.mapColorHandle(item)
+        obj = Object.assign({}, item, { bgColor })
+        return obj
+      })
+      this.mapList = _.cloneDeep(arr)
     },
     coordinatesComputed(id){
       let {
@@ -243,11 +268,15 @@ export default {
       let arr = []
       for(let i=0;i<num;i++){
         let obj = {}
+        let id = Math.floor(Math.random() * 899999999 + 100000000)
         switch(species){
           case 'medicine':{
             obj = {
+              id,
               species,
-              type:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })],
+              speciesDesc:'药',
+              type:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })].name,
+              typeDesc:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })].desc,
               hp:this.randomValue({ min:5 * level, max:5 + 10 * level })
             }
             obj.price = Math.floor(obj.hp / 3)
@@ -255,8 +284,11 @@ export default {
           }
           case 'armor':{
             obj = {
+              id,
               species,
-              type:armorType[this.randomValue({ min:0, max:armorType.length - 1 })],
+              speciesDesc:'防具',
+              type:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].name,
+              typeDesc:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].desc,
               defense:this.randomValue({ min:5 * level, max:10 + 5 * level })
             }
             obj.price = Math.floor(obj.defense * 1.5)
@@ -264,8 +296,11 @@ export default {
           }
           case 'weapon':{
             obj = {
+              id,
               species,
-              type:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })],
+              speciesDesc:'武器',
+              type:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].name,
+              typeDesc:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].desc,
               attack:this.randomValue({ min:4 * level, max:10 + 4 * level })
             }
             obj.price = Math.floor(obj.attack * 3)
@@ -274,49 +309,15 @@ export default {
         }
         arr.push(obj)
       }
-      // switch(species){
-      //   case 'medicine':{
-      //     for(let i=0;i<num;i++){
-      //       let obj = {
-      //         species,
-      //         type:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })],
-      //         hp:this.randomValue({ min:5 * level, max:5 + 10 * level })
-      //       }
-      //       obj.price = Math.floor(obj.hp / 3) 
-      //       arr.push(obj)
-      //     }
-      //     break
-      //   }
-      //   case 'armor':{
-      //     for(let i=0;i<num;i++){
-      //       let obj = {
-      //         species,
-      //         type:armorType[this.randomValue({ min:0, max:armorType.length - 1 })],
-      //         defense:this.randomValue({ min:5 * level, max:10 + 5 * level })
-      //       }
-      //       obj.price = Math.floor(obj.defense * 1.5) 
-      //       arr.push(obj)
-      //     }
-      //     break
-      //   }
-      //   case 'weapon':{
-      //     for(let i=0;i<num;i++){
-      //       let obj = {
-      //         species,
-      //         type:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })],
-      //         attack:this.randomValue({ min:4 * level, max:10 + 4 * level })
-      //       }
-      //       obj.price = Math.floor(obj.attack * 3) 
-      //       arr.push(obj)
-      //     }
-      //     break
-      //   }
-      // }
       return arr
     },
     cellClick(item){
       let obj = _.cloneDeep(item)
       this.selectCell = obj
+    },
+    protagonistMove(item){
+      this.protagonist.coordinate = item.id
+      this.redrawMapColor()
     },
     furnitureClick(data){
       switch(data.label){
@@ -328,6 +329,19 @@ export default {
           break
         }
       }
+    },
+    itemClick(row, selectCell){
+      this.protagonist.box.push(row)
+      let index = ''
+      let arr = this.mapList.map(item => {
+        if(item.id.join('') === selectCell.id.join('')){
+          index = _.findIndex(item.itemsList,['id',row.id])
+          item.itemsList.splice(index,1)
+        }
+        return item
+      })
+      this.selectCell.itemsList.splice(index,1)
+      this.mapList = _.cloneDeep(arr)
     },
     randomValue(config={}){
       let configs = Object.assign({
@@ -389,6 +403,11 @@ export default {
         line-height: 16px;
         margin-bottom: 10px;
         &:last-child{
+          margin-bottom: 0;
+        }
+        &.cell_content_list_empty{
+          background-color: #FFF;
+          text-align: center;
           margin-bottom: 0;
         }
         span{

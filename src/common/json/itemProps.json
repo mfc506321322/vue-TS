@@ -1,24 +1,54 @@
 {
 	"weaponTemplate": {
 		"type": [
-			"knife",
-			"sword",
-			"lance",
-			"hammer",
-			"katana"
+      {
+        "name": "knife",
+        "desc": "刀"
+      },
+      {
+        "name": "sword",
+        "desc": "剑"
+      },
+      {
+        "name": "lance",
+        "desc": "长枪"
+      },
+      {
+        "name": "hammer",
+        "desc": "锤"
+      },
+      {
+        "name": "katana",
+        "desc": "武士刀"
+      }
 		]
 	},
 	"armorTemplate": {
 		"type": [
-			"leather",
-			"wooden",
-			"copper",
-			"plate"
+      {
+        "name": "leather",
+        "desc": "皮甲"
+      },
+      {
+        "name": "wooden",
+        "desc": "木甲"
+      },
+      {
+        "name": "copper",
+        "desc": "铜甲"
+      },
+      {
+        "name": "plate",
+        "desc": "板甲"
+      }
 		]
   },
   "medicineTemplate": {
     "type": [
-			"tonic"
+      {
+        "name": "tonic",
+        "desc": "补药"
+      }
 		]
   }
 }

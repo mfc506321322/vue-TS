@@ -1,5 +1,12 @@
 <template>
   <div class="home">
+    <ul class="router_btn">
+      <li
+      v-for="(item, index) in routerBtn"
+      :key="index"
+      @click="routerBtnClick(item.value)"
+      >{{item.label}}</li>
+    </ul>
     <router-view class="content" name="content" ></router-view>
   </div>
 </template>
@@ -12,6 +19,33 @@ import Konva from './konva'
 export default {
   name: 'Home',
   components: {
+  },
+  data() {
+    return {
+      routerBtn:[
+        {
+          label:'golly',
+          value:'/canvas2'
+        },
+        {
+          label:'五子棋',
+          value:'/gobang'
+        },
+        {
+          label:'表格渲染测试',
+          value:'/routerTable'
+        },
+        {
+          label:'konvaGame',
+          value:'/konva'
+        }
+      ]
+    }
+  },
+  methods:{
+    routerBtnClick(path){
+      this.$router.push(path)
+    }
   }
 }
 
@@ -22,5 +56,19 @@ export default {
   height: 100%;
   padding: 15px;
   box-sizing: border-box;
+  .router_btn{
+    display: flex;
+    li{
+      padding: 5px 10px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #333;
+      border-radius: 2px;
+      cursor: pointer;
+      &:hover{
+        background-color: #eee;
+      }
+    }
+  }
 }
 </style>
