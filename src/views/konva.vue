@@ -169,11 +169,11 @@ export default {
       // val.forEach(item => {
       //   switch(item.species){
       //     case 'armor':{
-      //       this.protagonist.defense = this.protagonist.basisAttack + item.defense
+      //       this.protagonist.defense = this.protagonist.basisDefense + item.defense
       //       break
       //     }
       //     case 'weapon':{
-      //       this.protagonist.attack = this.protagonist.basisDefense + item.attack
+      //       this.protagonist.attack = this.protagonist.basisAttack + item.attack
       //       break
       //     }
       //   }
@@ -325,7 +325,7 @@ export default {
       for(let i=0;i<num;i++){
         let obj = {}
         let id = Math.floor(Math.random() * 899999999 + 100000000)
-        let descRdm = Math.floor(Math.random() * 9999 + 1)
+        let descRdm = Math.floor(Math.random() * 99999 + 1).toString(36)
         switch(species){
           case 'medicine':{
             obj = {
@@ -345,7 +345,7 @@ export default {
               species,
               speciesDesc:'防具',
               type:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].name,
-              typeDesc:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].desc + descRdm.toString(16),
+              typeDesc:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].desc + descRdm,
               defense:this.randomValue({ min:5 * level, max:10 + 5 * level })
             }
             obj.price = Math.floor(obj.defense * 1.5)
@@ -357,7 +357,7 @@ export default {
               species,
               speciesDesc:'武器',
               type:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].name,
-              typeDesc:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].desc + descRdm.toString(16),
+              typeDesc:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].desc + descRdm,
               attack:this.randomValue({ min:4 * level, max:10 + 4 * level })
             }
             obj.price = Math.floor(obj.attack * 3)
@@ -392,7 +392,19 @@ export default {
         })
         return
       }
-      if(item.id.length > 1 && !item.passage.side || !this.protagonist.placeCellInfo.passage.after){
+      
+      if(xDiff === 1){
+        if((itemId[0] - coordinate[0] === 1 && !this.protagonist.placeCellInfo.passage.after) || 
+        (itemId[0] - coordinate[0] === -1 && !item.passage.after)){
+          this.$message({
+            message:'不可移动',
+            type:'error',
+            center:true
+          })
+          return
+        }
+      }
+      if(yDiff === 1 && item.id.length > 1 && !item.passage.side){
         this.$message({
           message:'不可移动',
           type:'error',
@@ -433,12 +445,12 @@ export default {
       switch(item.species){
         case 'armor':{
           this.protagonist.selectArmor = item
-          this.protagonist.defense = this.protagonist.basisAttack + item.defense
+          this.protagonist.defense = this.protagonist.basisDefense + item.defense
           break
         }
         case 'weapon':{
           this.protagonist.selectWeapon = item
-          this.protagonist.attack = this.protagonist.basisDefense + item.attack
+          this.protagonist.attack = this.protagonist.basisAttack + item.attack
           break
         }
       }
