@@ -137,7 +137,7 @@ export default {
         config: {
           furniture: []
         },
-        itemsList:[]
+        itemsList: []
       },
       showBoxList:false,
       protagonist:{
@@ -205,6 +205,7 @@ export default {
           points,
           itemsList
         }
+        this.initData(obj)
         return obj
       })
     },
@@ -217,7 +218,6 @@ export default {
       }
       if(this.protagonist.coordinate.join('') === item.id.join('')){
         bgColor = '#FFFF00'
-        this.protagonist.placeCellInfo = item
       }
       return bgColor
     },
@@ -286,6 +286,12 @@ export default {
         }
       }
       return arr
+    },
+    initData(item){
+      if(this.protagonist.coordinate.join('') === item.id.join('')){
+        this.protagonist.placeCellInfo = item
+        this.selectCell = item
+      }
     },
     itemHandle(furniture){
       let arr = []
@@ -369,8 +375,11 @@ export default {
       return arr
     },
     cellClick(item){
-      let obj = _.cloneDeep(item)
-      this.selectCell = obj
+      // if(this.protagonist.coordinate.join('') !== item.id.join('')){
+      //   return
+      // }
+      // let obj = _.cloneDeep(item)
+      // this.selectCell = obj
     },
     protagonistMove(item){
       let coordinate = this.protagonist.coordinate,
@@ -413,6 +422,8 @@ export default {
         return
       }
 
+      let obj = _.cloneDeep(item)
+      this.selectCell = obj
       this.protagonist.placeCellInfo = item
       this.protagonist.coordinate = item.id
       this.redrawMapColor()
