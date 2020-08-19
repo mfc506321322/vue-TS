@@ -331,7 +331,7 @@ export default {
       for(let i=0;i<num;i++){
         let obj = {}
         let id = Math.floor(Math.random() * 899999999 + 100000000)
-        let descRdm = Math.floor(Math.random() * 99999 + 1).toString(36)
+        let descRdm = this.randomValue({ min:1, max:99999 }).toString(36)
         switch(species){
           case 'medicine':{
             obj = {
