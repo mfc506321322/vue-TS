@@ -23,8 +23,8 @@
             }"
           />
           <v-text
-            @click="cellClick(item)"
-            @dblclick="protagonistMove(item)"
+            @click="protagonistMove(item)"
+            @dblclick="cellClick(item)"
             :config="{
               x: item.x,
               y: item.y,
@@ -58,12 +58,22 @@
           :key="index"
           @click="furnitureClick(item)"
         >{{item.text}}</button>
-        <button
+        <el-popconfirm
+          confirmButtonText='干'
+          cancelButtonText='溜了'
+          icon="el-icon-info"
+          iconColor="red"
+          title="确定要进入战斗吗？"
           v-for="(item,index) in selectCell.enemy"
           :key="index+100"
+          @onConfirm="enterBattle(item)"
+        >
+          <button 
+          class="enemy_btn" 
+          slot="reference"
           @click="enemyClick(item)"
-          class="enemy_btn"
-        >{{`${item.name}${item.classDesc}`}}</button>
+          >{{`${item.name}${item.classDesc}`}}</button>
+        </el-popconfirm>
       </div>
       <ul class="cell_content_list" v-show="showBoxList">
         <li
@@ -116,6 +126,14 @@
         <div class="select_equip">装备防具: {{protagonist.selectArmor.typeDesc}}</div>
       </div>
     </div>
+    <div class="dialog">
+      <Dialog
+      :nowEnemyData="nowEnemyData"
+      :protagonistData="protagonist"
+      :isShow.sync="showBattleDialog"
+      @fightEnd="fightEnd"
+      ></Dialog>
+    </div>
   </div>
 </template>
 
@@ -125,11 +143,13 @@ import map from '@/common/json/map.json'
 import mapColor from '@/common/json/mapColor.json'
 import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'
+import Dialog from '@/views/components/Dialog'
 const width = window.innerWidth;
 const height = window.innerHeight;
 export default {
   name: 'Konva',
   components: {
+    Dialog
   },
   data() {
     return {
@@ -162,7 +182,9 @@ export default {
         selectWeapon: {},
         selectArmor: {},
         placeCellInfo: {}
-      }
+      },
+      nowEnemyData:{},
+      showBattleDialog:false
     };
   },
   mounted() {
@@ -395,6 +417,8 @@ export default {
 
       for(let i = 1;i <= num;i++){
         let obj = {
+          id:this.randomValue({ min:1, max:9999999 }).toString(36),
+          pid:item.id,
           name: names[this.randomValue({ min:0, max:names.length - 1 })],
           class: 0,
           classDesc: '',
@@ -486,11 +510,21 @@ export default {
       }
     },
     enemyClick(item){
-      console.log(item)
       this.showBoxList = false
-      
+    },
+    enterBattle(item){
+      this.nowEnemyData = item
+      this.showBattleDialog = true
     },
     itemClick(row, selectCell){
+      if(this.protagonist.box.length >= this.protagonist.maxBox){
+        this.$message({
+          message:'背包已满',
+          type:'error',
+          center:true
+        })
+        return
+      }
       this.protagonist.box.push(row)
       let index = ''
       let arr = this.mapList.map(item => {
@@ -515,6 +549,23 @@ export default {
           this.protagonist.attack = this.protagonist.basisAttack + item.attack
           break
         }
+      }
+    },
+    fightEnd(type,hp,enemy){
+      if(type){
+        this.protagonist.hp = hp
+        let index = ''
+        let arr = this.mapList.map(item => {
+          if(item.id.join('') === enemy.pid.join('')){
+            index = _.findIndex(item.enemy,['id',enemy.id])
+            item.enemy.splice(index,1)
+          }
+          return item
+        })
+        this.selectCell.enemy.splice(index,1)
+        this.mapList = _.cloneDeep(arr)
+      }else{
+        
       }
     },
     randomValue(config={}){
