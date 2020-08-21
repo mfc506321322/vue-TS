@@ -58,6 +58,12 @@
           :key="index"
           @click="furnitureClick(item)"
         >{{item.text}}</button>
+        <button
+          v-for="(item,index) in selectCell.enemy"
+          :key="index+100"
+          @click="enemyClick(item)"
+          class="enemy_btn"
+        >{{`${item.name}${item.classDesc}`}}</button>
       </div>
       <ul class="cell_content_list" v-show="showBoxList">
         <li
@@ -118,6 +124,7 @@ import _ from 'lodash'
 import map from '@/common/json/map.json'
 import mapColor from '@/common/json/mapColor.json'
 import itemProps from '@/common/json/itemProps.json'
+import enemyDatas from '@/common/json/enemy.json'
 const width = window.innerWidth;
 const height = window.innerHeight;
 export default {
@@ -198,12 +205,14 @@ export default {
         let bgColor = this.mapColorHandle(item)
         let points = this.drawLine(item.id, coordinates, item.passage)
         let itemsList = this.itemHandle(item.config.furniture)
+        let enemy = this.enemyRandomCreate(item)
         obj = { 
           ...item,
           bgColor,
           ...coordinates,
           points,
-          itemsList
+          itemsList,
+          enemy
         }
         this.initData(obj)
         return obj
@@ -374,6 +383,43 @@ export default {
       }
       return arr
     },
+    enemyRandomCreate(item){
+      if(item.type !== 'room' || Math.random() > 0.37){
+        return []
+      }
+      let plevel = this.protagonist.level,
+      num = this.randomValue({ min:1, max:3 }),
+      arr = [],
+      names = enemyDatas.name,
+      classData = enemyDatas.class
+
+      for(let i = 1;i <= num;i++){
+        let obj = {
+          name: names[this.randomValue({ min:0, max:names.length - 1 })],
+          class: 0,
+          classDesc: '',
+          level: 1,
+          attack: 2,
+          defense: 10,
+          hp: 50,
+          box:[]
+        }
+        if(Math.random() <= 0.333){
+          let classArr = classData.filter(item => {
+            return item.class <= (plevel % 10 + 1)
+          })
+          let randomClass = classArr[this.randomValue({ min:0, max:classArr.length - 1 })]
+          obj.class = randomClass.class
+          obj.classDesc = randomClass.desc
+        }
+        obj.level = 1 + obj.class * this.randomValue({ min:0, max:10 })
+        obj.attack = Math.ceil(1 + obj.level * Math.random())
+        obj.defense = Math.ceil(10 + obj.level * Math.random())
+        obj.hp = 30 + obj.level * 3
+        arr.push(obj)
+      }
+      return arr
+    },
     cellClick(item){
       // if(this.protagonist.coordinate.join('') !== item.id.join('')){
       //   return
@@ -438,6 +484,11 @@ export default {
           break
         }
       }
+    },
+    enemyClick(item){
+      console.log(item)
+      this.showBoxList = false
+      
     },
     itemClick(row, selectCell){
       this.protagonist.box.push(row)
@@ -511,6 +562,12 @@ export default {
       button{
         margin-right: 10px;
         margin-bottom: 10px;
+        cursor: pointer;
+        &.enemy_btn{
+          background-color:rgb(255, 78, 78);
+          border: 1px solid rgb(255, 143, 143);
+          color: #fff;
+        }
       }
     }
     .cell_content_list{
