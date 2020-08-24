@@ -170,9 +170,9 @@ export default {
       protagonist:{
         name: '主角',
         level: 1,
-        attack: 2,
+        attack: 5,
         defense: 10,
-        basisAttack: 2,
+        basisAttack: 5,
         basisDefense: 10,
         maxhp: 50,
         hp: 50,
@@ -464,32 +464,36 @@ export default {
       let xDiff = Math.abs(coordinate[0] - itemId[0]),
       yDiff = Math.abs(coordinate[1] - itemId[1])
       if( xDiff > 1 || yDiff > 1 || (xDiff === 1 && yDiff === 1) ){
-        this.$message({
+        return this.$message({
           message:'超过移动距离',
           type:'error',
           center:true
         })
-        return
       }
-      
       if(xDiff === 1){
         if((itemId[0] - coordinate[0] === 1 && !this.protagonist.placeCellInfo.passage.after) || 
         (itemId[0] - coordinate[0] === -1 && !item.passage.after)){
-          this.$message({
+          return this.$message({
             message:'不可移动',
             type:'error',
             center:true
           })
-          return
         }
       }
       if(yDiff === 1 && item.id.length > 1 && !item.passage.side){
-        this.$message({
+        return this.$message({
           message:'不可移动',
           type:'error',
           center:true
         })
-        return
+      }
+
+      if(this.selectCell.enemy.length > 0){
+        return this.$message({
+          message:'当前区域敌人尚未清除，无法前往下一区域',
+          type:'error',
+          center:true
+        })
       }
 
       let obj = _.cloneDeep(item)
@@ -565,7 +569,12 @@ export default {
         this.selectCell.enemy.splice(index,1)
         this.mapList = _.cloneDeep(arr)
       }else{
-        
+        this.$alert('胜败乃兵家常事，大侠请重新来过', '征程失利', {
+          confirmButtonText: '确定',
+          callback: action => {
+            location.reload()
+          }
+        })
       }
     },
     randomValue(config={}){

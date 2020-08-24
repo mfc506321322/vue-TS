@@ -10,7 +10,7 @@
   :close-on-press-escape="false"
   :show-close="false"
   >
-    <div class="content">
+    <div class="content" ref="fightList">
       <p
       v-for="(item,index) in fightList"
       :key="index"
@@ -63,7 +63,14 @@ export default {
   },
   mounted() {
   },
-  watch: {},
+  watch: {
+    fightList() {
+      this.$nextTick(() => {
+        let h = this.$refs.fightList
+        h.scrollTop = h.scrollHeight
+      })
+    }
+  },
   methods:{
     dialogOpen(){
       this.status = 'fighting'
@@ -87,7 +94,9 @@ export default {
       let patk = this.protagonistData.attack,
       pdef = this.protagonistData.defense,
       eatk = this.nowEnemyData.attack,
-      edef = this.nowEnemyData.defense
+      edef = this.nowEnemyData.defense,
+      classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc
+      
       console.log(patk,edef,eatk,pdef)
       this.timer = setInterval(() => {
         let damage = 0,
@@ -100,33 +109,38 @@ export default {
             damage = 1
           }
           this.ehp = this.ehp - damage
-          desc = this.descHandle(desc,this.protagonistData.name,this.nowEnemyData.name + this.nowEnemyData.classDesc,damage)
+          desc = this.descHandle(desc,this.protagonistData.name,classDesc,damage)
         }else{
           damage = Math.ceil(eatk * (1 - pdef / 100) * (this.randomValue({ min:6, max:10 }) / 10))
           if(damage <= 0){
             damage = 1
           }
           this.php = this.php - damage
-          desc = this.descHandle(desc,this.nowEnemyData.name + this.nowEnemyData.classDesc,this.protagonistData.name,damage)
+          desc = this.descHandle(desc,classDesc,this.protagonistData.name,damage)
         }
         this.count++
         this.fightList.push({
           identity,
           desc
         })
-        if(this.ehp <= 0 || this.php<= 0){
-          this.$message({
-            message:this.php ? 'YOU WIN' : 'YOU LOSE',
-            type:this.php ? 'success' : 'error',
-            center:true
-          })
-          this.status = this.php ? 'win' : 'lose'
-          this.title = '战斗结束'
-          this.$emit('fightEnd',Boolean(this.php),this.php,this.nowEnemyData)
-          clearInterval(this.timer)
-          this.timer = null
-        }
+
+        this.fightStateJudgment()
       },1000)
+    },
+    fightStateJudgment(){
+      if(this.ehp <= 0 || this.php <= 0){
+        let state = Boolean(this.php > 0)
+        this.$message({
+          message:state ? 'YOU WIN' : 'YOU LOSE',
+          type:state ? 'success' : 'error',
+          center:true
+        })
+        this.status = state ? 'win' : 'lose'
+        this.title = '战斗结束'
+        this.$emit('fightEnd',state,this.php,this.nowEnemyData)
+        clearInterval(this.timer)
+        this.timer = null
+      }
     },
     descHandle(desc,part1,part2,damage){
       let text = desc
@@ -166,7 +180,7 @@ export default {
         font-size: 14px;
         line-height: 16px;
         margin-bottom: 20px;
-        color: rgb(214, 140, 29);
+        color: rgb(202, 0, 0);
         &.is_right{
           color: rgb(0, 37, 201);
           text-align: right;
