@@ -97,24 +97,18 @@ export default {
       edef = this.nowEnemyData.defense,
       classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc
       
-      console.log(patk,edef,eatk,pdef)
+      console.log(`patk:${patk},edef:${edef},eatk:${eatk},pdef:${pdef}`)
       this.timer = setInterval(() => {
         let damage = 0,
         identity = this.count % 2,
         desc = fightDescData[this.randomValue({ min:0, max:fightDescData.length-1 })]
 
         if(identity){
-          damage = Math.ceil(patk * (1 - edef / 100) * (this.randomValue({ min:6, max:10 }) / 10))
-          if(damage <= 0){
-            damage = 1
-          }
+          damage = this.damageHandle(patk, edef)
           this.ehp = this.ehp - damage
           desc = this.descHandle(desc,this.protagonistData.name,classDesc,damage)
         }else{
-          damage = Math.ceil(eatk * (1 - pdef / 100) * (this.randomValue({ min:6, max:10 }) / 10))
-          if(damage <= 0){
-            damage = 1
-          }
+          damage = this.damageHandle(eatk, pdef)
           this.php = this.php - damage
           desc = this.descHandle(desc,classDesc,this.protagonistData.name,damage)
         }
@@ -126,6 +120,13 @@ export default {
 
         this.fightStateJudgment()
       },1000)
+    },
+    damageHandle(atk, def){
+      let damage = Math.ceil(atk * (1 - def / 100) * (this.randomValue({ min:6, max:10 }) / 10))
+      if(damage <= 0){
+        damage = 1
+      }
+      return damage
     },
     fightStateJudgment(){
       if(this.ehp <= 0 || this.php <= 0){

@@ -153,6 +153,7 @@ export default {
   },
   data() {
     return {
+      currentLevel:0,
       mapRenderParams: {},
       mapList: [],
       configKonva: {
@@ -221,7 +222,7 @@ export default {
         y:this.configKonva.height / 2 - this.mapRenderParams.cellSize.h / 2
       }
 
-      this.mapList = map.map((item, index) => {
+      this.mapList = map[this.currentLevel].map((item, index) => {
         let obj = {}
         let coordinates = this.coordinatesComputed(item.id)
         let bgColor = this.mapColorHandle(item)
@@ -543,6 +544,17 @@ export default {
     },
     boxItemClick(item){
       switch(item.species){
+        case 'medicine':{
+          if(this.protagonist.hp === this.protagonist.maxhp)return
+          let hp = this.protagonist.hp + item.hp
+          if(hp > this.protagonist.maxhp){
+            hp = this.protagonist.maxhp
+          }
+          this.protagonist.hp = hp
+          let index = _.findIndex(this.protagonist.box,['id',item.id])
+          this.protagonist.box.splice(index,1)
+          break
+        }
         case 'armor':{
           this.protagonist.selectArmor = item
           this.protagonist.defense = this.protagonist.basisDefense + item.defense
@@ -568,12 +580,30 @@ export default {
         })
         this.selectCell.enemy.splice(index,1)
         this.mapList = _.cloneDeep(arr)
+
+        this.passJudgment()
       }else{
         this.$alert('胜败乃兵家常事，大侠请重新来过', '征程失利', {
           confirmButtonText: '确定',
           callback: action => {
             location.reload()
           }
+        })
+      }
+    },
+    passJudgment(){
+      let flag = this.mapList.every(item => {
+        return item.enemy.length === 0
+      })
+      if(flag){
+        this.$confirm('当前关卡内敌人已清除殆尽，是否前往下一关卡', '关卡通关', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消，稍后手动前往'
+        }).then(() => {
+          ++this.currentLevel
+          this.protagonist.coordinate = [1]
+          this.showBattleDialog = false
+          this.initMap()
         })
       }
     },
