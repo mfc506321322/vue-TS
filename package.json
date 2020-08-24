@@ -6,6 +6,7 @@
     "start": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
+    "upload": "node ./up.js",
     "publish": "vue-cli-service build && node ./up.js"
   },
   "dependencies": {

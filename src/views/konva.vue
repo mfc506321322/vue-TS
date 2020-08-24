@@ -462,7 +462,7 @@ export default {
       }
 
       let xDiff = Math.abs(coordinate[0] - itemId[0]),
-      yDiff = Math.abs(Math.abs(coordinate[1]) - Math.abs(itemId[1]))
+      yDiff = Math.abs(coordinate[1] - itemId[1])
       if( xDiff > 1 || yDiff > 1 || (xDiff === 1 && yDiff === 1) ){
         this.$message({
           message:'超过移动距离',
