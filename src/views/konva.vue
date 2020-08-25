@@ -91,6 +91,11 @@
         </li>
         <li class="cell_content_list_empty" v-if="selectCell.itemsList.length === 0">空</li>
       </ul>
+      <button
+        v-if="showPassBtn"
+        class="pass_btn"
+        @click="passForward"
+      >点击前往下一关卡</button>
     </div>
     <div class="protagonist_info_area">
       <div class="info_block">
@@ -199,7 +204,8 @@ export default {
         placeCellInfo: {}
       },
       nowEnemyData:{},
-      showBattleDialog:false
+      showBattleDialog:false,
+      showPassBtn:false
     };
   },
   mounted() {
@@ -424,7 +430,7 @@ export default {
       return arr
     },
     enemyRandomCreate(item){
-      if(item.type !== 'room' || Math.random() > 0.4){
+      if(item.type !== 'room' || Math.random() > 0.45){
         return []
       }
       let plevel = this.protagonist.level,
@@ -656,16 +662,21 @@ export default {
         return item.enemy.length === 0
       })
       if(flag){
+        this.showPassBtn = true
         this.$confirm('当前关卡内敌人已清除殆尽，是否前往下一关卡', '关卡通关', {
           confirmButtonText: '确定',
           cancelButtonText: '取消，稍后手动前往'
         }).then(() => {
-          ++this.currentLevel
-          this.protagonist.coordinate = [1]
-          this.showBattleDialog = false
-          this.initMap()
+          this.passForward()
         })
       }
+    },
+    passForward(){
+      ++this.currentLevel
+      this.protagonist.coordinate = [1]
+      this.showBattleDialog = false
+      this.showPassBtn = false
+      this.initMap()
     },
     expHandle(enemy){
       let {
@@ -697,10 +708,12 @@ export default {
         if(this.protagonist.level % 5 === 0){
           this.protagonist.maxBox++
         }
-        this.$message({
-          message:'等级提升!!!',
-          type:'success',
-          center:true
+        setTimeout(() => {
+          this.$message({
+            message:'等级提升!!!',
+            type:'success',
+            center:true
+          })
         })
       }
       console.log('exp',eExp,enemy.level)
@@ -718,6 +731,9 @@ export default {
 
 </script>
 <style lang="scss" scoped>
+button{
+  cursor: pointer;
+}
 .content_box{
   border: 2px solid #000;
   width: 900px;
@@ -751,7 +767,6 @@ export default {
       button{
         margin-right: 10px;
         margin-bottom: 10px;
-        cursor: pointer;
         &.enemy_btn{
           background-color:rgb(255, 78, 78);
           border: 1px solid rgb(255, 143, 143);
@@ -785,6 +800,11 @@ export default {
           margin: 0 10px 0 0;
         }
       }
+    }
+    .pass_btn{
+      width: 100%;
+      line-height: 30px;
+      margin-top: 20px;
     }
   }
   .protagonist_info_area{
