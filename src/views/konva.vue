@@ -104,8 +104,20 @@
           <li>等级: {{protagonist.level}}</li>
           <li>攻击: {{protagonist.attack}}</li>
           <li>防御: {{protagonist.defense}}</li>
-          <li>血量: {{protagonist.hp}} / {{protagonist.maxhp}}</li>
-          <li>经验: {{protagonist.exp}} / {{protagonist.maxExp}}</li>
+          <li 
+            class="progress_bar"
+            :style="{
+              '--progressBar':progressBarHp,
+              '--progressColor':'rgb(255, 73, 73)'
+            }"
+          ><span>血量: {{protagonist.hp}} / {{protagonist.maxhp}}</span></li>
+          <li 
+            class="progress_bar"
+            :style="{
+              '--progressBar':progressBarExp,
+              '--progressColor':'rgb(255, 220, 0)'
+            }"
+          ><span>经验: {{protagonist.exp}} / {{protagonist.maxExp}}</span></li>
           <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
         </ul>
       </div>
@@ -210,6 +222,14 @@ export default {
   },
   mounted() {
     this.initMap()
+  },
+  computed:{
+    progressBarHp(){
+      return Math.ceil(this.protagonist.hp / this.protagonist.maxhp * 100) + '%'
+    },
+    progressBarExp(){
+      return Math.ceil(this.protagonist.exp / this.protagonist.maxExp * 100) + '%'
+    }
   },
   watch:{
     'selectCell.id':function(){
@@ -823,9 +843,32 @@ button{
     }
     .states{
       li{
-        margin-bottom: 5px;
+        margin-bottom: 3px;
+        line-height: 18px;
+        box-sizing: border-box;
+        padding-left: 2px;
         &:last-child{
           margin-bottom: 0;
+        }
+        &.progress_bar{
+          background-color: rgb(202, 202, 202);
+          position: relative;
+          z-index: 1;
+          span{
+            position: relative;
+            z-index: 99;
+          }
+          &::after{
+            content: '';
+            display: block;
+            width: var(--progressBar);
+            height: 100%;
+            background-color: var(--progressColor);
+            position: absolute;
+            z-index: 2;
+            top: 0;
+            left: 0;
+          }
         }
       }
     }
