@@ -100,6 +100,7 @@
           <li>攻击: {{protagonist.attack}}</li>
           <li>防御: {{protagonist.defense}}</li>
           <li>血量: {{protagonist.hp}} / {{protagonist.maxhp}}</li>
+          <li>经验: {{protagonist.exp}} / {{protagonist.maxExp}}</li>
           <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
         </ul>
       </div>
@@ -177,7 +178,9 @@ export default {
         basisDefense: 6,
         maxhp: 50,
         hp: 50,
-        coordinate:[1],
+        exp: 0,
+        maxExp: 200,
+        coordinate: [1],
         maxBox: 15,
         box: [],
         selectWeapon: {},
@@ -430,6 +433,7 @@ export default {
           attack: 2,
           defense: 10,
           hp: 50,
+          exp: 100,
           box:[]
         }
         if(Math.random() <= 0.333){
@@ -450,6 +454,7 @@ export default {
         obj.attack = 5 + obj.level * this.randomValue({ min:2, max:4 })
         obj.defense = 3 + obj.level * this.randomValue({ min:2, max:3 })
         obj.hp = 20 + obj.level * this.randomValue({ min:6, max:9 })
+        obj.exp = obj.level * 100
         arr.push(obj)
       }
       return arr
@@ -463,7 +468,12 @@ export default {
     },
     protagonistMove(item){
       let coordinate = this.protagonist.coordinate,
-      itemId = item.id
+      itemId = item.id,
+      pSide = this.protagonist.placeCellInfo.passage.side,
+      iSide = item.passage.side
+
+      if(coordinate.join('') === itemId.join(''))return
+
       if(this.protagonist.coordinate.length === 1){
         coordinate = this.protagonist.coordinate.concat([0])
       }
@@ -490,22 +500,29 @@ export default {
           })
         }
       }
+      
+      let flag = false
       if(yDiff === 1){
-        if(itemId[1] === 0 && !this.protagonist.placeCellInfo.passage.side){
-          return this.$message({
-            message:'不可移动',
-            type:'error',
-            center:true
-          })
+        if(coordinate[1] === 0){
+          flag = !iSide
+        }else{
+          if(itemId[1] === 0){
+            flag = !pSide
+          }else{
+            if(coordinate[1] - itemId[1] === 1){
+              flag = coordinate[1] < 0 ? !iSide : !pSide
+            }else{
+              flag = coordinate[1] > 0 ? !iSide : !pSide
+            }
+          }
         }
-        if(itemId[1] !== 0 && ((coordinate[1] - itemId[1] === -1 && !item.passage.side) || 
-        (coordinate[1] - itemId[1] === 1 && !this.protagonist.placeCellInfo.passage.side))){
-          return this.$message({
-            message:'不可移动',
-            type:'error',
-            center:true
-          })
-        }
+      }
+      if(flag){
+        return this.$message({
+          message:'不可移动',
+          type:'error',
+          center:true
+        })
       }
 
       if(this.selectCell.enemy.length > 0){
@@ -542,12 +559,11 @@ export default {
     },
     itemClick(row, selectCell){
       if(this.protagonist.box.length >= this.protagonist.maxBox){
-        this.$message({
+        return this.$message({
           message:'背包已满',
           type:'error',
           center:true
         })
-        return
       }
       this.protagonist.box.push(row)
       let index = ''
@@ -600,6 +616,7 @@ export default {
         this.selectCell.enemy.splice(index,1)
         this.mapList = _.cloneDeep(arr)
 
+        this.expHandle(enemy)
         this.passJudgment()
       }else{
         this.$alert('胜败乃兵家常事，大侠请重新来过', '征程失利', {
@@ -625,6 +642,45 @@ export default {
           this.initMap()
         })
       }
+    },
+    expHandle(enemy){
+      let {
+        exp,
+        maxExp,
+        level
+      } = this.protagonist
+      let eExp = enemy.exp
+      if(enemy.level > level){
+        eExp = enemy.exp * 1.5
+      }
+
+      exp = exp + eExp
+      if(exp >= maxExp){
+        exp = exp - maxExp
+        ++this.protagonist.level
+        this.protagonist.maxExp = 100 * Math.pow(this.protagonist.level,2) + 100
+
+        let attack = this.randomValue({min:6,max:9}),
+        defense = this.randomValue({min:5,max:7}),
+        hp = this.randomValue({min:10,max:20})
+
+        this.protagonist.basisAttack += attack
+        this.protagonist.basisDefense += defense
+        this.protagonist.attack += attack
+        this.protagonist.defense += defense
+        this.protagonist.maxhp += hp
+        this.protagonist.hp = this.protagonist.maxhp
+        if(this.protagonist.level % 5 === 0){
+          this.protagonist.maxBox++
+        }
+        this.$message({
+          message:'等级提升！！！',
+          type:'success',
+          center:true
+        })
+      }
+      console.log('exp',eExp,enemy.level)
+      this.protagonist.exp = exp
     },
     randomValue(config={}){
       let configs = Object.assign({
