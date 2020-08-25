@@ -101,7 +101,7 @@ export default {
       this.timer = setInterval(() => {
         let damage = 0,
         identity = this.count % 2,
-        desc = fightDescData[this.randomValue({ min:0, max:fightDescData.length-1 })]
+        desc = fightDescData[this.randomValue({ min:0, max:fightDescData.length - 1 })]
 
         if(identity){
           damage = this.damageHandle(patk, edef)
@@ -122,7 +122,7 @@ export default {
       },1000)
     },
     damageHandle(atk, def){
-      let damage = Math.ceil(atk * (1 - def / 100) * (this.randomValue({ min:6, max:10 }) / 10))
+      let damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 5)) * this.randomValue({min:7, max:11}) / 10)
       if(damage <= 0){
         damage = 1
       }

@@ -171,14 +171,14 @@ export default {
       protagonist:{
         name: '主角',
         level: 1,
-        attack: 5,
-        defense: 10,
-        basisAttack: 5,
-        basisDefense: 10,
+        attack: 8,
+        defense: 6,
+        basisAttack: 8,
+        basisDefense: 6,
         maxhp: 50,
         hp: 50,
         coordinate:[1],
-        maxBox: 20,
+        maxBox: 15,
         box: [],
         selectWeapon: {},
         selectArmor: {},
@@ -331,7 +331,10 @@ export default {
         return item.label === 'box'
       })
       if(boxInfo.length){
-        let boxLevel = boxInfo[0].level
+        let boxLevel = this.protagonist.level + this.randomValue({ min:-3, max:1})
+        if(boxLevel <= 1){
+          boxLevel = 1
+        }
         let sums = this.randomValue({ min:3, max:5 })
         let itemsNum = {
           weapon:0,
@@ -372,9 +375,9 @@ export default {
               speciesDesc:'药',
               type:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })].name,
               typeDesc:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })].desc,
-              hp:this.randomValue({ min:5 * level, max:5 + 10 * level })
+              hp:level * this.randomValue({ min:15, max:25 })
             }
-            obj.price = Math.floor(obj.hp / 3)
+            obj.price = Math.floor(obj.hp / 2.5)
             break
           }
           case 'armor':{
@@ -384,9 +387,9 @@ export default {
               speciesDesc:'防具',
               type:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].name,
               typeDesc:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].desc + descRdm,
-              defense:this.randomValue({ min:5 * level, max:10 + 5 * level })
+              defense:level * this.randomValue({ min:7, max:12 })
             }
-            obj.price = Math.floor(obj.defense * 1.5)
+            obj.price = Math.floor(obj.defense * 2)
             break
           }
           case 'weapon':{
@@ -396,9 +399,9 @@ export default {
               speciesDesc:'武器',
               type:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].name,
               typeDesc:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].desc + descRdm,
-              attack:this.randomValue({ min:4 * level, max:10 + 4 * level })
+              attack:level * this.randomValue({ min:8, max:13})
             }
-            obj.price = Math.floor(obj.attack * 3)
+            obj.price = Math.floor(obj.attack * 2.5)
             break
           }
         }
@@ -407,7 +410,7 @@ export default {
       return arr
     },
     enemyRandomCreate(item){
-      if(item.type !== 'room' || Math.random() > 0.37){
+      if(item.type !== 'room' || Math.random() > 0.4){
         return []
       }
       let plevel = this.protagonist.level,
@@ -431,16 +434,22 @@ export default {
         }
         if(Math.random() <= 0.333){
           let classArr = classData.filter(item => {
-            return item.class <= (plevel % 10 + 1)
+            return item.class <= Math.ceil(plevel / 10)
           })
           let randomClass = classArr[this.randomValue({ min:0, max:classArr.length - 1 })]
           obj.class = randomClass.class
           obj.classDesc = randomClass.desc
         }
-        obj.level = 1 + obj.class * this.randomValue({ min:0, max:10 })
-        obj.attack = Math.ceil(1 + obj.level * Math.random())
-        obj.defense = Math.ceil(10 + obj.level * Math.random())
-        obj.hp = 30 + obj.level * 3
+
+        let randomLevel = this.randomValue({ min:-2, max:2 })
+        obj.level = randomLevel + plevel
+        if(obj.level <= 1){
+          obj.level = 1
+        }
+        obj.level = obj.level + obj.class
+        obj.attack = 5 + obj.level * this.randomValue({ min:2, max:4 })
+        obj.defense = 3 + obj.level * this.randomValue({ min:2, max:3 })
+        obj.hp = 20 + obj.level * this.randomValue({ min:6, max:9 })
         arr.push(obj)
       }
       return arr
@@ -481,12 +490,22 @@ export default {
           })
         }
       }
-      if(yDiff === 1 && item.id.length > 1 && !item.passage.side){
-        return this.$message({
-          message:'不可移动',
-          type:'error',
-          center:true
-        })
+      if(yDiff === 1){
+        if(itemId[1] === 0 && !this.protagonist.placeCellInfo.passage.side){
+          return this.$message({
+            message:'不可移动',
+            type:'error',
+            center:true
+          })
+        }
+        if(itemId[1] !== 0 && ((coordinate[1] - itemId[1] === -1 && !item.passage.side) || 
+        (coordinate[1] - itemId[1] === 1 && !this.protagonist.placeCellInfo.passage.side))){
+          return this.$message({
+            message:'不可移动',
+            type:'error',
+            center:true
+          })
+        }
       }
 
       if(this.selectCell.enemy.length > 0){
