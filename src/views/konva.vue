@@ -118,6 +118,17 @@
               item.species === 'medicine' ? `${item.hp}hp` : ''
             }}</span>
             <span>{{item.price}}金</span>
+            <el-popconfirm
+              class="item_destroy_box"
+              confirmButtonText='确定'
+              cancelButtonText='取消'
+              icon="el-icon-info"
+              iconColor="red"
+              title="确定要丢弃该道具吗？"
+              @onConfirm="enterItemDestroy(item)"
+            >
+              <el-icon class="el-icon-close item_destroy" slot="reference"></el-icon>
+            </el-popconfirm>
           </li>
           <li class="cell_content_list_empty" v-if="protagonist.box.length === 0">空</li>
         </ul>
@@ -445,7 +456,7 @@ export default {
           obj.classDesc = randomClass.desc
         }
 
-        let randomLevel = this.randomValue({ min:-2, max:2 })
+        let randomLevel = this.randomValue({ min:-1, max:2 })
         obj.level = randomLevel + plevel
         if(obj.level <= 1){
           obj.level = 1
@@ -453,7 +464,7 @@ export default {
         obj.level = obj.level + obj.class
         obj.attack = 5 + obj.level * this.randomValue({ min:2, max:4 })
         obj.defense = 3 + obj.level * this.randomValue({ min:2, max:3 })
-        obj.hp = 20 + obj.level * this.randomValue({ min:6, max:9 })
+        obj.hp = 25 + obj.level * this.randomValue({ min:6, max:9 })
         obj.exp = obj.level * 100
         arr.push(obj)
       }
@@ -602,6 +613,19 @@ export default {
         }
       }
     },
+    enterItemDestroy(item){
+      if(item.species === 'armor' || item.species === 'weapon'){
+        if(item.id === this.protagonist.selectWeapon.id || item.id === this.protagonist.selectArmor.id){
+          return this.$message({
+            message:'当前道具已装备，无法丢弃',
+            type:'error',
+            center:true
+          })
+        }
+      }
+      let index = _.findIndex(this.protagonist.box,['id',item.id])
+      this.protagonist.box.splice(index,1)
+    },
     fightEnd(type,hp,enemy){
       if(type){
         this.protagonist.hp = hp
@@ -674,7 +698,7 @@ export default {
           this.protagonist.maxBox++
         }
         this.$message({
-          message:'等级提升！！！',
+          message:'等级提升!!!',
           type:'success',
           center:true
         })
@@ -811,6 +835,10 @@ export default {
         span{
           display: inline-block;
           margin: 0 10px 0 0;
+          &.item_destroy_box{
+            margin: 0;
+            float: right;
+          }
         }
       }
     }
