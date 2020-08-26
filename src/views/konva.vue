@@ -168,7 +168,7 @@
 
 <script>
 import _ from 'lodash'
-import map from '@/common/json/map.json'
+import map from '@/common/json/map.js'
 import mapColor from '@/common/json/mapColor.json'
 import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'

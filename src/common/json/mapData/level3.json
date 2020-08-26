@@ -1,0 +1,159 @@
+[
+  {
+    "id": [1],
+    "passage": {
+      "after": 1
+    },
+    "text": "树林入口",
+    "describe": "密林的入口，地上的脚印还很新",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": []
+    }
+  },
+  {
+    "id": [2],
+    "passage": {
+      "after": 1
+    },
+    "text": "林间小道",
+    "describe": "林间小道，微弱的月光穿过树叶照在地上",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": []
+    }
+  },
+  {
+    "id": [3],
+    "passage": {
+      "after": 1
+    },
+    "text": "林间小道",
+    "describe": "林间小道，一辆残破的马车倾倒在路旁",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": [4],
+    "passage": {
+      "after": 1
+    },
+    "text": "林中营地",
+    "describe": "密林中一块宽阔的空地，一队人马在这里露宿",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": [4, -1],
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "岔路",
+    "describe": "营地后面有2条岔路，这是其中一条",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": []
+    }
+  },
+  {
+    "id": [4, -2],
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "林中小屋",
+    "describe": "营地往后再走不久，有一座小木屋",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": [5],
+    "passage": {
+      "after": 1
+    },
+    "text": "林间小道",
+    "describe": "密林中的小路",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": []
+    }
+  },
+  {
+    "id": [6],
+    "passage": {
+      "after": 1
+    },
+    "text": "河石镇-溪木街",
+    "describe": "穿过密林，面前是河石镇的溪木街",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": []
+    }
+  },
+  {
+    "id": [6, 1],
+    "passage": {
+      "after": 0,
+      "side": 1
+    },
+    "text": "商铺",
+    "describe": "溪木街的商铺",
+    "species": "build",
+    "type": "shop",
+    "config": {
+      "furniture": []
+    }
+  },
+  {
+    "id": [7],
+    "passage": {
+      "after": 0
+    },
+    "text": "崇武院",
+    "describe": "河石镇的武院，里面驻扎着当地官兵",
+    "species": "build",
+    "type": "room",
+    "config": {
+      "furniture": [
+        {
+          "text": "箱子",
+          "label": "box",
+          "level": 3
+        }
+      ]
+    }
+  }
+]
