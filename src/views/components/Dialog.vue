@@ -122,7 +122,7 @@ export default {
       },1000)
     },
     damageHandle(atk, def){
-      let damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 5)) * this.randomValue({min:7, max:11}) / 10)
+      let damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 5)) * this.randomValue({min:8, max:11}) / 10)
       if(damage <= 0){
         damage = 1
       }

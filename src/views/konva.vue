@@ -6,6 +6,19 @@
       class="stage"
     >
       <v-layer ref="layer">
+        <v-text
+          :config="{
+            x: 10,
+            y: 0,
+            width: 100,
+            height: 40,
+            text: `当前关卡：${currentLevel+1}`,
+            fontSize: 16,
+            fill: '#000000',
+            align: 'center',
+            verticalAlign: 'middle'
+          }"
+        />
         <div 
           class="map_box"
           v-for="(item, index) in mapList"
@@ -417,7 +430,7 @@ export default {
               speciesDesc:'药',
               type:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })].name,
               typeDesc:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })].desc,
-              hp:level * this.randomValue({ min:15, max:25 })
+              hp:level * this.randomValue({ min:20, max:30 })
             }
             obj.price = Math.floor(obj.hp / 2.5)
             break
@@ -429,7 +442,7 @@ export default {
               speciesDesc:'防具',
               type:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].name,
               typeDesc:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].desc + descRdm,
-              defense:level * this.randomValue({ min:7, max:12 })
+              defense:level * this.randomValue({ min:6, max:9 })
             }
             obj.price = Math.floor(obj.defense * 2)
             break
@@ -441,7 +454,7 @@ export default {
               speciesDesc:'武器',
               type:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].name,
               typeDesc:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].desc + descRdm,
-              attack:level * this.randomValue({ min:8, max:13})
+              attack:level * this.randomValue({ min:6, max:9})
             }
             obj.price = Math.floor(obj.attack * 2.5)
             break
@@ -452,7 +465,7 @@ export default {
       return arr
     },
     enemyRandomCreate(item){
-      if(item.type !== 'room' || Math.random() > 0.45){
+      if(item.type !== 'room' || Math.random() > 0.4){
         return []
       }
       let plevel = this.protagonist.level,
@@ -490,9 +503,10 @@ export default {
           obj.level = 1
         }
         obj.level = obj.level + obj.class
-        obj.attack = 5 + obj.level * this.randomValue({ min:2, max:4 })
-        obj.defense = 3 + obj.level * this.randomValue({ min:2, max:3 })
-        obj.hp = 25 + obj.level * this.randomValue({ min:6, max:9 })
+        let levelRelated = Math.floor(Math.pow(obj.level, 1.4))
+        obj.attack = 5 + levelRelated * this.randomValue({ min:2, max:3 })
+        obj.defense = 3 + levelRelated * this.randomValue({ min:2, max:3 })
+        obj.hp = 25 + levelRelated * this.randomValue({ min:6, max:9 })
         obj.exp = obj.level * 100
         arr.push(obj)
       }
@@ -714,6 +728,8 @@ export default {
       let eExp = enemy.exp
       if(enemy.level > level){
         eExp = enemy.exp * 1.5
+      }else if(enemy.level < level){
+        eExp = enemy.exp * 0.8
       }
 
       exp = exp + eExp
@@ -723,8 +739,8 @@ export default {
         this.protagonist.maxExp = 100 * Math.pow(this.protagonist.level,2) + 100
 
         let attack = this.randomValue({min:6,max:9}),
-        defense = this.randomValue({min:5,max:7}),
-        hp = this.randomValue({min:10,max:20})
+        defense = this.randomValue({min:4,max:6}),
+        hp = this.randomValue({min:14,max:21})
 
         this.protagonist.basisAttack += attack
         this.protagonist.basisDefense += defense
@@ -770,8 +786,8 @@ export default {
         Object.assign(obj, mapText)
         childArr.push(obj)
         if(Math.random() <= 0.25){
-          let childNum = this.randomValue({min:1, max:5}),
-          startNum = this.randomValue({min:-5, max:-1})
+          let childNum = this.randomValue({min:1, max:4}),
+          startNum = this.randomValue({min:-4, max:-1})
           if(Math.random() <= 0.5){
             if(Math.random() <= 0.5){
               startNum = 1
@@ -800,7 +816,7 @@ export default {
       let text = enlessModeMap.name[this.randomValue({min:0, max:enlessModeMap.name.length - 1})],
       config = {}
 
-      if(Math.random() <= 0.3){
+      if(Math.random() <= 0.4){
         config = {
           config: {
             furniture: [
