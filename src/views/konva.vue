@@ -172,6 +172,7 @@ import map from '@/common/json/map.js'
 import mapColor from '@/common/json/mapColor.json'
 import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'
+import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import Dialog from '@/views/components/Dialog'
 const width = window.innerWidth;
 const height = window.innerHeight;
@@ -182,6 +183,7 @@ export default {
   },
   data() {
     return {
+      initMapData:[],
       currentLevel:0,
       mapRenderParams: {},
       mapList: [],
@@ -221,6 +223,7 @@ export default {
     };
   },
   mounted() {
+    this.initMapData = map
     this.initMap()
   },
   computed:{
@@ -261,8 +264,7 @@ export default {
         x:10,
         y:this.configKonva.height / 2 - this.mapRenderParams.cellSize.h / 2
       }
-
-      this.mapList = map[this.currentLevel].map((item, index) => {
+      this.mapList = this.initMapData[this.currentLevel].map((item, index) => {
         let obj = {}
         let coordinates = this.coordinatesComputed(item.id)
         let bgColor = this.mapColorHandle(item)
@@ -692,6 +694,11 @@ export default {
       }
     },
     passForward(){
+      if(this.currentLevel === (this.initMapData.length - 1)){
+        let arr = []
+        arr[this.currentLevel + 1] = this.endlessMode()
+        this.initMapData = arr
+      }
       ++this.currentLevel
       this.protagonist.coordinate = [1]
       this.showBattleDialog = false
@@ -738,6 +745,80 @@ export default {
       }
       console.log('exp',eExp,enemy.level)
       this.protagonist.exp = exp
+    },
+    endlessMode(){
+      let arr = [],
+      mapNum = this.randomValue({min:6,max:12})
+      for(let i = 1;i<=mapNum;i++){
+        let obj = {
+          id: [i],
+          passage: {
+            after: 1
+          },
+          text: '',
+          describe: '',
+          species: 'build',
+          type: 'room',
+          config: {
+            furniture: []
+          }
+        },
+        childArr = [],
+        mapText = this.randomMapContent()
+
+        if(i === mapNum)obj.passage.after = 0
+        Object.assign(obj, mapText)
+        childArr.push(obj)
+        if(Math.random() <= 0.25){
+          let childNum = this.randomValue({min:1, max:5}),
+          startNum = this.randomValue({min:-5, max:-1})
+          if(Math.random() <= 0.5){
+            if(Math.random() <= 0.5){
+              startNum = 1
+            }else{
+              childNum = -1
+            }
+          }
+          for(let j=startNum;j<=childNum;j++){
+            if(j === 0)continue
+            let childObj = _.cloneDeep(obj)
+            childObj.id = [i, j]
+            childObj.passage = {
+              after: 0,
+              side: 1
+            }
+            Object.assign(childObj, this.randomMapContent())
+            childArr.push(childObj)
+          }
+        }
+
+        arr = arr.concat(childArr)
+      }
+      return arr
+    },
+    randomMapContent(){
+      let text = enlessModeMap.name[this.randomValue({min:0, max:enlessModeMap.name.length - 1})],
+      config = {}
+
+      if(Math.random() <= 0.3){
+        config = {
+          config: {
+            furniture: [
+              {
+                text: '箱子',
+                label: 'box',
+                level: this.randomValue({min:1, max:5})
+              }
+            ]
+          }
+        }
+      }
+
+      let obj = {
+        ...text,
+        ...config
+      }
+      return obj
     },
     randomValue(config={}){
       let configs = Object.assign({
