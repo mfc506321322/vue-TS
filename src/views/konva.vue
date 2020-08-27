@@ -164,8 +164,16 @@
         </ul>
       </div>
       <div class="info_block">
-        <div class="select_equip">装备武器: {{protagonist.selectWeapon.typeDesc}}</div>
-        <div class="select_equip">装备防具: {{protagonist.selectArmor.typeDesc}}</div>
+        <div class="select_equip">
+          装备武器: <span v-if="protagonist.selectWeapon.typeDesc">
+            {{protagonist.selectWeapon.typeDesc}} / {{protagonist.selectWeapon.attack}}攻击
+          </span>
+        </div>
+        <div class="select_equip">
+          装备防具: <span v-if="protagonist.selectArmor.typeDesc">
+            {{protagonist.selectArmor.typeDesc}} / {{protagonist.selectArmor.defense}}防御
+          </span>
+        </div>
       </div>
     </div>
     <div class="dialog">
@@ -175,6 +183,30 @@
       :isShow.sync="showBattleDialog"
       @fightEnd="fightEnd"
       ></Dialog>
+    </div>
+    <div class="update_info">
+      <el-collapse v-model="insNames" class="ins_box">
+        <el-collapse-item title="操作说明" name="1">
+          <p>移动：<span>点击地图区块，每次只能移动一格，未连接区块无法移动</span></p>
+          <p>获取道具：<span>点击右侧功能区箱子按钮打开道具列表，点击道具获取</span></p>
+          <p>丢弃道具：<span>点击下方信息区背包道具列表里的道具”X“键，丢弃道具</span></p>
+          <p>使用道具&穿戴装备：<span>双击下方信息区背包道具列表里的道具进行使用或装备</span></p>
+          <p>进行战斗：<span>点击右侧功能区红色敌人按钮进入战斗</span></p>
+          <p>战斗撤退：<span>战斗中途可以随时点击战斗窗口右下角“撤退”按钮退出战斗</span></p>
+          <p>进入下一关卡：<span>当前地图敌人全部清除后会提示是否进入下一关卡，或者点击右侧“前往下一关卡“按钮</span></p>
+        </el-collapse-item>
+      </el-collapse>
+      <div class="update_title">更新信息</div>
+      <el-timeline :reverse="true">
+        <el-timeline-item
+          v-for="(item, index) in updateInfo"
+          :key="index"
+          :timestamp="item.timestamp"
+          :color="index === updateInfo.length - 1 ? '#00AE7E' : null"
+        >
+          {{item.content}}
+        </el-timeline-item>
+      </el-timeline>
     </div>
   </div>
 </template>
@@ -187,6 +219,7 @@ import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'
 import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import Dialog from '@/views/components/Dialog'
+import updateInfo from '@/common/json/updateInfo.json'
 const width = window.innerWidth;
 const height = window.innerHeight;
 export default {
@@ -196,6 +229,8 @@ export default {
   },
   data() {
     return {
+      insNames:[],
+      updateInfo:updateInfo,
       initMapData:[],
       currentLevel:0,
       mapRenderParams: {},
@@ -854,6 +889,7 @@ button{
 .content_box{
   border: 2px solid #000;
   width: 900px;
+  position: relative;
   .stage{
     display: inline-block;
   }
@@ -1004,6 +1040,31 @@ button{
     }
     .select_equip{
       margin-bottom: 10px;
+    }
+  }
+  .update_info{
+    width: 300px;
+    max-height: 800px;
+    overflow-y: auto;
+    position: absolute;
+    right: -302px;
+    top: -2px;
+    padding: 0 10px 10px 10px;
+    box-sizing: border-box;
+    .ins_box{
+      margin-bottom: 15px;
+      p{
+        font-weight: bold;
+        span{
+          color: #333;
+          font-weight: normal;
+        }
+      }
+    }
+    .update_title{
+      margin-bottom: 20px;
+      font-weight: bold;
+      font-size: 14px;
     }
   }
 }
