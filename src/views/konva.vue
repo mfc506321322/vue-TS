@@ -1,24 +1,12 @@
 <template>
   <div class="content_box">
+    <span class="current_level">当前关卡：{{currentLevel+1}}</span>
     <v-stage
       ref="stage"
       :config="configKonva"
       class="stage"
     >
       <v-layer ref="layer">
-        <v-text
-          :config="{
-            x: 10,
-            y: 0,
-            width: 100,
-            height: 40,
-            text: `当前关卡：${currentLevel+1}`,
-            fontSize: 16,
-            fill: '#000000',
-            align: 'center',
-            verticalAlign: 'middle'
-          }"
-        />
         <div 
           class="map_box"
           v-for="(item, index) in mapList"
@@ -890,6 +878,13 @@ button{
   border: 2px solid #000;
   width: 900px;
   position: relative;
+  .current_level{
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #fff;
+    z-index: 99;
+  }
   .stage{
     display: inline-block;
   }
