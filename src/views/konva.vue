@@ -243,7 +243,8 @@ import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import Dialog from '@/views/components/Dialog'
 import updateInfo from '@/common/json/updateInfo.json'
 import {
-  randomValue
+  randomValue,
+  weightRandom
 } from '@/common/utils'
 
 const width = window.innerWidth;
@@ -448,21 +449,47 @@ export default {
         return item.label === 'box'
       })
       if(boxInfo.length){
-        let boxLevel = this.protagonist.level + randomValue({ min:-3, max:1})
-        if(boxLevel <= 1){
-          boxLevel = 1
-        }
-        let sums = randomValue({ min:3, max:5 })
-        let itemsNum = {
+        let boxLevel = this.protagonist.level + randomValue({ min:-3, max:1}),
+        sums = randomValue({ min:3, max:5 }),
+        itemsNum = {
           weapon:0,
           armor:0,
           medicine:0
+        },
+        itemWeight = [
+          {
+            value:1,
+            weight:10
+          },
+          {
+            value:2,
+            weight:20
+          },
+          {
+            value:3,
+            weight:70
+          }
+        ]
+
+        if(boxLevel <= 1){
+          boxLevel = 1
         }
-        itemsNum.medicine = randomValue({ min:1, max:(sums - 1) })
-        itemsNum.armor = randomValue({ min:0, max:(sums - itemsNum.medicine) })
-        if((sums - itemsNum.medicine - itemsNum.armor) > 0){
-          itemsNum.weapon = randomValue({ min:0, max:(sums - itemsNum.medicine - itemsNum.armor) })
+
+        for(let j=1;j<=sums;j++){
+          let i = weightRandom(itemWeight)
+          if(i === 1){
+            itemsNum.weapon++
+          }else if(i === 2){
+            itemsNum.armor++
+          }else{
+            itemsNum.medicine++
+          }
         }
+        // itemsNum.medicine = randomValue({ min:1, max:(sums - 1) })
+        // itemsNum.armor = randomValue({ min:0, max:(sums - itemsNum.medicine) })
+        // if((sums - itemsNum.medicine - itemsNum.armor) > 0){
+        //   itemsNum.weapon = randomValue({ min:0, max:(sums - itemsNum.medicine - itemsNum.armor) })
+        // }
 
         let medicines = this.itemRandomCreate('medicine',boxLevel,itemsNum.medicine)
         let armors = this.itemRandomCreate('armor',boxLevel,itemsNum.armor)
