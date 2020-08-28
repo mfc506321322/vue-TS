@@ -168,7 +168,7 @@
         </div>
       </div>
     </div>
-    <div class="function_area" v-if="archiveShowInfo">
+    <div class="function_area">
       <div class="function_btn_box">
         <el-popconfirm
           confirmButtonText='确定'
@@ -191,7 +191,7 @@
           <button class="function_btn" slot="reference">载入存档</button>
         </el-popconfirm>
       </div>
-      <div class="archive_info">
+      <div class="archive_info" v-if="archiveShowInfo">
         <span class="archive_title">存档</span>
         <span>关卡：{{archiveShowInfo.currentLevel}}</span>
         <span>所在地图：{{archiveShowInfo.mapName}}</span>
