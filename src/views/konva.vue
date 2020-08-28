@@ -193,7 +193,7 @@
       </div>
       <div class="archive_info" v-if="archiveShowInfo">
         <span class="archive_title">存档</span>
-        <span>关卡：{{archiveShowInfo.currentLevel}}</span>
+        <span>关卡：{{archiveShowInfo.currentLevel + 1}}</span>
         <span>所在地图：{{archiveShowInfo.mapName}}</span>
         <span>人物血量：{{archiveShowInfo.hp}}</span>
       </div>
