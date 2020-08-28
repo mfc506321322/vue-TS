@@ -242,6 +242,10 @@ import enemyDatas from '@/common/json/enemy.json'
 import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import Dialog from '@/views/components/Dialog'
 import updateInfo from '@/common/json/updateInfo.json'
+import {
+  randomValue
+} from '@/common/utils'
+
 const width = window.innerWidth;
 const height = window.innerHeight;
 let localStorage = window.localStorage
@@ -444,20 +448,20 @@ export default {
         return item.label === 'box'
       })
       if(boxInfo.length){
-        let boxLevel = this.protagonist.level + this.randomValue({ min:-3, max:1})
+        let boxLevel = this.protagonist.level + randomValue({ min:-3, max:1})
         if(boxLevel <= 1){
           boxLevel = 1
         }
-        let sums = this.randomValue({ min:3, max:5 })
+        let sums = randomValue({ min:3, max:5 })
         let itemsNum = {
           weapon:0,
           armor:0,
           medicine:0
         }
-        itemsNum.medicine = this.randomValue({ min:1, max:(sums - 1) })
-        itemsNum.armor = this.randomValue({ min:0, max:(sums - itemsNum.medicine) })
+        itemsNum.medicine = randomValue({ min:1, max:(sums - 1) })
+        itemsNum.armor = randomValue({ min:0, max:(sums - itemsNum.medicine) })
         if((sums - itemsNum.medicine - itemsNum.armor) > 0){
-          itemsNum.weapon = this.randomValue({ min:0, max:(sums - itemsNum.medicine - itemsNum.armor) })
+          itemsNum.weapon = randomValue({ min:0, max:(sums - itemsNum.medicine - itemsNum.armor) })
         }
 
         let medicines = this.itemRandomCreate('medicine',boxLevel,itemsNum.medicine)
@@ -479,16 +483,16 @@ export default {
       for(let i=0;i<num;i++){
         let obj = {}
         let id = Math.floor(Math.random() * 899999999 + 100000000)
-        let descRdm = this.randomValue({ min:1, max:99999 }).toString(36)
+        let descRdm = randomValue({ min:1, max:99999 }).toString(36)
         switch(species){
           case 'medicine':{
             obj = {
               id,
               species,
               speciesDesc:'药',
-              type:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })].name,
-              typeDesc:medicineType[this.randomValue({ min:0, max:medicineType.length - 1 })].desc,
-              hp:level * this.randomValue({ min:20, max:30 })
+              type:medicineType[randomValue({ min:0, max:medicineType.length - 1 })].name,
+              typeDesc:medicineType[randomValue({ min:0, max:medicineType.length - 1 })].desc,
+              hp:level * randomValue({ min:20, max:30 })
             }
             obj.price = Math.floor(obj.hp / 2.5)
             break
@@ -498,9 +502,9 @@ export default {
               id,
               species,
               speciesDesc:'防具',
-              type:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].name,
-              typeDesc:armorType[this.randomValue({ min:0, max:armorType.length - 1 })].desc + descRdm,
-              defense:level * this.randomValue({ min:6, max:9 })
+              type:armorType[randomValue({ min:0, max:armorType.length - 1 })].name,
+              typeDesc:armorType[randomValue({ min:0, max:armorType.length - 1 })].desc + descRdm,
+              defense:level * randomValue({ min:6, max:9 })
             }
             obj.price = Math.floor(obj.defense * 2)
             break
@@ -510,9 +514,9 @@ export default {
               id,
               species,
               speciesDesc:'武器',
-              type:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].name,
-              typeDesc:weaponType[this.randomValue({ min:0, max:weaponType.length - 1 })].desc + descRdm,
-              attack:level * this.randomValue({ min:6, max:9})
+              type:weaponType[randomValue({ min:0, max:weaponType.length - 1 })].name,
+              typeDesc:weaponType[randomValue({ min:0, max:weaponType.length - 1 })].desc + descRdm,
+              attack:level * randomValue({ min:6, max:9})
             }
             obj.price = Math.floor(obj.attack * 2.5)
             break
@@ -527,16 +531,16 @@ export default {
         return []
       }
       let plevel = this.protagonist.level,
-      num = this.randomValue({ min:1, max:3 }),
+      num = randomValue({ min:1, max:3 }),
       arr = [],
       names = enemyDatas.name,
       classData = enemyDatas.class
 
       for(let i = 1;i <= num;i++){
         let obj = {
-          id:this.randomValue({ min:1, max:9999999 }).toString(36),
+          id:randomValue({ min:1, max:9999999 }).toString(36),
           pid:item.id,
-          name: names[this.randomValue({ min:0, max:names.length - 1 })],
+          name: names[randomValue({ min:0, max:names.length - 1 })],
           class: 0,
           classDesc: '',
           level: 1,
@@ -550,21 +554,21 @@ export default {
           let classArr = classData.filter(item => {
             return item.class <= Math.ceil(plevel / 10)
           })
-          let randomClass = classArr[this.randomValue({ min:0, max:classArr.length - 1 })]
+          let randomClass = classArr[randomValue({ min:0, max:classArr.length - 1 })]
           obj.class = randomClass.class
           obj.classDesc = randomClass.desc
         }
 
-        let randomLevel = this.randomValue({ min:-1, max:2 })
+        let randomLevel = randomValue({ min:-1, max:2 })
         obj.level = randomLevel + plevel
         if(obj.level <= 1){
           obj.level = 1
         }
         obj.level = obj.level + obj.class
         let levelRelated = Math.floor(Math.pow(obj.level, 1.4))
-        obj.attack = 5 + levelRelated * this.randomValue({ min:2, max:3 })
-        obj.defense = 3 + levelRelated * this.randomValue({ min:2, max:3 })
-        obj.hp = 25 + levelRelated * this.randomValue({ min:6, max:9 })
+        obj.attack = 5 + levelRelated * randomValue({ min:2, max:3 })
+        obj.defense = 3 + levelRelated * randomValue({ min:2, max:3 })
+        obj.hp = 25 + levelRelated * randomValue({ min:6, max:9 })
         obj.exp = obj.level * 100
         arr.push(obj)
       }
@@ -800,9 +804,9 @@ export default {
         ++this.protagonist.level
         this.protagonist.maxExp = 100 * Math.pow(this.protagonist.level,2) + 100
 
-        let attack = this.randomValue({min:6,max:9}),
-        defense = this.randomValue({min:4,max:6}),
-        hp = this.randomValue({min:14,max:21})
+        let attack = randomValue({min:6,max:9}),
+        defense = randomValue({min:4,max:6}),
+        hp = randomValue({min:14,max:21})
 
         this.protagonist.basisAttack += attack
         this.protagonist.basisDefense += defense
@@ -825,7 +829,7 @@ export default {
     },
     endlessMode(){
       let arr = [],
-      mapNum = this.randomValue({min:6,max:12})
+      mapNum = randomValue({min:6,max:12})
       for(let i = 1;i<=mapNum;i++){
         let obj = {
           id: [i],
@@ -847,8 +851,8 @@ export default {
         Object.assign(obj, mapText)
         childArr.push(obj)
         if(Math.random() <= 0.25){
-          let childNum = this.randomValue({min:1, max:4}),
-          startNum = this.randomValue({min:-4, max:-1})
+          let childNum = randomValue({min:1, max:4}),
+          startNum = randomValue({min:-4, max:-1})
           if(Math.random() <= 0.5){
             if(Math.random() <= 0.5){
               startNum = 1
@@ -874,7 +878,7 @@ export default {
       return arr
     },
     randomMapContent(){
-      let text = enlessModeMap.name[this.randomValue({min:0, max:enlessModeMap.name.length - 1})],
+      let text = enlessModeMap.name[randomValue({min:0, max:enlessModeMap.name.length - 1})],
       config = {}
 
       if(Math.random() <= 0.4){
@@ -884,7 +888,7 @@ export default {
               {
                 text: '箱子',
                 label: 'box',
-                level: this.randomValue({min:1, max:5})
+                level: randomValue({min:1, max:5})
               }
             ]
           }
@@ -927,13 +931,6 @@ export default {
           center:true
         })
       }
-    },
-    randomValue(config={}){
-      let configs = Object.assign({
-        min:1,
-        max:10,
-      },config)
-      return Math.floor(Math.random() * ( configs.max - configs.min + 1 ) + configs.min)
     }
   },
 }

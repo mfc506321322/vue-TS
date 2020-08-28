@@ -29,6 +29,10 @@
 <script>
 import fightDescData from '@/common/json/fightDescData.json'
 import _ from 'lodash'
+import {
+  randomValue
+} from '@/common/utils'
+
 export default {
   name:'Dialog',
   components: {},
@@ -101,7 +105,7 @@ export default {
       this.timer = setInterval(() => {
         let damage = 0,
         identity = this.count % 2,
-        desc = fightDescData[this.randomValue({ min:0, max:fightDescData.length - 1 })]
+        desc = fightDescData[randomValue({ min:0, max:fightDescData.length - 1 })]
 
         if(identity){
           damage = this.damageHandle(patk, edef)
@@ -122,7 +126,7 @@ export default {
       },1000)
     },
     damageHandle(atk, def){
-      let damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 5)) * this.randomValue({min:8, max:11}) / 10)
+      let damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 5)) * randomValue({min:8, max:11}) / 10)
       if(damage <= 0){
         damage = 1
       }
@@ -153,13 +157,6 @@ export default {
         }[$1]
       })
       return text
-    },
-    randomValue(config={}){
-      let configs = Object.assign({
-        min:1,
-        max:10,
-      },config)
-      return Math.floor(Math.random() * ( configs.max - configs.min + 1 ) + configs.min)
     }
   }
 }
