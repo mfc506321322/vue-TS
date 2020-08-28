@@ -97,6 +97,10 @@
         class="pass_btn"
         @click="passForward"
       >点击前往下一关卡</button>
+      <!-- <button
+        class="pass_btn"
+        @click="passForward"
+      >点击前往下一关卡</button> -->
     </div>
     <div class="protagonist_info_area">
       <div class="info_block">
@@ -164,6 +168,36 @@
         </div>
       </div>
     </div>
+    <div class="function_area" v-if="archiveShowInfo">
+      <div class="function_btn_box">
+        <el-popconfirm
+          confirmButtonText='确定'
+          cancelButtonText='取消'
+          icon="el-icon-info"
+          iconColor="green"
+          title="确定要保存当前状态吗？"
+          @onConfirm="saveOrReadArchive()"
+        >
+          <button class="function_btn" slot="reference">保存存档</button>
+        </el-popconfirm>
+        <el-popconfirm
+          confirmButtonText='确定'
+          cancelButtonText='取消'
+          icon="el-icon-info"
+          iconColor="#FFCC00"
+          title="确定要读取存档吗？"
+          @onConfirm="saveOrReadArchive(true)"
+        >
+          <button class="function_btn" slot="reference">载入存档</button>
+        </el-popconfirm>
+      </div>
+      <div class="archive_info">
+        <span class="archive_title">存档</span>
+        <span>关卡：{{archiveShowInfo.currentLevel}}</span>
+        <span>所在地图：{{archiveShowInfo.mapName}}</span>
+        <span>人物血量：{{archiveShowInfo.hp}}</span>
+      </div>
+    </div>
     <div class="dialog">
       <Dialog
       :nowEnemyData="nowEnemyData"
@@ -210,6 +244,7 @@ import Dialog from '@/views/components/Dialog'
 import updateInfo from '@/common/json/updateInfo.json'
 const width = window.innerWidth;
 const height = window.innerHeight;
+let localStorage = window.localStorage
 export default {
   name: 'Konva',
   components: {
@@ -250,17 +285,18 @@ export default {
         maxBox: 15,
         box: [],
         selectWeapon: {},
-        selectArmor: {},
-        placeCellInfo: {}
+        selectArmor: {}
       },
       nowEnemyData:{},
       showBattleDialog:false,
-      showPassBtn:false
+      showPassBtn:false,
+      archiveShowInfo:null
     };
   },
   mounted() {
     this.initMapData = map
     this.initMap()
+    this.archiveShowInfo = JSON.parse(localStorage.getItem('archiveShowInfo'))
   },
   computed:{
     progressBarHp(){
@@ -399,7 +435,6 @@ export default {
     },
     initData(item){
       if(this.protagonist.coordinate.join('') === item.id.join('')){
-        this.protagonist.placeCellInfo = item
         this.selectCell = item
       }
     },
@@ -545,7 +580,7 @@ export default {
     protagonistMove(item){
       let coordinate = this.protagonist.coordinate,
       itemId = item.id,
-      pSide = this.protagonist.placeCellInfo.passage.side,
+      pSide = this.selectCell.passage.side,
       iSide = item.passage.side
 
       if(coordinate.join('') === itemId.join(''))return
@@ -567,7 +602,7 @@ export default {
         })
       }
       if(xDiff === 1){
-        if((itemId[0] - coordinate[0] === 1 && !this.protagonist.placeCellInfo.passage.after) || 
+        if((itemId[0] - coordinate[0] === 1 && !this.selectCell.passage.after) || 
         (itemId[0] - coordinate[0] === -1 && !item.passage.after)){
           return this.$message({
             message:'不可移动',
@@ -611,7 +646,6 @@ export default {
 
       let obj = _.cloneDeep(item)
       this.selectCell = obj
-      this.protagonist.placeCellInfo = item
       this.protagonist.coordinate = item.id
       this.redrawMapColor()
     },
@@ -708,11 +742,13 @@ export default {
         this.expHandle(enemy)
         this.passJudgment()
       }else{
-        this.$alert('胜败乃兵家常事，大侠请重新来过', '征程失利', {
-          confirmButtonText: '确定',
-          callback: action => {
-            location.reload()
-          }
+        this.$confirm('胜败乃兵家常事，大侠请重新来过', '征程失利', {
+          confirmButtonText: '读取本关存档',
+          cancelButtonText: '重新开始'
+        }).then(() => {
+          this.saveOrReadArchive(true)
+        }).catch(() => {
+          location.reload()
         })
       }
     },
@@ -741,6 +777,9 @@ export default {
       this.showBattleDialog = false
       this.showPassBtn = false
       this.initMap()
+      this.$nextTick(() => {
+        this.saveOrReadArchive()
+      })
     },
     expHandle(enemy){
       let {
@@ -782,7 +821,6 @@ export default {
           })
         })
       }
-      console.log('exp',eExp,enemy.level)
       this.protagonist.exp = exp
     },
     endlessMode(){
@@ -858,6 +896,37 @@ export default {
         ...config
       }
       return obj
+    },
+    saveOrReadArchive(flag){
+      if(flag){
+        this.showBattleDialog = false
+        this.protagonist = JSON.parse(localStorage.getItem('protagonist'))
+        this.mapList = JSON.parse(localStorage.getItem('mapList'))
+        this.selectCell = JSON.parse(localStorage.getItem('selectCell'))
+        this.$message({
+          message:'读取存档成功',
+          type:'success',
+          center:true
+        })
+      }else{
+        let protagonist = JSON.stringify(this.protagonist),
+        mapList = JSON.stringify(this.mapList),
+        selectCell = JSON.stringify(this.selectCell)
+        localStorage.setItem('protagonist',protagonist)
+        localStorage.setItem('mapList',mapList)
+        localStorage.setItem('selectCell',selectCell)
+        this.archiveShowInfo = {
+          currentLevel:this.currentLevel,
+          mapName:this.selectCell.text,
+          hp:this.protagonist.hp
+        }
+        localStorage.setItem('archiveShowInfo',JSON.stringify(this.archiveShowInfo))
+        this.$message({
+          message:'已存档',
+          type:'success',
+          center:true
+        })
+      }
     },
     randomValue(config={}){
       let configs = Object.assign({
@@ -1060,6 +1129,39 @@ button{
       margin-bottom: 20px;
       font-weight: bold;
       font-size: 14px;
+    }
+  }
+  .function_area{
+    background-color: #FFF5EE;
+    padding: 10px;
+    border-top: 2px solid #999;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .function_btn_box{
+      .function_btn{
+        margin-right: 10px;
+      }
+    }
+    .archive_info{
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      border: 2px solid #00CCFF;
+      font-size: 14px;
+      padding: 0 5px;
+      span{
+        line-height: 20px;
+        margin-right: 10px;
+        &.archive_title{
+          border-right: 2px solid #00CCFF;
+          margin-right: 5px;
+          padding-right: 5px;
+        }
+        &:last-child{
+          margin-right: 0;
+        }
+      }
     }
   }
 }
