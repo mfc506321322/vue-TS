@@ -449,7 +449,29 @@ export default {
         return item.label === 'box'
       })
       if(boxInfo.length){
-        let boxLevel = this.protagonist.level + randomValue({ min:-3, max:1}),
+        let boxLevelWeight = [
+          {
+            value:-2,
+            weight:50
+          },
+          {
+            value:-1,
+            weight:40
+          },
+          {
+            value:0,
+            weight:30
+          },
+          {
+            value:1,
+            weight:20
+          },
+          {
+            value:2,
+            weight:10
+          }
+        ],
+        boxLevel = this.protagonist.level + weightRandom(boxLevelWeight),
         sums = randomValue({ min:3, max:5 }),
         itemsNum = {
           weapon:0,
