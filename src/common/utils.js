@@ -3,7 +3,11 @@ const randomValue = function(config={}){
   let configs = Object.assign({
     min:1,
     max:10,
+    arr:[]
   },config)
+  if(configs.arr.length > 0){
+    return configs.arr[randomValue({ min:0, max:configs.arr.length - 1 })]
+  }
   return Math.floor(Math.random() * ( configs.max - configs.min + 1 ) + configs.min)
 }
 
@@ -23,25 +27,20 @@ const commonDivisor = function(arrs){
   }
 }
 
-const weightRandom = function(arr,type=false){
-  let weightArr = arr.map(item => {
-    return item.weight
-  }),
-  newWeightArr = commonDivisor(weightArr).newArr,
-  newArr = [],
-  value = null
-  arr.forEach((item,index) => {
-    for(let i=1;i<=newWeightArr[index];i++){
-      newArr.push(item.value)
+const weightRandom = function(arrConfig,type=false){
+  let weightArr = commonDivisor(arrConfig.weight).newArr,
+  newArr = []
+  arrConfig.value.forEach((item,index) => {
+    for(let i=1;i<=weightArr[index];i++){
+      newArr.push(item)
     }
     // newArr.fill(item.value,newArr.length,newArr.length+newWeightArr[index]-1)
   })
   newArr = Shuffle(newArr)
   if(type){
-    return newArr
+    return randomValue({ arr:newArr })
   }else{
-    value = newArr[randomValue({ min:0,max:newArr.length - 1 })]
-    return value
+    return newArr
   }
 }
 

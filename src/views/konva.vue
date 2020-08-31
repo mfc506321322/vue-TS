@@ -295,10 +295,19 @@ export default {
       nowEnemyData:{},
       showBattleDialog:false,
       showPassBtn:false,
-      archiveShowInfo:null
+      archiveShowInfo:null,
+      boxLevelWeight:weightRandom({
+        value:[-2, -1, 0, 1, 2],
+        weight:[50, 40, 30, 20, 10]
+      }),
+      itemWeight:weightRandom({
+        value:[1, 2, 3],
+        weight:[15, 25, 75]
+      })
     };
   },
   mounted() {
+    console.log(this.boxLevelWeight,this.itemWeight)
     this.initMapData = map
     this.initMap()
     this.archiveShowInfo = JSON.parse(localStorage.getItem('archiveShowInfo'))
@@ -449,53 +458,16 @@ export default {
         return item.label === 'box'
       })
       if(boxInfo.length){
-        let boxLevelWeight = [
-          {
-            value:-2,
-            weight:50
-          },
-          {
-            value:-1,
-            weight:40
-          },
-          {
-            value:0,
-            weight:30
-          },
-          {
-            value:1,
-            weight:20
-          },
-          {
-            value:2,
-            weight:10
-          }
-        ],
-        boxLevel = this.protagonist.level + weightRandom(boxLevelWeight),
+        let boxLevel = this.protagonist.level + randomValue({ arr:this.boxLevelWeight }),
         sums = randomValue({ min:3, max:5 }),
         itemsNum = {
           weapon:0,
           armor:0,
           medicine:0
-        },
-        itemWeight = [
-          {
-            value:1,
-            weight:15
-          },
-          {
-            value:2,
-            weight:25
-          },
-          {
-            value:3,
-            weight:75
-          }
-        ],
-        weightArr = weightRandom(itemWeight,true)
+        }
 
         for(let j=1;j<=sums;j++){
-          let i = weightArr[randomValue({ min:0,max:weightArr.length - 1 })]
+          let i = randomValue({ arr:this.itemWeight })
           if(i === 1){
             itemsNum.weapon++
           }else if(i === 2){
@@ -539,8 +511,8 @@ export default {
               id,
               species,
               speciesDesc:'药',
-              type:medicineType[randomValue({ min:0, max:medicineType.length - 1 })].name,
-              typeDesc:medicineType[randomValue({ min:0, max:medicineType.length - 1 })].desc,
+              type:randomValue({ arr:medicineType }).name,
+              typeDesc:randomValue({ arr:medicineType }).desc,
               hp:level * randomValue({ min:15, max:25 })
             }
             obj.price = Math.floor(obj.hp / 3)
@@ -551,8 +523,8 @@ export default {
               id,
               species,
               speciesDesc:'防具',
-              type:armorType[randomValue({ min:0, max:armorType.length - 1 })].name,
-              typeDesc:armorType[randomValue({ min:0, max:armorType.length - 1 })].desc + descRdm,
+              type:randomValue({ arr:armorType }).name,
+              typeDesc:randomValue({ arr:armorType }).desc + descRdm,
               defense:level * randomValue({ min:6, max:9 })
             }
             obj.price = Math.floor(obj.defense * 2)
@@ -563,8 +535,8 @@ export default {
               id,
               species,
               speciesDesc:'武器',
-              type:weaponType[randomValue({ min:0, max:weaponType.length - 1 })].name,
-              typeDesc:weaponType[randomValue({ min:0, max:weaponType.length - 1 })].desc + descRdm,
+              type:randomValue({ arr:weaponType }).name,
+              typeDesc:randomValue({ arr:weaponType }).desc + descRdm,
               attack:level * randomValue({ min:6, max:9})
             }
             obj.price = Math.floor(obj.attack * 2.5)
@@ -589,7 +561,7 @@ export default {
         let obj = {
           id:randomValue({ min:1, max:9999999 }).toString(36),
           pid:item.id,
-          name: names[randomValue({ min:0, max:names.length - 1 })],
+          name: randomValue({ arr:names }),
           class: 0,
           classDesc: '',
           level: 1,
@@ -603,7 +575,7 @@ export default {
           let classArr = classData.filter(item => {
             return item.class <= Math.ceil(plevel / 10)
           })
-          let randomClass = classArr[randomValue({ min:0, max:classArr.length - 1 })]
+          let randomClass = randomValue({ arr:classArr })
           obj.class = randomClass.class
           obj.classDesc = randomClass.desc
         }
@@ -927,7 +899,7 @@ export default {
       return arr
     },
     randomMapContent(){
-      let text = enlessModeMap.name[randomValue({min:0, max:enlessModeMap.name.length - 1})],
+      let text = randomValue({ arr:enlessModeMap.name }),
       config = {}
 
       if(Math.random() <= 0.4){

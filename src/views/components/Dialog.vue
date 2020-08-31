@@ -59,7 +59,11 @@ export default {
       fightList:[],
       php:0,
       ehp:0,
-      count:1
+      count:1,
+      critWeight:weightRandom({
+        value:[0.8, 0.9, 1, 1.1, 1.2],
+        weight:[10, 20, 50, 20, 10]
+      })
     }
   },
   computed: {
@@ -100,43 +104,20 @@ export default {
       pdef = this.protagonistData.defense,
       eatk = this.nowEnemyData.attack,
       edef = this.nowEnemyData.defense,
-      classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc,
-      critWeightConfig = [
-        {
-          value:0.8,
-          weight:10
-        },
-        {
-          value:0.9,
-          weight:20
-        },
-        {
-          value:1,
-          weight:50
-        },
-        {
-          value:1.1,
-          weight:20
-        },
-        {
-          value:1.2,
-          weight:10
-        }
-      ],
-      critWeightArr = weightRandom(critWeightConfig,true)
+      classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc
 
       console.log(`patk:${patk},edef:${edef},eatk:${eatk},pdef:${pdef}`)
       this.timer = setInterval(() => {
         let damage = 0,
         identity = this.count % 2,
-        desc = fightDescData[randomValue({ min:0, max:fightDescData.length - 1 })]
+        desc = randomValue({ arr:fightDescData })
 
         if(identity){
-          damage = this.damageHandle(patk, edef, critWeightArr)
+          damage = this.damageHandle(patk, edef, this.critWeight)
           this.ehp = this.ehp - damage
           desc = this.descHandle(desc,this.protagonistData.name,classDesc,damage)
         }else{
-          damage = this.damageHandle(eatk, pdef, critWeightArr)
+          damage = this.damageHandle(eatk, pdef, this.critWeight)
           this.php = this.php - damage
           desc = this.descHandle(desc,classDesc,this.protagonistData.name,damage)
         }
@@ -150,7 +131,7 @@ export default {
       },1000)
     },
     damageHandle(atk, def, critWeightArr){
-      let crit = critWeightArr[randomValue({ min:0,max:critWeightArr.length - 1 })],
+      let crit = randomValue({ arr:critWeightArr }),
       damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 8)) * crit)
       if(damage <= 0){
         damage = 1
