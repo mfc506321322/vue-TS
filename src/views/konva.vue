@@ -81,13 +81,14 @@
           v-for="(item,index) in selectCell.itemsList"
           :key="index"
           @click="itemClick(item, selectCell)"
+          :class="item.species === 'weapon' ? 'weapon_item' :
+            item.species === 'armor' ? 'armor_item' :
+            item.species === 'medicine' ? 'medicine_item' : null"
         >
           <span>物品种类: {{item.speciesDesc}}-{{item.typeDesc}}</span>
-          <span>{{
-            item.species === 'weapon' ? `攻击: ${item.attack}` :
-            item.species === 'armor' ? `防御: ${item.defense}` :
-            item.species === 'medicine' ? `回血: ${item.hp}` : ''
-          }}</span>
+          <span v-if="item.species === 'weapon'">攻击: {{item.attack}}</span>
+          <span v-if="item.species === 'armor'">防御: {{item.defense}}</span>
+          <span v-if="item.species === 'medicine'">回血: {{item.hp}}</span>
           <span>价格: {{item.price}}金</span>
         </li>
         <li class="cell_content_list_empty" v-if="selectCell.itemsList.length === 0">空</li>
@@ -107,8 +108,18 @@
         <ul class="states">
           <li class="name">角色名: {{protagonist.name}}</li>
           <li>等级: {{protagonist.level}}</li>
-          <li>攻击: {{protagonist.attack}}</li>
-          <li>防御: {{protagonist.defense}}</li>
+          <li>攻击: {{protagonist.attack}}
+            <span 
+            class="attr_detail" 
+            v-if="protagonist.selectWeapon.attack"
+            >(基本:{{protagonist.basisAttack}}+武器:{{protagonist.selectWeapon.attack}})</span>
+          </li>
+          <li>防御: {{protagonist.defense}}
+            <span 
+            class="attr_detail"
+            v-if="protagonist.selectArmor.defense"
+            >(基本:{{protagonist.basisDefense}}+防具:{{protagonist.selectArmor.defense}})</span>
+          </li>
           <li 
             class="progress_bar"
             :style="{
@@ -132,13 +143,14 @@
             v-for="(item,index) in protagonist.box"
             :key="index"
             @dblclick="boxItemClick(item)"
+            :class="item.species === 'weapon' ? 'weapon_item' :
+            item.species === 'armor' ? 'armor_item' :
+            item.species === 'medicine' ? 'medicine_item' : null"
           >
             <span>{{item.typeDesc}}</span>
-            <span>{{
-              item.species === 'weapon' ? `${item.attack}atk` :
-              item.species === 'armor' ? `${item.defense}def` :
-              item.species === 'medicine' ? `${item.hp}hp` : ''
-            }}</span>
+            <span v-if="item.species === 'weapon'">{{item.attack}}atk</span>
+            <span v-if="item.species === 'armor'">{{item.defense}}def</span>
+            <span v-if="item.species === 'medicine'">{{item.hp}}hp</span>
             <span>{{item.price}}金</span>
             <el-popconfirm
               class="item_destroy_box"
@@ -198,14 +210,6 @@
         <span>人物血量：{{archiveShowInfo.hp}}</span>
       </div>
     </div>
-    <div class="dialog">
-      <Dialog
-      :nowEnemyData="nowEnemyData"
-      :protagonistData="protagonist"
-      :isShow.sync="showBattleDialog"
-      @fightEnd="fightEnd"
-      ></Dialog>
-    </div>
     <div class="update_info">
       <el-collapse v-model="insNames" class="ins_box">
         <el-collapse-item title="操作说明" name="1">
@@ -229,6 +233,14 @@
           {{item.content}}
         </el-timeline-item>
       </el-timeline>
+    </div>
+    <div class="dialog">
+      <Dialog
+      :nowEnemyData="nowEnemyData"
+      :protagonistData="protagonist"
+      :isShow.sync="showBattleDialog"
+      @fightEnd="fightEnd"
+      ></Dialog>
     </div>
   </div>
 </template>
@@ -306,7 +318,7 @@ export default {
       }),
       enemyLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
-        weight:[30, 50, 30, 20, 10]
+        weight:[20, 40, 30, 20, 10]
       })
     };
   },
@@ -1022,7 +1034,6 @@ button{
       font-size: 12px;
       li{
         cursor: pointer;
-        background-color: #ADD8E6;
         padding: 5px;
         border-radius: 4px;
         line-height: 16px;
@@ -1031,9 +1042,17 @@ button{
           margin-bottom: 0;
         }
         &.cell_content_list_empty{
-          background-color: #FFF;
           text-align: center;
           margin-bottom: 0;
+        }
+        &.weapon_item{
+          background-color: #ffb649;
+        }
+        &.armor_item{
+          background-color: #ADD8E6;
+        }
+        &.medicine_item{
+          background-color: #ff7e7e;
         }
         span{
           display: inline-block;
@@ -1058,7 +1077,7 @@ button{
     display: flex;
     .info_block{
       min-height: 80px;
-      width: 200px;
+      width: 220px;
       margin-right: 10px;
     }
     .states{
@@ -1090,6 +1109,10 @@ button{
             left: 0;
           }
         }
+        .attr_detail{
+          color: #1bb8ec;
+          font-size: 12px;
+        }
       }
     }
     .cell_content_list{
@@ -1102,7 +1125,6 @@ button{
       overflow-y: auto;
       li{
         cursor: pointer;
-        background-color: #ADD8E6;
         padding: 5px;
         border-radius: 4px;
         line-height: 16px;
@@ -1111,9 +1133,17 @@ button{
           margin-bottom: 0;
         }
         &.cell_content_list_empty{
-          background-color: #FFF;
           text-align: center;
           margin-bottom: 0;
+        }
+        &.weapon_item{
+          background-color: #ffb649;
+        }
+        &.armor_item{
+          background-color: #ADD8E6;
+        }
+        &.medicine_item{
+          background-color: #ff7e7e;
         }
         span{
           display: inline-block;
