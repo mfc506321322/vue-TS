@@ -1,3 +1,4 @@
+import Shuffle from 'lodash/_arrayShuffle'
 const randomValue = function(config={}){
   let configs = Object.assign({
     min:1,
@@ -22,7 +23,7 @@ const commonDivisor = function(arrs){
   }
 }
 
-const weightRandom = function(arr){
+const weightRandom = function(arr,type=false){
   let weightArr = arr.map(item => {
     return item.weight
   }),
@@ -35,8 +36,13 @@ const weightRandom = function(arr){
     }
     // newArr.fill(item.value,newArr.length,newArr.length+newWeightArr[index]-1)
   })
-  value = newArr[randomValue({ min:0,max:newArr.length - 1 })]
-  return value
+  newArr = Shuffle(newArr)
+  if(type){
+    return newArr
+  }else{
+    value = newArr[randomValue({ min:0,max:newArr.length - 1 })]
+    return value
+  }
 }
 
 

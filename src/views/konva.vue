@@ -481,24 +481,21 @@ export default {
         itemWeight = [
           {
             value:1,
-            weight:10
+            weight:15
           },
           {
             value:2,
-            weight:20
+            weight:25
           },
           {
             value:3,
-            weight:70
+            weight:75
           }
-        ]
-
-        if(boxLevel <= 1){
-          boxLevel = 1
-        }
+        ],
+        weightArr = weightRandom(itemWeight,true)
 
         for(let j=1;j<=sums;j++){
-          let i = weightRandom(itemWeight)
+          let i = weightArr[randomValue({ min:0,max:weightArr.length - 1 })]
           if(i === 1){
             itemsNum.weapon++
           }else if(i === 2){
@@ -506,6 +503,9 @@ export default {
           }else{
             itemsNum.medicine++
           }
+        }
+        if(boxLevel <= 1){
+          boxLevel = 1
         }
         // itemsNum.medicine = randomValue({ min:1, max:(sums - 1) })
         // itemsNum.armor = randomValue({ min:0, max:(sums - itemsNum.medicine) })
@@ -541,9 +541,9 @@ export default {
               speciesDesc:'药',
               type:medicineType[randomValue({ min:0, max:medicineType.length - 1 })].name,
               typeDesc:medicineType[randomValue({ min:0, max:medicineType.length - 1 })].desc,
-              hp:level * randomValue({ min:20, max:30 })
+              hp:level * randomValue({ min:15, max:25 })
             }
-            obj.price = Math.floor(obj.hp / 2.5)
+            obj.price = Math.floor(obj.hp / 3)
             break
           }
           case 'armor':{
@@ -608,7 +608,7 @@ export default {
           obj.classDesc = randomClass.desc
         }
 
-        let randomLevel = randomValue({ min:-1, max:2 })
+        let randomLevel = randomValue({ min:-1, max:1 })
         obj.level = randomLevel + plevel
         if(obj.level <= 1){
           obj.level = 1
@@ -617,7 +617,7 @@ export default {
         let levelRelated = Math.floor(Math.pow(obj.level, 1.4))
         obj.attack = 5 + levelRelated * randomValue({ min:2, max:3 })
         obj.defense = 3 + levelRelated * randomValue({ min:2, max:3 })
-        obj.hp = 25 + levelRelated * randomValue({ min:6, max:9 })
+        obj.hp = 20 + levelRelated * randomValue({ min:6, max:9 })
         obj.exp = obj.level * 100
         arr.push(obj)
       }
@@ -956,6 +956,7 @@ export default {
         this.protagonist = JSON.parse(localStorage.getItem('protagonist'))
         this.mapList = JSON.parse(localStorage.getItem('mapList'))
         this.selectCell = JSON.parse(localStorage.getItem('selectCell'))
+        this.currentLevel = JSON.parse(localStorage.getItem('currentLevel'))
         this.$message({
           message:'读取存档成功',
           type:'success',
@@ -968,6 +969,7 @@ export default {
         localStorage.setItem('protagonist',protagonist)
         localStorage.setItem('mapList',mapList)
         localStorage.setItem('selectCell',selectCell)
+        localStorage.setItem('currentLevel',this.currentLevel)
         this.archiveShowInfo = {
           currentLevel:this.currentLevel,
           mapName:this.selectCell.text,

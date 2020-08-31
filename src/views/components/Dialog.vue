@@ -30,7 +30,8 @@
 import fightDescData from '@/common/json/fightDescData.json'
 import _ from 'lodash'
 import {
-  randomValue
+  randomValue,
+  weightRandom
 } from '@/common/utils'
 
 export default {
@@ -99,8 +100,31 @@ export default {
       pdef = this.protagonistData.defense,
       eatk = this.nowEnemyData.attack,
       edef = this.nowEnemyData.defense,
-      classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc
-      
+      classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc,
+      critWeightConfig = [
+        {
+          value:0.8,
+          weight:10
+        },
+        {
+          value:0.9,
+          weight:20
+        },
+        {
+          value:1,
+          weight:50
+        },
+        {
+          value:1.1,
+          weight:20
+        },
+        {
+          value:1.2,
+          weight:10
+        }
+      ],
+      critWeightArr = weightRandom(critWeightConfig,true)
+
       console.log(`patk:${patk},edef:${edef},eatk:${eatk},pdef:${pdef}`)
       this.timer = setInterval(() => {
         let damage = 0,
@@ -108,11 +132,11 @@ export default {
         desc = fightDescData[randomValue({ min:0, max:fightDescData.length - 1 })]
 
         if(identity){
-          damage = this.damageHandle(patk, edef)
+          damage = this.damageHandle(patk, edef, critWeightArr)
           this.ehp = this.ehp - damage
           desc = this.descHandle(desc,this.protagonistData.name,classDesc,damage)
         }else{
-          damage = this.damageHandle(eatk, pdef)
+          damage = this.damageHandle(eatk, pdef, critWeightArr)
           this.php = this.php - damage
           desc = this.descHandle(desc,classDesc,this.protagonistData.name,damage)
         }
@@ -125,8 +149,9 @@ export default {
         this.fightStateJudgment()
       },1000)
     },
-    damageHandle(atk, def){
-      let damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 5)) * randomValue({min:8, max:11}) / 10)
+    damageHandle(atk, def, critWeightArr){
+      let crit = critWeightArr[randomValue({ min:0,max:critWeightArr.length - 1 })],
+      damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 8)) * crit)
       if(damage <= 0){
         damage = 1
       }
