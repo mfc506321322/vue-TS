@@ -303,11 +303,15 @@ export default {
       itemWeight:weightRandom({
         value:[1, 2, 3],
         weight:[15, 25, 75]
+      }),
+      enemyLevelWeight:weightRandom({
+        value:[-2, -1, 0, 1, 2],
+        weight:[30, 50, 30, 20, 10]
       })
     };
   },
   mounted() {
-    console.log(this.boxLevelWeight,this.itemWeight)
+    console.log(this.enemyLevelWeight)
     this.initMapData = map
     this.initMap()
     this.archiveShowInfo = JSON.parse(localStorage.getItem('archiveShowInfo'))
@@ -571,7 +575,7 @@ export default {
           exp: 100,
           box:[]
         }
-        if(Math.random() <= 0.333){
+        if(Math.random() <= 0.3){
           let classArr = classData.filter(item => {
             return item.class <= Math.ceil(plevel / 10)
           })
@@ -580,16 +584,15 @@ export default {
           obj.classDesc = randomClass.desc
         }
 
-        let randomLevel = randomValue({ min:-1, max:1 })
-        obj.level = randomLevel + plevel
+        obj.level = plevel + randomValue({ arr:this.enemyLevelWeight })
         if(obj.level <= 1){
           obj.level = 1
         }
         obj.level = obj.level + obj.class
         let levelRelated = Math.floor(Math.pow(obj.level, 1.4))
-        obj.attack = 5 + levelRelated * randomValue({ min:2, max:3 })
-        obj.defense = 3 + levelRelated * randomValue({ min:2, max:3 })
-        obj.hp = 20 + levelRelated * randomValue({ min:6, max:9 })
+        obj.attack = 5 + Math.floor(levelRelated * randomValue({ min:2, max:2.6, decimal:1 }))
+        obj.defense = 3 + Math.floor(levelRelated * randomValue({ min:2, max:2.6, decimal:1 }))
+        obj.hp = 20 + Math.floor(levelRelated * randomValue({ min:6, max:7.6, decimal:1 }))
         obj.exp = obj.level * 100
         arr.push(obj)
       }

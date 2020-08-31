@@ -3,10 +3,15 @@ const randomValue = function(config={}){
   let configs = Object.assign({
     min:1,
     max:10,
+    decimal:0,
     arr:[]
   },config)
   if(configs.arr.length > 0){
     return configs.arr[randomValue({ min:0, max:configs.arr.length - 1 })]
+  }
+  if(configs.decimal){
+    let decimalValue = (Math.random() * ( configs.max - configs.min ) + configs.min).toFixed(configs.decimal)
+    return Number(decimalValue)
   }
   return Math.floor(Math.random() * ( configs.max - configs.min + 1 ) + configs.min)
 }
