@@ -476,91 +476,69 @@ export default {
       if(boxInfo.length){
         let boxLevel = this.protagonist.level + randomValue({ arr:this.boxLevelWeight }),
         sums = randomValue({ min:3, max:5 }),
-        itemsNum = {
-          weapon:0,
-          armor:0,
-          medicine:0
-        }
+        itemsNum = []
 
         for(let j=1;j<=sums;j++){
-          let i = randomValue({ arr:this.itemWeight })
-          if(i === 1){
-            itemsNum.weapon++
-          }else if(i === 2){
-            itemsNum.armor++
-          }else{
-            itemsNum.medicine++
-          }
+          itemsNum.push(randomValue({ arr:this.itemWeight }))
         }
         if(boxLevel <= 1){
           boxLevel = 1
         }
-        // itemsNum.medicine = randomValue({ min:1, max:(sums - 1) })
-        // itemsNum.armor = randomValue({ min:0, max:(sums - itemsNum.medicine) })
-        // if((sums - itemsNum.medicine - itemsNum.armor) > 0){
-        //   itemsNum.weapon = randomValue({ min:0, max:(sums - itemsNum.medicine - itemsNum.armor) })
-        // }
-
-        let medicines = this.itemRandomCreate('medicine',boxLevel,itemsNum.medicine)
-        let armors = this.itemRandomCreate('armor',boxLevel,itemsNum.armor)
-        let weapons = this.itemRandomCreate('weapon',boxLevel,itemsNum.weapon)
-        arr = [
-          ...medicines,
-          ...armors,
-          ...weapons
-        ]
+        arr = this.itemRandomCreate(boxLevel,itemsNum)
       }
       return arr
     },
-    itemRandomCreate(species,level,num){
-      let medicineType = itemProps.medicineTemplate.type
-      let armorType = itemProps.armorTemplate.type
-      let weaponType = itemProps.weaponTemplate.type
-      let arr = []
-      for(let i=0;i<num;i++){
-        let obj = {}
-        let id = Math.floor(Math.random() * 899999999 + 100000000)
-        let descRdm = randomValue({ min:1, max:99999 }).toString(36)
-        switch(species){
-          case 'medicine':{
+    itemRandomCreate(level,itemsNum){
+      let weaponType = itemProps.weaponTemplate.type,
+      armorType = itemProps.armorTemplate.type,
+      medicineType = itemProps.medicineTemplate.type,
+      arr = itemsNum.map(item => {
+        let obj = {},
+        id = randomValue({ min:100000000, max:999999999 }),
+        descRdm = randomValue({ min:1, max:99999 }).toString(36)
+        switch(item){//1:武器 2:防具 3:药瓶
+          case 1:{
+            let typeInfo = randomValue({ arr:weaponType })
             obj = {
               id,
-              species,
-              speciesDesc:'药',
-              type:randomValue({ arr:medicineType }).name,
-              typeDesc:randomValue({ arr:medicineType }).desc,
-              hp:level * randomValue({ min:15, max:25 })
-            }
-            obj.price = Math.floor(obj.hp / 3)
-            break
-          }
-          case 'armor':{
-            obj = {
-              id,
-              species,
-              speciesDesc:'防具',
-              type:randomValue({ arr:armorType }).name,
-              typeDesc:randomValue({ arr:armorType }).desc + descRdm,
-              defense:level * randomValue({ min:6, max:9 })
-            }
-            obj.price = Math.floor(obj.defense * 2)
-            break
-          }
-          case 'weapon':{
-            obj = {
-              id,
-              species,
+              species:'weapon',
               speciesDesc:'武器',
-              type:randomValue({ arr:weaponType }).name,
-              typeDesc:randomValue({ arr:weaponType }).desc + descRdm,
+              type:typeInfo.name,
+              typeDesc:typeInfo.desc + descRdm,
               attack:level * randomValue({ min:6, max:9})
             }
             obj.price = Math.floor(obj.attack * 2.5)
             break
           }
+          case 2:{
+            let typeInfo = randomValue({ arr:armorType })
+            obj = {
+              id,
+              species:'armor',
+              speciesDesc:'防具',
+              type:typeInfo.name,
+              typeDesc:typeInfo.desc + descRdm,
+              defense:level * randomValue({ min:6, max:9 })
+            }
+            obj.price = Math.floor(obj.defense * 2)
+            break
+          }
+          case 3:{
+            let typeInfo = randomValue({ arr:medicineType })
+            obj = {
+              id,
+              species:'medicine',
+              speciesDesc:'药',
+              type:typeInfo.name,
+              typeDesc:typeInfo.desc,
+              hp:level * randomValue({ min:15, max:25 })
+            }
+            obj.price = Math.floor(obj.hp / 3)
+            break
+          }
         }
-        arr.push(obj)
-      }
+        return obj
+      })
       return arr
     },
     enemyRandomCreate(item){
