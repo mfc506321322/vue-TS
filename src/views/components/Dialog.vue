@@ -60,9 +60,9 @@ export default {
       php:0,
       ehp:0,
       count:1,
-      critWeight:weightRandom({
-        value:[0.8, 0.9, 1, 1.1, 1.2],
-        weight:[10, 20, 50, 20, 10]
+      randomDamageWeight:weightRandom({
+        value:[0.9, 1, 1.1],
+        weight:[10, 40, 10]
       })
     }
   },
@@ -100,24 +100,38 @@ export default {
       this.$emit('update:isShow',false)
     },
     fighting(){
-      let patk = this.protagonistData.attack,
-      pdef = this.protagonistData.defense,
-      eatk = this.nowEnemyData.attack,
-      edef = this.nowEnemyData.defense,
-      classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc
+      let classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc,
+      pAttr = {
+        atk:this.protagonistData.attack,
+        def:this.protagonistData.defense,
+        crit:this.protagonistData.crit,
+        dodge:this.protagonistData.dodge
+      },
+      eAttr = {
+        atk:this.nowEnemyData.attack,
+        def:this.nowEnemyData.defense,
+        crit:this.nowEnemyData.crit,
+        dodge:this.nowEnemyData.dodge
+      }
 
-      console.log(`patk:${patk},edef:${edef},eatk:${eatk},pdef:${pdef}`)
+      console.log(`eatk:${eAttr.atk},edef:${eAttr.def},ecrit:${eAttr.crit},edod:${eAttr.dodge}`)
       this.timer = setInterval(() => {
         let damage = 0,
         identity = this.count % 2,
         desc = randomValue({ arr:fightDescData })
 
         if(identity){
-          damage = this.damageHandle(patk, edef, this.critWeight)
+          damage = this.damageHandle(pAttr,eAttr)
+          if(damage === 0){
+            desc = '$$$闪避了@@@的攻击，$$$受到&&&点伤害'
+          }
           this.ehp = this.ehp - damage
           desc = this.descHandle(desc,this.protagonistData.name,classDesc,damage)
         }else{
-          damage = this.damageHandle(eatk, pdef, this.critWeight)
+          damage = this.damageHandle(eAttr,pAttr)
+          if(damage === 0){
+            desc = '$$$闪避了@@@的攻击，$$$受到&&&点伤害'
+          }
           this.php = this.php - damage
           desc = this.descHandle(desc,classDesc,this.protagonistData.name,damage)
         }
@@ -130,11 +144,19 @@ export default {
         this.fightStateJudgment()
       },1000)
     },
-    damageHandle(atk, def, critWeightArr){
-      let crit = randomValue({ arr:critWeightArr }),
-      damage = Math.floor(atk * (1 - (def * 0.06)/(def * 0.06 + 8)) * crit)
+    damageHandle(attr, otherAttr){
+      let critDamage = 1,
+      randomDamage = randomValue({ arr:this.randomDamageWeight })
+      if(Math.random() <= attr.crit){
+        critDamage = 1.5
+        console.log('crit')
+      }
+      let damage = Math.floor(attr.atk * (1 - (otherAttr.def * 0.06)/(otherAttr.def * 0.06 + 8)) * critDamage * randomDamage)
       if(damage <= 0){
         damage = 1
+      }
+      if(Math.random() <= otherAttr.dodge){
+        damage = 0
       }
       return damage
     },

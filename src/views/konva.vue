@@ -86,8 +86,14 @@
             item.species === 'medicine' ? 'medicine_item' : null"
         >
           <span>物品种类: {{item.speciesDesc}}-{{item.typeDesc}}</span>
-          <span v-if="item.species === 'weapon'">攻击: {{item.attack}}</span>
-          <span v-if="item.species === 'armor'">防御: {{item.defense}}</span>
+          <template v-if="item.species === 'weapon'">
+            <span>攻击: {{item.attack}}</span>
+            <span v-if="item.crit">暴击: {{item.crit * 100}}%</span>
+          </template>
+          <template v-if="item.species === 'armor'">
+            <span>防御: {{item.defense}}</span>
+            <span v-if="item.dodge">闪避: {{item.dodge * 100}}%</span>
+          </template>
           <span v-if="item.species === 'medicine'">回血: {{item.hp}}</span>
           <span>价格: {{item.price}}金</span>
         </li>
@@ -134,6 +140,8 @@
               '--progressColor':'rgb(255, 220, 0)'
             }"
           ><span>经验: {{protagonist.exp}} / {{protagonist.maxExp}}</span></li>
+          <li>暴击: {{protagonist.crit * 100}}%</li>
+          <li>闪避: {{protagonist.dodge * 100}}%</li>
           <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
         </ul>
       </div>
@@ -148,8 +156,14 @@
             item.species === 'medicine' ? 'medicine_item' : null"
           >
             <span>{{item.typeDesc}}</span>
-            <span v-if="item.species === 'weapon'">{{item.attack}}atk</span>
-            <span v-if="item.species === 'armor'">{{item.defense}}def</span>
+            <template v-if="item.species === 'weapon'">
+              <span>{{item.attack}}atk</span>
+              <span v-if="item.crit">{{item.crit * 100}}%crit</span>
+            </template>
+            <template v-if="item.species === 'armor'">
+              <span>{{item.defense}}def</span>
+              <span v-if="item.dodge">{{item.dodge * 100}}%dod</span>
+            </template>
             <span v-if="item.species === 'medicine'">{{item.hp}}hp</span>
             <span>{{item.price}}金</span>
             <el-popconfirm
@@ -296,6 +310,8 @@ export default {
         basisDefense: 6,
         maxhp: 50,
         hp: 50,
+        crit: 0,
+        dodge: 0,
         exp: 0,
         maxExp: 200,
         coordinate: [1],
@@ -507,6 +523,10 @@ export default {
               typeDesc:typeInfo.desc + descRdm,
               attack:level * randomValue({ min:6, max:9})
             }
+            obj.crit = 0
+            if(Math.random() <= 0.25){
+              obj.crit = Number((0.7 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+            }
             obj.price = Math.floor(obj.attack * 2.5)
             break
           }
@@ -519,6 +539,10 @@ export default {
               type:typeInfo.name,
               typeDesc:typeInfo.desc + descRdm,
               defense:level * randomValue({ min:6, max:9 })
+            }
+            obj.dodge = 0
+            if(Math.random() <= 0.25){
+              obj.dodge = Number((0.4 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
             }
             obj.price = Math.floor(obj.defense * 2)
             break
@@ -562,6 +586,8 @@ export default {
           attack: 2,
           defense: 10,
           hp: 50,
+          crit: 0,
+          dodge: 0,
           exp: 100,
           box:[]
         }
@@ -583,6 +609,8 @@ export default {
         obj.attack = 5 + Math.floor(levelRelated * randomValue({ min:2, max:2.6, decimal:1 }))
         obj.defense = 3 + Math.floor(levelRelated * randomValue({ min:2, max:2.6, decimal:1 }))
         obj.hp = 20 + Math.floor(levelRelated * randomValue({ min:6, max:7.6, decimal:1 }))
+        obj.crit = Number((0.4 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
+        obj.dodge = Number((0.2 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
         obj.exp = obj.level * 100
         arr.push(obj)
       }
@@ -721,11 +749,13 @@ export default {
         case 'armor':{
           this.protagonist.selectArmor = item
           this.protagonist.defense = this.protagonist.basisDefense + item.defense
+          this.protagonist.dodge = item.dodge
           break
         }
         case 'weapon':{
           this.protagonist.selectWeapon = item
           this.protagonist.attack = this.protagonist.basisAttack + item.attack
+          this.protagonist.crit = item.crit
           break
         }
       }
