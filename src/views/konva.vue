@@ -88,11 +88,11 @@
           <span>物品种类: {{item.speciesDesc}}-{{item.typeDesc}}</span>
           <template v-if="item.species === 'weapon'">
             <span>攻击: {{item.attack}}</span>
-            <span v-if="item.crit">暴击: {{item.crit * 100}}%</span>
+            <span v-if="item.crit">暴击: {{item.crit | percentageUnit}}</span>
           </template>
           <template v-if="item.species === 'armor'">
             <span>防御: {{item.defense}}</span>
-            <span v-if="item.dodge">闪避: {{item.dodge * 100}}%</span>
+            <span v-if="item.dodge">闪避: {{item.dodge | percentageUnit}}</span>
           </template>
           <span v-if="item.species === 'medicine'">回血: {{item.hp}}</span>
           <span>价格: {{item.price}}金</span>
@@ -140,8 +140,8 @@
               '--progressColor':'rgb(255, 220, 0)'
             }"
           ><span>经验: {{protagonist.exp}} / {{protagonist.maxExp}}</span></li>
-          <li>暴击: {{protagonist.crit * 100}}%</li>
-          <li>闪避: {{protagonist.dodge * 100}}%</li>
+          <li>暴击: {{protagonist.crit | percentageUnit}}</li>
+          <li>闪避: {{protagonist.dodge | percentageUnit}}</li>
           <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
         </ul>
       </div>
@@ -158,11 +158,11 @@
             <span>{{item.typeDesc}}</span>
             <template v-if="item.species === 'weapon'">
               <span>{{item.attack}}atk</span>
-              <span v-if="item.crit">{{item.crit * 100}}%crit</span>
+              <span v-if="item.crit">{{item.crit | percentageUnit}}crit</span>
             </template>
             <template v-if="item.species === 'armor'">
               <span>{{item.defense}}def</span>
-              <span v-if="item.dodge">{{item.dodge * 100}}%dod</span>
+              <span v-if="item.dodge">{{item.dodge | percentageUnit}}dod</span>
             </template>
             <span v-if="item.species === 'medicine'">{{item.hp}}hp</span>
             <span>{{item.price}}金</span>
@@ -183,14 +183,18 @@
       </div>
       <div class="info_block">
         <div class="select_equip">
-          装备武器: <span v-if="protagonist.selectWeapon.typeDesc">
-            {{protagonist.selectWeapon.typeDesc}} / {{protagonist.selectWeapon.attack}}攻击
-          </span>
+          装备武器: <div class="select_equip_box" v-if="protagonist.selectWeapon.typeDesc">
+            <span>{{protagonist.selectWeapon.typeDesc}}</span>
+            <span> / {{protagonist.selectWeapon.attack}}攻击</span>
+            <span v-if="protagonist.selectWeapon.crit"> / {{protagonist.selectWeapon.crit | percentageUnit}}暴击</span>
+          </div>
         </div>
         <div class="select_equip">
-          装备防具: <span v-if="protagonist.selectArmor.typeDesc">
-            {{protagonist.selectArmor.typeDesc}} / {{protagonist.selectArmor.defense}}防御
-          </span>
+          装备防具: <div class="select_equip_box" v-if="protagonist.selectArmor.typeDesc">
+            <span>{{protagonist.selectArmor.typeDesc}}</span>
+            <span> / {{protagonist.selectArmor.defense}}防御</span>
+            <span v-if="protagonist.selectArmor.dodge"> / {{protagonist.selectArmor.dodge | percentageUnit}}闪避</span>
+          </div>
         </div>
       </div>
     </div>
@@ -343,6 +347,14 @@ export default {
     this.initMapData = map
     this.initMap()
     this.archiveShowInfo = JSON.parse(localStorage.getItem('archiveShowInfo'))
+  },
+  filters: {
+    percentageUnit:function(value){
+      if(value || value + '' === '0'){
+        return value * 100 + '%'
+      }
+      return ''
+    }
   },
   computed:{
     progressBarHp(){

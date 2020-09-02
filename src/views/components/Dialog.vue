@@ -14,7 +14,7 @@
       <p
       v-for="(item,index) in fightList"
       :key="index"
-      :class="item.identity ? 'is_right' : null"
+      :class="item.identity ? `is_right ${item.specialState}` : `${item.specialState}`"
       >{{item.desc}}</p>
     </div>
     <div slot="footer" class="dialog_footer">
@@ -63,7 +63,8 @@ export default {
       randomDamageWeight:weightRandom({
         value:[0.9, 1, 1.1],
         weight:[10, 40, 10]
-      })
+      }),
+      specialState:''
     }
   },
   computed: {
@@ -119,6 +120,7 @@ export default {
         let damage = 0,
         identity = this.count % 2,
         desc = randomValue({ arr:fightDescData })
+        this.specialState = ''
 
         if(identity){
           damage = this.damageHandle(pAttr,eAttr)
@@ -138,7 +140,8 @@ export default {
         this.count++
         this.fightList.push({
           identity,
-          desc
+          desc,
+          specialState:this.specialState
         })
 
         this.fightStateJudgment()
@@ -149,7 +152,7 @@ export default {
       randomDamage = randomValue({ arr:this.randomDamageWeight })
       if(Math.random() <= attr.crit){
         critDamage = 1.5
-        console.log('crit')
+        this.specialState = 'crit'
       }
       let damage = Math.floor(attr.atk * (1 - (otherAttr.def * 0.06)/(otherAttr.def * 0.06 + 8)) * critDamage * randomDamage)
       if(damage <= 0){
@@ -157,6 +160,7 @@ export default {
       }
       if(Math.random() <= otherAttr.dodge){
         damage = 0
+        this.specialState = 'dodge'
       }
       return damage
     },
@@ -210,6 +214,14 @@ export default {
         &.is_right{
           color: rgb(0, 37, 201);
           text-align: right;
+        }
+        &.crit{
+          font-weight: bold;
+          text-shadow: 0 0 5px rgb(255, 195, 28);
+        }
+        &.dodge{
+          font-weight: bold;
+          text-shadow: 0 0 5px rgb(186, 84, 255);
         }
       }
     }
