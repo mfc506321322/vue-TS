@@ -119,20 +119,20 @@ export default {
       this.timer = setInterval(() => {
         let damage = 0,
         identity = this.count % 2,
-        desc = randomValue({ arr:fightDescData })
+        desc = randomValue({ arr:fightDescData.normalAtk })
         this.specialState = ''
 
         if(identity){
           damage = this.damageHandle(pAttr,eAttr)
-          if(damage === 0){
-            desc = '$$$闪避了@@@的攻击，$$$受到&&&点伤害'
+          if(this.specialState === 'dodge'){
+            desc = randomValue({ arr:fightDescData.dodgeAtk })
           }
           this.ehp = this.ehp - damage
           desc = this.descHandle(desc,this.protagonistData.name,classDesc,damage)
         }else{
           damage = this.damageHandle(eAttr,pAttr)
-          if(damage === 0){
-            desc = '$$$闪避了@@@的攻击，$$$受到&&&点伤害'
+          if(this.specialState === 'dodge'){
+            desc = randomValue({ arr:fightDescData.dodgeAtk })
           }
           this.php = this.php - damage
           desc = this.descHandle(desc,classDesc,this.protagonistData.name,damage)

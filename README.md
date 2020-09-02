@@ -26,3 +26,4 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - [] boss战
 - [] 怪物掉落道具
 - [] 自定义加点
+- [] 金币宝箱（开箱乐）

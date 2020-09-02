@@ -197,6 +197,9 @@
           </div>
         </div>
       </div>
+      <Skill
+      :protagonistData="protagonist"
+      ></Skill>
     </div>
     <div class="function_area">
       <div class="function_btn_box">
@@ -274,6 +277,7 @@ import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'
 import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import Dialog from '@/views/components/Dialog'
+import Skill from '@/views/components/Skill'
 import updateInfo from '@/common/json/updateInfo.json'
 import {
   randomValue,
@@ -286,7 +290,8 @@ let localStorage = window.localStorage
 export default {
   name: 'Konva',
   components: {
-    Dialog
+    Dialog,
+    Skill
   },
   data() {
     return {
