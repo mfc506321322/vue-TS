@@ -241,16 +241,19 @@
         </el-collapse-item>
       </el-collapse>
       <div class="update_title">更新信息</div>
-      <el-timeline :reverse="true">
-        <el-timeline-item
-          v-for="(item, index) in updateInfo"
-          :key="index"
-          :timestamp="item.timestamp"
-          :color="index === updateInfo.length - 1 ? '#00AE7E' : null"
-        >
-          {{item.content}}
-        </el-timeline-item>
-      </el-timeline>
+      <div class="time_line_box">
+        <el-timeline class="time_line" :reverse="true">
+          <el-timeline-item
+            v-for="(item, index) in updateInfo"
+            :key="index"
+            :timestamp="item.timestamp"
+            :color="index === updateInfo.length - 1 ? '#00AE7E' : null"
+          >
+            {{item.content}}
+          </el-timeline-item>
+        </el-timeline>
+      </div>
+      <div class="thanks">鸣谢：@季--提供数值系统支持</div>
     </div>
     <div class="dialog">
       <Dialog
@@ -1181,13 +1184,14 @@ button{
   }
   .update_info{
     width: 300px;
-    max-height: 800px;
-    overflow-y: auto;
+    max-height: 860px;
     position: absolute;
     right: -302px;
     top: -2px;
-    padding: 0 10px 10px 10px;
+    padding: 0 10px;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     .ins_box{
       margin-bottom: 15px;
       p{
@@ -1202,6 +1206,17 @@ button{
       margin-bottom: 20px;
       font-weight: bold;
       font-size: 14px;
+    }
+    .time_line_box{
+      flex: 1;
+      overflow-y: auto;
+      padding: 5px 0 0 5px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    .thanks{
+      font-size: 14px;
+      color: #666666;
     }
   }
   .function_area{
