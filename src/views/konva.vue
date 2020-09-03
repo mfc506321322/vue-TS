@@ -81,9 +81,7 @@
           v-for="(item,index) in selectCell.itemsList"
           :key="index"
           @click="itemClick(item, selectCell)"
-          :class="item.species === 'weapon' ? 'weapon_item' :
-            item.species === 'armor' ? 'armor_item' :
-            item.species === 'medicine' ? 'medicine_item' : null"
+          :class="item.styleClass"
         >
           <span>物品种类: {{item.speciesDesc}}-{{item.typeDesc}}</span>
           <template v-if="item.species === 'weapon'">
@@ -151,9 +149,7 @@
             v-for="(item,index) in protagonist.box"
             :key="index"
             @dblclick="boxItemClick(item)"
-            :class="item.species === 'weapon' ? 'weapon_item' :
-            item.species === 'armor' ? 'armor_item' :
-            item.species === 'medicine' ? 'medicine_item' : null"
+            :class="item.styleClass"
           >
             <span>{{item.typeDesc}}</span>
             <template v-if="item.species === 'weapon'">
@@ -279,6 +275,7 @@ import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import Dialog from '@/views/components/Dialog'
 import Skill from '@/views/components/Skill'
 import updateInfo from '@/common/json/updateInfo.json'
+import skills from '@/common/json/skills'
 import {
   randomValue,
   weightRandom
@@ -330,7 +327,8 @@ export default {
         maxBox: 15,
         box: [],
         selectWeapon: {},
-        selectArmor: {}
+        selectArmor: {},
+        skills:[]
       },
       nowEnemyData:{},
       showBattleDialog:false,
@@ -341,8 +339,8 @@ export default {
         weight:[50, 40, 30, 20, 10]
       }),
       itemWeight:weightRandom({
-        value:[1, 2, 3],
-        weight:[15, 25, 75]
+        value:[1, 2, 3, 4],
+        weight:[15, 25, 75, 1000]
       }),
       enemyLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
@@ -351,7 +349,6 @@ export default {
     };
   },
   mounted() {
-    console.log(this.enemyLevelWeight)
     this.initMapData = map
     this.initMap()
     this.archiveShowInfo = JSON.parse(localStorage.getItem('archiveShowInfo'))
@@ -528,15 +525,17 @@ export default {
       let weaponType = itemProps.weaponTemplate.type,
       armorType = itemProps.armorTemplate.type,
       medicineType = itemProps.medicineTemplate.type,
+      skillType = [...skills.ascension,...skills.damage,...skills.reply],
       arr = itemsNum.map(item => {
-        let obj = {},
-        id = randomValue({ min:100000000, max:999999999 }),
-        descRdm = randomValue({ min:1, max:99999 }).toString(36)
+        let obj = {}
         switch(item){//1:武器 2:防具 3:药瓶
           case 1:{
-            let typeInfo = randomValue({ arr:weaponType })
+            let typeInfo = randomValue({ arr:weaponType }),
+            id = randomValue({ min:10000000, max:19999999 }),
+            descRdm = randomValue({ min:1, max:99999 }).toString(36)
             obj = {
               id,
+              styleClass:'weapon_item',
               species:'weapon',
               speciesDesc:'武器',
               type:typeInfo.name,
@@ -551,9 +550,12 @@ export default {
             break
           }
           case 2:{
-            let typeInfo = randomValue({ arr:armorType })
+            let typeInfo = randomValue({ arr:armorType }),
+            id = randomValue({ min:20000000, max:29999999 }),
+            descRdm = randomValue({ min:100000, max:199999 }).toString(36)
             obj = {
               id,
+              styleClass:'armor_item',
               species:'armor',
               speciesDesc:'防具',
               type:typeInfo.name,
@@ -568,16 +570,32 @@ export default {
             break
           }
           case 3:{
-            let typeInfo = randomValue({ arr:medicineType })
+            let typeInfo = randomValue({ arr:medicineType }),
+            id = randomValue({ min:30000000, max:39999999 })
             obj = {
               id,
+              styleClass:'medicine_item',
               species:'medicine',
               speciesDesc:'药',
               type:typeInfo.name,
               typeDesc:typeInfo.desc,
               hp:level * randomValue({ min:15, max:25 })
             }
-            obj.price = Math.floor(obj.hp / 3)
+            obj.price = Math.floor(obj.hp / 5)
+            break
+          }
+          case 4:{
+            let typeInfo = randomValue({ arr:skillType }),
+            id = randomValue({ min:40000000, max:49999999 })
+            obj = {
+              id,
+              styleClass:'skill_item',
+              species:'skill',
+              speciesDesc:'技能'
+            }
+            Object.assign(obj, typeInfo)
+            obj.level = level
+            obj.price = level * 20
             break
           }
         }
@@ -762,8 +780,7 @@ export default {
             hp = this.protagonist.maxhp
           }
           this.protagonist.hp = hp
-          let index = _.findIndex(this.protagonist.box,['id',item.id])
-          this.protagonist.box.splice(index,1)
+          this.boxItemAutoDestroy(item.id)
           break
         }
         case 'armor':{
@@ -778,7 +795,28 @@ export default {
           this.protagonist.crit = item.crit
           break
         }
+        case 'skill':{
+          let arr = this.protagonist.skills,
+          index = _.findIndex(arr,['typeDesc',item.typeDesc])
+          if(index > -1){
+            arr[index] = item
+          }else{
+            arr.push(item)
+          }
+          this.protagonist.skills = _.cloneDeep(arr)
+          this.boxItemAutoDestroy(item.id)
+          this.$message({
+            message:'已学习技能',
+            type:'success',
+            center:true
+          })
+          break
+        }
       }
+    },
+    boxItemAutoDestroy(id){
+      let boxIndex = _.findIndex(this.protagonist.box,['id',id])
+      this.protagonist.box.splice(boxIndex,1)
     },
     enterItemDestroy(item){
       if(item.species === 'armor' || item.species === 'weapon'){
@@ -1006,6 +1044,18 @@ export default {
 button{
   cursor: pointer;
 }
+.weapon_item{
+  background-color: #ffb649;
+}
+.armor_item{
+  background-color: #ADD8E6;
+}
+.medicine_item{
+  background-color: #ff7e7e;
+}
+.skill_item{
+  background-color: #83e976;
+}
 .content_box{
   border: 2px solid #000;
   width: 900px;
@@ -1072,15 +1122,6 @@ button{
         &.cell_content_list_empty{
           text-align: center;
           margin-bottom: 0;
-        }
-        &.weapon_item{
-          background-color: #ffb649;
-        }
-        &.armor_item{
-          background-color: #ADD8E6;
-        }
-        &.medicine_item{
-          background-color: #ff7e7e;
         }
         span{
           display: inline-block;
@@ -1163,15 +1204,6 @@ button{
         &.cell_content_list_empty{
           text-align: center;
           margin-bottom: 0;
-        }
-        &.weapon_item{
-          background-color: #ffb649;
-        }
-        &.armor_item{
-          background-color: #ADD8E6;
-        }
-        &.medicine_item{
-          background-color: #ff7e7e;
         }
         span{
           display: inline-block;

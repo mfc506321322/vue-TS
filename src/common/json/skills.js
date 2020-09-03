@@ -24,10 +24,10 @@ const skills = {
     {
       level: 1,
       type: 'damage',
-      typeDesc: '沧海一刀',
+      typeDesc: '沧海渡',
       time:4,
       chance:0.2,
-      desc:'@@@施展了沧海一刀，造成的伤害提高。',
+      desc:'@@@施展了沧海渡，造成的伤害提高。',
       condition: function(){
         let flag = true
         return flag
