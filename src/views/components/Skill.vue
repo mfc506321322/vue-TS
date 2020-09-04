@@ -6,8 +6,17 @@
         v-for="(item, index) in protagonistData.skills"
         :key="index"
       >
-        <span class="skill_name">{{item.typeDesc}}</span>
-        <img class="skill_img" src="@/assets/skill1.jpg" alt="">
+        <el-tooltip
+          placement="top" 
+          effect="light" 
+          popper-class="skill_tooltip_box"
+        >
+          <div class="tooltip_content" slot="content">{{item.skillDesc}}</div>
+          <div class="tooltip_btn">
+            <span class="skill_name">{{item.typeDesc}}</span>
+            <img class="skill_img" src="@/assets/skill1.jpg" alt="">
+          </div>
+        </el-tooltip>
       </li>
     </ul>
   </div>
@@ -61,21 +70,23 @@ export default {
     overflow-y: auto;
     flex-wrap: wrap;
     li{
-      position: relative;
       margin-right: 5px;
       margin-bottom: 5px;
-      .skill_name{
-        position: absolute;
-        font-size: 12px;
-        width: 12px;
-        right: 12px;
-        top: 13px;
-        font-family: "SimSun", "STSong";
-      }
-      .skill_img{
-        width: 80px;
-        height: auto;
-        display: block;
+      .tooltip_btn{
+        position: relative;
+        .skill_name{
+          position: absolute;
+          font-size: 12px;
+          width: 12px;
+          right: 12px;
+          top: 13px;
+          font-family: "SimSun", "STSong";
+        }
+        .skill_img{
+          width: 80px;
+          height: auto;
+          display: block;
+        }
       }
     }
   }

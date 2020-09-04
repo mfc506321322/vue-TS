@@ -7,8 +7,9 @@ const skills = {
       typeDesc: '天魔大化',
       time:'after',
       round:2,
-      chance:0.2,
+      chance:0.35,
       desc:'@@@施展了天魔大化，攻击力提高。',
+      skillDesc:'提升使用者当前回合的攻击力',
       condition: function(){
         let flag = true
         return flag
@@ -28,9 +29,10 @@ const skills = {
       type: 'damage',
       typeDesc: '沧海渡',
       time:'after',
-      round:4,
-      chance:0.3,
+      round:3,
+      chance:0.25,
       desc:'@@@施展了沧海渡，造成的伤害提高。',
+      skillDesc:'提升使用者当前回合对对方造成的伤害',
       condition: function(){
         let flag = true
         return flag
@@ -47,9 +49,10 @@ const skills = {
       type: 'reply',
       typeDesc: '无想转生',
       time:'before',
-      round:3,
-      chance:0.3,
+      round:2,
+      chance:0.25,
       desc:'@@@施展了无想转生，血量回复了。',
+      skillDesc:'回复使用者的生命值',
       condition: function(data){
         let flag = true
         if(data.hp === data.maxhp){
