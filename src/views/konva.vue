@@ -93,6 +93,7 @@
             <span v-if="item.dodge">闪避: {{item.dodge | percentageUnit}}</span>
           </template>
           <span v-if="item.species === 'medicine'">回血: {{item.hp}}</span>
+          <span v-if="item.species === 'skill'">等级: {{item.level}}</span>
           <span>价格: {{item.price}}金</span>
         </li>
         <li class="cell_content_list_empty" v-if="selectCell.itemsList.length === 0">空</li>
@@ -161,6 +162,7 @@
               <span v-if="item.dodge">{{item.dodge | percentageUnit}}dod</span>
             </template>
             <span v-if="item.species === 'medicine'">{{item.hp}}hp</span>
+            <span v-if="item.species === 'skill'">{{item.level}}级</span>
             <span>{{item.price}}金</span>
             <el-popconfirm
               class="item_destroy_box"
