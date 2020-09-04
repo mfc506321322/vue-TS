@@ -257,12 +257,18 @@
       <div class="thanks">鸣谢：@季--提供数值系统支持</div>
     </div>
     <div class="dialog">
-      <Dialog
+      <!-- <Dialog
       :nowEnemyData="nowEnemyData"
       :protagonistData="protagonist"
       :isShow.sync="showBattleDialog"
       @fightEnd="fightEnd"
-      ></Dialog>
+      ></Dialog> -->
+      <FightDialog
+      :nowEnemyData="nowEnemyData"
+      :protagonistData="protagonist"
+      :isShow.sync="showBattleDialog"
+      @fightEnd="fightEnd"
+      ></FightDialog>
     </div>
   </div>
 </template>
@@ -275,6 +281,7 @@ import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'
 import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import Dialog from '@/views/components/Dialog'
+import FightDialog from '@/views/components/FightDialog'
 import Skill from '@/views/components/Skill'
 import updateInfo from '@/common/json/updateInfo.json'
 import skills from '@/common/json/skills'
@@ -290,7 +297,8 @@ export default {
   name: 'Konva',
   components: {
     Dialog,
-    Skill
+    Skill,
+    FightDialog
   },
   data() {
     return {
@@ -530,7 +538,7 @@ export default {
       skillType = [...skills.ascension,...skills.damage,...skills.reply],
       arr = itemsNum.map(item => {
         let obj = {}
-        switch(item){//1:武器 2:防具 3:药瓶
+        switch(item){//1:武器 2:防具 3:药瓶 4:技能
           case 1:{
             let typeInfo = randomValue({ arr:weaponType }),
             id = randomValue({ min:10000000, max:19999999 }),
