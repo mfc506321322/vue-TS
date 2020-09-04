@@ -340,7 +340,7 @@ export default {
       }),
       itemWeight:weightRandom({
         value:[1, 2, 3, 4],
-        weight:[15, 25, 75, 1000]
+        weight:[15, 25, 75, 10]
       }),
       enemyLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
@@ -627,7 +627,8 @@ export default {
           crit: 0,
           dodge: 0,
           exp: 100,
-          box:[]
+          box:[],
+          skills:[]
         }
         if(Math.random() <= 0.3){
           let classArr = classData.filter(item => {

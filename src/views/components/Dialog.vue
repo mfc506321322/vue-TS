@@ -101,18 +101,21 @@ export default {
       this.$emit('update:isShow',false)
     },
     fighting(){
-      let classDesc = this.nowEnemyData.name + this.nowEnemyData.classDesc,
-      pAttr = {
+      let pAttr = {
+        name:this.protagonistData.name,
         atk:this.protagonistData.attack,
         def:this.protagonistData.defense,
         crit:this.protagonistData.crit,
-        dodge:this.protagonistData.dodge
+        dodge:this.protagonistData.dodge,
+        maxhp:this.protagonistData.maxhp
       },
       eAttr = {
+        name:this.nowEnemyData.name + this.nowEnemyData.classDesc,
         atk:this.nowEnemyData.attack,
         def:this.nowEnemyData.defense,
         crit:this.nowEnemyData.crit,
-        dodge:this.nowEnemyData.dodge
+        dodge:this.nowEnemyData.dodge,
+        maxhp:this.nowEnemyData.maxhp
       }
 
       console.log(`eatk:${eAttr.atk},edef:${eAttr.def},ecrit:${eAttr.crit},edod:${eAttr.dodge}`)
@@ -123,19 +126,19 @@ export default {
         this.specialState = ''
 
         if(identity){
-          damage = this.damageHandle(pAttr,eAttr)
+          damage = this.damageHandle(pAttr,eAttr,identity)
           if(this.specialState === 'dodge'){
             desc = randomValue({ arr:fightDescData.dodgeAtk })
           }
           this.ehp = this.ehp - damage
-          desc = this.descHandle(desc,this.protagonistData.name,classDesc,damage)
+          desc = this.descHandle(desc,pAttr.name,eAttr.name,damage)
         }else{
-          damage = this.damageHandle(eAttr,pAttr)
+          damage = this.damageHandle(eAttr,pAttr,identity)
           if(this.specialState === 'dodge'){
             desc = randomValue({ arr:fightDescData.dodgeAtk })
           }
           this.php = this.php - damage
-          desc = this.descHandle(desc,classDesc,this.protagonistData.name,damage)
+          desc = this.descHandle(desc,eAttr.name,pAttr.name,damage)
         }
         this.count++
         this.fightList.push({
@@ -147,22 +150,91 @@ export default {
         this.fightStateJudgment()
       },1000)
     },
-    damageHandle(attr, otherAttr){
-      let critDamage = 1,
-      randomDamage = randomValue({ arr:this.randomDamageWeight })
+    damageHandle(attr, otherAttr, identity){
+      let skillOut = this.skillHandle({
+        time:'after',
+        count:this.count,
+        identity,
+        attr
+      }),
+      critDamage = 1,
+      randomDamage = randomValue({ arr:this.randomDamageWeight }),
+      atk = Math.floor(attr.atk * skillOut.atkAscension)
+
       if(Math.random() <= attr.crit){
         critDamage = 1.5
         this.specialState = 'crit'
       }
-      let damage = Math.floor(attr.atk * (1 - (otherAttr.def * 0.06)/(otherAttr.def * 0.06 + 8)) * critDamage * randomDamage)
+
+      let damage = Math.floor(atk * (1 - (otherAttr.def * 0.06)/(otherAttr.def * 0.06 + 8)) * critDamage * randomDamage)
+      damage = Math.floor(damage * skillOut.damageAscension)
       if(damage <= 0){
         damage = 1
       }
+
       if(Math.random() <= otherAttr.dodge){
         damage = 0
         this.specialState = 'dodge'
       }
       return damage
+    },
+    skillHandle(data){
+      let obj = {
+        atkAscension:1,
+        damageAscension:1
+      },
+      fn = 'nowEnemyData',
+      round = data.count / 2,
+      hpTarget = 'ehp'
+      if(data.identity){
+        fn = 'protagonistData'
+        round = (data.count + 1) / 2
+        hpTarget = 'php'
+      }
+
+      this[fn].skills.forEach(item => {
+        if(round % item.round === 0 && Math.random() <= item.chance){
+          let fightInfoFlag = false
+          switch(item.type){
+            case 'ascension':{
+              if(item.condition()){
+                obj.atkAscension += item.effect()
+                fightInfoFlag = true
+              }
+              break
+            }
+            case 'damage':{
+              if(item.condition()){
+                obj.damageAscension += item.effect()
+                fightInfoFlag = true
+              }
+              break
+            }
+            case 'reply':{
+              if(item.condition({
+                hp:this[hpTarget],
+                maxhp:data.attr.maxhp
+              })){
+                let newhp = this[hpTarget] + item.effect(data.attr.maxhp)
+                if(newhp > data.attr.maxhp){
+                  newhp = data.attr.maxhp
+                }
+                this[hpTarget] = newhp
+                fightInfoFlag = true
+              }
+              break
+            }
+          }
+          if(fightInfoFlag){
+            this.fightList.push({
+              identity:data.identity,
+              desc:this.descHandle(item.desc,data.attr.name),
+              specialState:'skill'
+            })
+          }
+        }
+      })
+      return obj
     },
     fightStateJudgment(){
       if(this.ehp <= 0 || this.php <= 0){
@@ -222,6 +294,10 @@ export default {
         &.dodge{
           font-weight: bold;
           text-shadow: 0 0 5px rgb(186, 84, 255);
+        }
+        &.skill{
+          font-weight: bold;
+          text-shadow: 0 0 5px rgb(255, 64, 64);
         }
       }
     }
