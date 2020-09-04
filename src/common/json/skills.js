@@ -14,12 +14,11 @@ const skills = {
         let flag = true
         return flag
       },
-      effect: function(){
-        // let newData = cloneDeep(data),
-        // ascension = 1 + Number((0.6 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2))
-        // newData.attr.atk = Math.floor(newData.attr.atk * ascension)
-        let ascension = 1 + Number((0.6 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2))
-        return ascension
+      effect: function(data){
+        let newData = cloneDeep(data),
+        ascension = 1 + 0.1 + Number((0.6 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2))
+        newData.attack = Math.floor(newData.attack * ascension)
+        return newData
       }
     }
   ],
@@ -38,7 +37,7 @@ const skills = {
         return flag
       },
       effect: function(){
-        let ascension = 1 + Number((0.5 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2))
+        let ascension = 1 + 0.1 + Number((0.5 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2))
         return ascension
       }
     }
@@ -60,10 +59,15 @@ const skills = {
         }
         return flag
       },
-      effect: function(maxhp){
-        let reply = Number((1 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2)),
-        hp = Math.ceil(maxhp * reply)
-        return hp
+      effect: function(data){
+        let newData = cloneDeep(data),
+        reply = 0.1 + Number((1 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2))
+
+        newData.hp = newData.hp + Math.ceil(newData.maxhp * reply)
+        if(newData.hp > newData.maxhp){
+          newData.hp = newData.maxhp
+        }
+        return newData
       }
     }
   ]

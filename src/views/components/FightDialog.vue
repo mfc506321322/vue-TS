@@ -63,8 +63,7 @@ export default {
       randomDamageWeight:weightRandom({
         value:[0.9, 1, 1.1],
         weight:[10, 40, 10]
-      }),
-      specialState:''
+      })
     }
   },
   computed: {
@@ -101,125 +100,122 @@ export default {
       this.$emit('update:isShow',false)
     },
     fighting(){
-      let pAttr = {
-        name:this.protagonistData.name,
-        atk:this.protagonistData.attack,
-        def:this.protagonistData.defense,
-        crit:this.protagonistData.crit,
-        dodge:this.protagonistData.dodge,
-        maxhp:this.protagonistData.maxhp
-      },
-      eAttr = {
-        name:this.nowEnemyData.name + this.nowEnemyData.classDesc,
-        atk:this.nowEnemyData.attack,
-        def:this.nowEnemyData.defense,
-        crit:this.nowEnemyData.crit,
-        dodge:this.nowEnemyData.dodge,
-        maxhp:this.nowEnemyData.maxhp
-      }
+      let pAttr = _.cloneDeep(this.protagonistData),
+      eAttr = _.cloneDeep(this.nowEnemyData)
 
-      console.log(`eatk:${eAttr.atk},edef:${eAttr.def},ecrit:${eAttr.crit},edod:${eAttr.dodge}`)
+      pAttr['descName'] = pAttr.name,
+      eAttr['descName'] = eAttr.name + eAttr.classDesc
+
+      console.log(`eatk:${eAttr.attack},edef:${eAttr.defense},ecrit:${eAttr.crit},edod:${eAttr.dodge}`)
       this.timer = setInterval(() => {
-        let damage = 0,
-        identity = this.count % 2,
-        desc = randomValue({ arr:fightDescData.normalAtk })
-        this.specialState = ''
-
-        if(identity){
-          damage = this.damageHandle(pAttr,eAttr,identity)
-          if(this.specialState === 'dodge'){
-            desc = randomValue({ arr:fightDescData.dodgeAtk })
-          }
-          this.ehp = this.ehp - damage
-          desc = this.descHandle(desc,pAttr.name,eAttr.name,damage)
-        }else{
-          damage = this.damageHandle(eAttr,pAttr,identity)
-          if(this.specialState === 'dodge'){
-            desc = randomValue({ arr:fightDescData.dodgeAtk })
-          }
-          this.php = this.php - damage
-          desc = this.descHandle(desc,eAttr.name,pAttr.name,damage)
+        pAttr.hp = this.php
+        eAttr.hp = this.ehp
+        
+        let identity = this.count % 2,
+        fightParams = {
+          identity,
+          attr: pAttr,
+          otherAttr: eAttr,
+          round: (this.count + 1) / 2,
+          specialState: '',
+          desc: randomValue({ arr:fightDescData.normalAtk })
         }
+        if(!identity){
+          fightParams.attr = eAttr
+          fightParams.otherAttr = pAttr
+          fightParams.round = this.count / 2
+        }
+
+        let fightData = this.fightHandle(fightParams)
+
         this.count++
         this.fightList.push({
           identity,
-          desc,
-          specialState:this.specialState
+          desc:fightData.desc,
+          specialState:fightData.specialState
         })
 
         this.fightStateJudgment()
       },1000)
     },
-    damageHandle(attr, otherAttr, identity){
-      let skillOut = this.skillHandle({
-        time:'after',
-        count:this.count,
-        identity,
-        attr
-      }),
-      critDamage = 1,
-      randomDamage = randomValue({ arr:this.randomDamageWeight }),
-      atk = Math.floor(attr.atk * skillOut.atkAscension)
-
-      if(Math.random() <= attr.crit){
-        critDamage = 1.5
-        this.specialState = 'crit'
+    fightHandle(data){
+      let newData = {
+        nfd:_.cloneDeep(data),//newFightData
+        damageBoost:[]
       }
 
-      let damage = Math.floor(atk * (1 - (otherAttr.def * 0.06)/(otherAttr.def * 0.06 + 8)) * critDamage * randomDamage)
-      damage = Math.floor(damage * skillOut.damageAscension)
+      newData = this.skillHandle(newData.nfd)
+
+      newData = this.damageHandle(newData)
+
+      if(newData.nfd.identity){
+        this.php = newData.nfd.attr.hp
+        this.ehp = newData.nfd.otherAttr.hp
+      }else{
+        this.php = newData.nfd.otherAttr.hp
+        this.ehp = newData.nfd.attr.hp
+      }
+
+      return newData.nfd
+    },
+    damageHandle(data){
+      let newData = _.cloneDeep(data),
+      critDamage = 1,
+      randomDamage = randomValue({ arr:this.randomDamageWeight }),
+      desc = newData.nfd.desc
+
+      if(Math.random() <= newData.nfd.attr.crit){
+        critDamage = 1.5
+        newData.nfd.specialState = 'crit'
+      }
+
+      let damage = Math.floor(newData.nfd.attr.attack * (1 - (newData.nfd.otherAttr.defense * 0.06)/(newData.nfd.otherAttr.defense * 0.06 + 8)) * critDamage * randomDamage)
+      
+      if(newData.damageBoost.length > 0){
+        newData.damageBoost.forEach(item => {
+          damage = Math.floor(damage * item)
+        })
+      }
+
       if(damage <= 0){
         damage = 1
       }
 
-      if(Math.random() <= otherAttr.dodge){
+      if(Math.random() <= newData.nfd.otherAttr.dodge){
         damage = 0
-        this.specialState = 'dodge'
-      }
-      return damage
-    },
-    skillHandle(data){
-      let obj = {
-        atkAscension:1,
-        damageAscension:1
-      },
-      fn = 'nowEnemyData',
-      round = data.count / 2,
-      hpTarget = 'ehp'
-      if(data.identity){
-        fn = 'protagonistData'
-        round = (data.count + 1) / 2
-        hpTarget = 'php'
+        newData.nfd.specialState = 'dodge'
+        desc = randomValue({ arr:fightDescData.dodgeAtk })
       }
 
-      this[fn].skills.forEach(item => {
-        if(round % item.round === 0 && Math.random() <= item.chance){
+      newData.nfd.otherAttr.hp -= damage
+      newData.nfd.desc = this.descHandle(desc,newData.nfd.attr.descName,newData.nfd.otherAttr.descName,damage)
+      
+      return newData
+    },
+    skillHandle(data){
+      let newData = _.cloneDeep(data),
+      damageBoost = []
+      newData.attr.skills.forEach(item => {
+        if(newData.round % item.round === 0 && Math.random() <= item.chance){
           let fightInfoFlag = false
           switch(item.type){
             case 'ascension':{
               if(item.condition()){
-                obj.atkAscension += item.effect()
+                newData.attr = item.effect(newData.attr)
                 fightInfoFlag = true
               }
               break
             }
             case 'damage':{
               if(item.condition()){
-                obj.damageAscension += item.effect()
+                damageBoost.push(item.effect())
                 fightInfoFlag = true
               }
               break
             }
             case 'reply':{
-              if(item.condition({
-                hp:this[hpTarget],
-                maxhp:data.attr.maxhp
-              })){
-                let newhp = this[hpTarget] + item.effect(data.attr.maxhp)
-                if(newhp > data.attr.maxhp){
-                  newhp = data.attr.maxhp
-                }
-                this[hpTarget] = newhp
+              if(item.condition(newData.attr)){
+                newData.attr = item.effect(newData.attr)
                 fightInfoFlag = true
               }
               break
@@ -227,14 +223,17 @@ export default {
           }
           if(fightInfoFlag){
             this.fightList.push({
-              identity:data.identity,
-              desc:this.descHandle(item.desc,data.attr.name),
+              identity:newData.identity,
+              desc:this.descHandle(item.desc,newData.attr.name),
               specialState:'skill'
             })
           }
         }
       })
-      return obj
+      return {
+        nfd: newData,
+        damageBoost
+      }
     },
     fightStateJudgment(){
       if(this.ehp <= 0 || this.php <= 0){
