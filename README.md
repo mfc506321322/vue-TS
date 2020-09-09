@@ -20,7 +20,8 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ### 更新计划
 - [] 多类型装备（首饰等）
-- [] 技能
+- [x] 技能（技能书）
+- [] 角色技能树
 - [] 新的基础属性（元素值、暴击伤害等）
 - [] 地图元素丰富（商店等）
 - [] boss战

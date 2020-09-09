@@ -535,7 +535,6 @@ export default {
       let weaponType = itemProps.weaponTemplate.type,
       armorType = itemProps.armorTemplate.type,
       medicineType = itemProps.medicineTemplate.type,
-      skillType = [...skills.ascension,...skills.damage,...skills.reply],
       arr = itemsNum.map(item => {
         let obj = {}
         switch(item){//1:武器 2:防具 3:药瓶 4:技能
@@ -595,7 +594,7 @@ export default {
             break
           }
           case 4:{
-            let typeInfo = randomValue({ arr:skillType }),
+            let typeInfo = randomValue({ arr:skills }),
             id = randomValue({ min:40000000, max:49999999 })
             obj = {
               id,
@@ -634,11 +633,13 @@ export default {
           attack: 2,
           defense: 10,
           hp: 50,
+          maxhp: 50,
           crit: 0,
           dodge: 0,
           exp: 100,
           box:[],
-          skills:[]
+          skills:[],
+          buff:[]
         }
         if(Math.random() <= 0.3){
           let classArr = classData.filter(item => {
@@ -658,6 +659,7 @@ export default {
         obj.attack = 5 + Math.floor(levelRelated * randomValue({ min:2, max:2.6, decimal:1 }))
         obj.defense = 3 + Math.floor(levelRelated * randomValue({ min:2, max:2.6, decimal:1 }))
         obj.hp = 20 + Math.floor(levelRelated * randomValue({ min:6, max:7.6, decimal:1 }))
+        obj.maxhp = obj.hp
         obj.crit = Number((0.4 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
         obj.dodge = Number((0.2 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
         obj.exp = obj.level * 100
