@@ -350,7 +350,7 @@ export default {
       }),
       itemWeight:weightRandom({
         value:[1, 2, 3, 4],
-        weight:[15, 25, 75, 10]
+        weight:[15, 25, 85, 10]
       }),
       enemyLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
@@ -656,13 +656,13 @@ export default {
         }
         obj.level = obj.level + obj.class
         let levelRelated = Math.floor(Math.pow(obj.level, 1.4))
-        obj.attack = 5 + Math.floor(levelRelated * randomValue({ min:2, max:2.6, decimal:1 }))
-        obj.defense = 3 + Math.floor(levelRelated * randomValue({ min:2, max:2.6, decimal:1 }))
-        obj.hp = 20 + Math.floor(levelRelated * randomValue({ min:6, max:7.6, decimal:1 }))
+        obj.attack = 5 + Math.floor(levelRelated * randomValue({ min:2, max:2.8, decimal:1 }))
+        obj.defense = 3 + Math.floor(levelRelated * randomValue({ min:2, max:2.8, decimal:1 }))
+        obj.hp = 20 + Math.floor(levelRelated * randomValue({ min:12, max:17, decimal:1 }))
         obj.maxhp = obj.hp
         obj.crit = Number((0.4 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
         obj.dodge = Number((0.2 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
-        obj.exp = obj.level * 100
+        obj.exp = obj.level * 120
         arr.push(obj)
       }
       return arr
@@ -921,7 +921,7 @@ export default {
 
         let attack = randomValue({min:6,max:9}),
         defense = randomValue({min:4,max:6}),
-        hp = randomValue({min:14,max:21})
+        hp = randomValue({min:50,max:60})
 
         this.protagonist.basisAttack += attack
         this.protagonist.basisDefense += defense
@@ -944,7 +944,7 @@ export default {
     },
     endlessMode(){
       let arr = [],
-      mapNum = randomValue({min:6,max:12})
+      mapNum = randomValue({min:6,max:8})
       for(let i = 1;i<=mapNum;i++){
         let obj = {
           id: [i],
@@ -965,7 +965,7 @@ export default {
         if(i === mapNum)obj.passage.after = 0
         Object.assign(obj, mapText)
         childArr.push(obj)
-        if(Math.random() <= 0.25){
+        if(Math.random() <= 0.2){
           let childNum = randomValue({min:1, max:4}),
           startNum = randomValue({min:-4, max:-1})
           if(Math.random() <= 0.5){
@@ -996,7 +996,7 @@ export default {
       let text = randomValue({ arr:enlessModeMap.name }),
       config = {}
 
-      if(Math.random() <= 0.4){
+      if(Math.random() <= 0.3){
         config = {
           config: {
             furniture: [

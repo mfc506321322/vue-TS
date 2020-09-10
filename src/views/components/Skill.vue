@@ -11,7 +11,7 @@
           effect="light" 
           popper-class="skill_tooltip_box"
         >
-          <div class="tooltip_content" slot="content">{{item.skillDesc}}</div>
+          <div class="tooltip_content" slot="content">{{`${item.skillDesc} | 等级${item.level}`}}</div>
           <div class="tooltip_btn">
             <span class="skill_name">{{item.typeDesc}}</span>
             <img class="skill_img" src="@/assets/skill1.jpg" alt="">

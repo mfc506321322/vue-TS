@@ -212,7 +212,7 @@ export default {
         })
 
         this.fightStateJudgment()
-      },1000)
+      },800)
     },
     fightHandle(data){
       let newData = {
