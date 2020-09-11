@@ -257,12 +257,6 @@
       <div class="thanks">鸣谢：@季--提供数值系统支持</div>
     </div>
     <div class="dialog">
-      <!-- <Dialog
-      :nowEnemyData="nowEnemyData"
-      :protagonistData="protagonist"
-      :isShow.sync="showBattleDialog"
-      @fightEnd="fightEnd"
-      ></Dialog> -->
       <FightDialog
       :nowEnemyData="nowEnemyData"
       :protagonistData="protagonist"
@@ -280,7 +274,6 @@ import mapColor from '@/common/json/mapColor.json'
 import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'
 import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
-import Dialog from '@/views/components/Dialog'
 import FightDialog from '@/views/components/FightDialog'
 import Skill from '@/views/components/Skill'
 import updateInfo from '@/common/json/updateInfo.json'
@@ -296,7 +289,6 @@ let localStorage = window.localStorage
 export default {
   name: 'Konva',
   components: {
-    Dialog,
     Skill,
     FightDialog
   },
