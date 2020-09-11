@@ -244,7 +244,7 @@ export default {
 
       return newData.nfd
     },
-    skillHandle(data){
+    skillHandle(data){//技能触发处理
       let newData = _.cloneDeep(data),
       damageBoost = []
       newData.attr.skills.forEach(item => {
@@ -280,7 +280,7 @@ export default {
         damageBoost
       }
     },
-    damageHandle(data){
+    damageHandle(data){//伤害计算
       let newData = _.cloneDeep(data),
       critDamage = 1,
       randomDamage = randomValue({ arr:this.randomDamageWeight }),
@@ -314,7 +314,7 @@ export default {
       
       return newData
     },
-    buffAdd(buff, skill, createRound){
+    buffAdd(buff, skill, createRound){//buff添加
       let arr = _.cloneDeep(buff),
       flag =  _.findIndex(arr,['name',skill.typeDesc]),
       {
@@ -340,7 +340,7 @@ export default {
       }
       return arr
     },
-    buffHandle(data){
+    buffHandle(data){//buff处理
       let newData = _.cloneDeep(data)
 
       newData.attr.buff.forEach(item => {
@@ -352,7 +352,7 @@ export default {
 
       return newData
     },
-    buffDelete(){
+    buffDelete(){//buff移除
       let identity = this.count % 2,
       round = identity ? (this.count + 1) / 2 : this.count / 2,
       fn = identity ? 'proAttr' : 'enemyAttr'
@@ -362,7 +362,7 @@ export default {
         }
       })
     },
-    fightStateJudgment(){
+    fightStateJudgment(){//战斗结果
       if(this.enemyAttr.hp <= 0 || this.proAttr.hp <= 0){
         let state = Boolean(this.proAttr.hp > 0)
         this.$message({

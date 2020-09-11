@@ -391,7 +391,7 @@ export default {
     }
   },
   methods: {
-    initMap(){
+    initMap(){//初始化数据
       this.mapRenderParams.cellSize = {
         w:80,
         h:40,
@@ -420,7 +420,7 @@ export default {
         return obj
       })
     },
-    mapColorHandle(item){
+    mapColorHandle(item){//地图块颜色处理
       let bgColor = '#FFFFFF'
       if(mapColor[item.species][item.type] instanceof Array){
         bgColor = mapColor[item.species][item.type][item.config.lock]
@@ -432,7 +432,7 @@ export default {
       }
       return bgColor
     },
-    redrawMapColor(){
+    redrawMapColor(){//角色所在区域颜色渲染
       let arr = this.mapList.map((item, index) => {
         let obj = {}
         let bgColor = this.mapColorHandle(item)
@@ -464,7 +464,7 @@ export default {
         y:y + this.mapRenderParams.start.y
       }
     },
-    drawLine(id, coordinates, passage){
+    drawLine(id, coordinates, passage){//绘制地图连接线
       let {
         w,
         h,
@@ -498,12 +498,12 @@ export default {
       }
       return arr
     },
-    initData(item){
+    initData(item){//重置选择数据
       if(this.protagonist.coordinate.join('') === item.id.join('')){
         this.selectCell = item
       }
     },
-    itemHandle(furniture){
+    itemHandle(furniture){//道具生成
       let arr = []
       let boxInfo = furniture.filter(item => {
         return item.label === 'box'
@@ -523,7 +523,7 @@ export default {
       }
       return arr
     },
-    itemRandomCreate(level,itemsNum){
+    itemRandomCreate(level,itemsNum){//道具生成处理
       let weaponType = itemProps.weaponTemplate.type,
       armorType = itemProps.armorTemplate.type,
       medicineType = itemProps.medicineTemplate.type,
@@ -604,7 +604,7 @@ export default {
       })
       return arr
     },
-    enemyRandomCreate(item){
+    enemyRandomCreate(item){//敌人生成
       if(item.type !== 'room' || Math.random() > 0.4){
         return []
       }
@@ -666,7 +666,7 @@ export default {
       // let obj = _.cloneDeep(item)
       // this.selectCell = obj
     },
-    protagonistMove(item){
+    protagonistMove(item){//点击地图移动
       let coordinate = this.protagonist.coordinate,
       itemId = item.id,
       pSide = this.selectCell.passage.side,
@@ -756,7 +756,7 @@ export default {
       this.nowEnemyData = item
       this.showBattleDialog = true
     },
-    itemClick(row, selectCell){
+    itemClick(row, selectCell){//道具获取
       if(this.protagonist.box.length >= this.protagonist.maxBox){
         return this.$message({
           message:'背包已满',
@@ -776,7 +776,7 @@ export default {
       this.selectCell.itemsList.splice(index,1)
       this.mapList = _.cloneDeep(arr)
     },
-    boxItemClick(item){
+    boxItemClick(item){//背包道具使用
       switch(item.species){
         case 'medicine':{
           if(this.protagonist.hp === this.protagonist.maxhp)return
@@ -819,7 +819,7 @@ export default {
         }
       }
     },
-    boxItemAutoDestroy(id){
+    boxItemAutoDestroy(id){//背包道具删除
       let boxIndex = _.findIndex(this.protagonist.box,['id',id])
       this.protagonist.box.splice(boxIndex,1)
     },
@@ -836,7 +836,7 @@ export default {
       let index = _.findIndex(this.protagonist.box,['id',item.id])
       this.protagonist.box.splice(index,1)
     },
-    fightEnd(type,hp,enemy){
+    fightEnd(type,hp,enemy){//战斗结束
       if(type){
         this.protagonist.hp = hp
         let index = ''
@@ -863,7 +863,7 @@ export default {
         })
       }
     },
-    passJudgment(){
+    passJudgment(){//过关
       let flag = this.mapList.every(item => {
         return item.enemy.length === 0
       })
@@ -892,7 +892,7 @@ export default {
         this.saveOrReadArchive()
       })
     },
-    expHandle(enemy){
+    expHandle(enemy){//经验计算
       let {
         exp,
         maxExp,
@@ -934,7 +934,7 @@ export default {
       }
       this.protagonist.exp = exp
     },
-    endlessMode(){
+    endlessMode(){//无尽模式地图生成
       let arr = [],
       mapNum = randomValue({min:6,max:8})
       for(let i = 1;i<=mapNum;i++){
@@ -1008,7 +1008,7 @@ export default {
       }
       return obj
     },
-    saveOrReadArchive(flag){
+    saveOrReadArchive(flag){//保存读取存档
       if(flag){
         this.showBattleDialog = false
         this.protagonist = JSON.parse(localStorage.getItem('protagonist'))
