@@ -11,6 +11,7 @@
           effect="light" 
           popper-class="box_tooltip_box"
           :open-delay="200"
+          :enterable="false"
           v-if="item.id"
         >
           <div class="tooltip_content" slot="content">
@@ -37,7 +38,20 @@
             :class="`block_content ${item.styleClass}`"
             @dblclick="dbClickBlock(item)"
           >
-            <div class="hover_layer"></div>
+            <div class="hover_layer">
+              <el-popconfirm
+                v-if="openDelete"
+                class="item_destroy_box"
+                confirmButtonText='确定'
+                cancelButtonText='取消'
+                icon="el-icon-info"
+                iconColor="red"
+                title="确定要丢弃该道具吗？"
+                @onConfirm="enterItemDestroy(item)"
+              >
+                <el-icon class="el-icon-close item_destroy" slot="reference"></el-icon>
+              </el-popconfirm>
+            </div>
             <span class="block_title">{{item.speciesDesc}}</span>
             <span class="block_text">{{item.typeDesc}}</span>
           </div>
@@ -56,6 +70,10 @@ export default {
       type: Array,
       default: () => []
     },
+    openDelete: {
+      type: Boolean,
+      default: false
+    }
   },
   data() {
     return {
@@ -80,7 +98,10 @@ export default {
   methods: {
     dbClickBlock(item){
       this.$emit('dbClickBlock', item)
-    }
+    },
+    enterItemDestroy(item){
+      this.$emit('enterItemDestroy', item)
+    },
   }
 }
 </script>
@@ -128,8 +149,17 @@ export default {
           top: 0;
           left: 0;
           z-index: 999;
+          .item_destroy_box{
+            position: absolute;
+            right: 1px;
+            top: 1px;
+            display: none;
+          }
           &:hover{
             background: rgba(255, 233, 32, 0.25);
+            .item_destroy_box{
+              display: block;
+            }
           }
         }
         &>span{

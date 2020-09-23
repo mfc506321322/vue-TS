@@ -32,7 +32,9 @@
             <div class="content_right">
               <BlockMenu
                 :data="boxData"
+                :openDelete="true"
                 @dbClickBlock="dbClickBlock"
+                @enterItemDestroy="enterItemDestroy"
               ></BlockMenu>
             </div>
           </div>
@@ -116,6 +118,10 @@ export default {
     dbClickBlock(item){
       this.$emit('boxItemClick', item)
       this.boxData = this.boxDataHandle()
+    },
+    enterItemDestroy(item){
+      this.$emit('enterItemDestroy', item)
+      this.boxData = this.boxDataHandle()
     }
   }
 }
@@ -123,7 +129,7 @@ export default {
 <style lang="scss" scoped>
 .dialog_box{
   /deep/ .dialog_content{
-    width: 800px;
+    width: 680px;
     .el-dialog__header{
       padding: 0;
       .el-dialog__headerbtn{
@@ -148,7 +154,7 @@ export default {
           min-height: 300px;
           display: flex;
           .content_left{
-            width: 150px;
+            flex-shrink: 0;
             border-right: 1px solid #666;
             padding-right: 5px;
             .select_item{
