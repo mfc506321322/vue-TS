@@ -28,3 +28,4 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - [] 怪物掉落道具
 - [] 自定义加点
 - [] 金币宝箱（开箱乐）
+- [] 装备提升系统

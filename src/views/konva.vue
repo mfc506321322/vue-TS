@@ -107,6 +107,9 @@
         class="pass_btn"
         @click="passForward"
       >点击前往下一关卡</button> -->
+      <button
+        @click="showFigureDialog = true"
+      >背包</button>
     </div>
     <div class="protagonist_info_area">
       <div class="info_block">
@@ -263,6 +266,10 @@
       :isShow.sync="showBattleDialog"
       @fightEnd="fightEnd"
       ></FightDialog>
+      <FigureDialog
+      :isShow.sync="showFigureDialog"
+      :protagonist="protagonist"
+      ></FigureDialog>
     </div>
   </div>
 </template>
@@ -275,6 +282,7 @@ import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'
 import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import FightDialog from '@/views/components/FightDialog'
+import FigureDialog from '@/views/components/FigureDialog'
 import Skill from '@/views/components/Skill'
 import updateInfo from '@/common/json/updateInfo.json'
 import skills from '@/common/json/skills'
@@ -290,7 +298,8 @@ export default {
   name: 'Konva',
   components: {
     Skill,
-    FightDialog
+    FightDialog,
+    FigureDialog
   },
   data() {
     return {
@@ -335,6 +344,7 @@ export default {
       nowEnemyData:{},
       showBattleDialog:false,
       showPassBtn:false,
+      showFigureDialog:true,
       archiveShowInfo:null,
       boxLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
@@ -536,6 +546,7 @@ export default {
             descRdm = randomValue({ min:1, max:99999 }).toString(36)
             obj = {
               id,
+              level,
               styleClass:'weapon_item',
               species:'weapon',
               speciesDesc:'武器',
@@ -556,6 +567,7 @@ export default {
             descRdm = randomValue({ min:100000, max:199999 }).toString(36)
             obj = {
               id,
+              level,
               styleClass:'armor_item',
               species:'armor',
               speciesDesc:'防具',
@@ -575,6 +587,7 @@ export default {
             id = randomValue({ min:30000000, max:39999999 })
             obj = {
               id,
+              level,
               styleClass:'medicine_item',
               species:'medicine',
               speciesDesc:'药',
