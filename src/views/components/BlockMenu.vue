@@ -33,7 +33,11 @@
             </template>
             <span>价格: {{item.price}}金</span>
           </div>
-          <div :class="`block_content ${item.styleClass}`">
+          <div 
+            :class="`block_content ${item.styleClass}`"
+            @dblclick="dbClickBlock(item)"
+          >
+            <div class="hover_layer"></div>
             <span class="block_title">{{item.speciesDesc}}</span>
             <span class="block_text">{{item.typeDesc}}</span>
           </div>
@@ -74,6 +78,9 @@ export default {
   watch: {
   },
   methods: {
+    dbClickBlock(item){
+      this.$emit('dbClickBlock', item)
+    }
   }
 }
 </script>
@@ -103,6 +110,9 @@ export default {
       margin-bottom: 5px;
       position: relative;
       overflow: hidden;
+      &:hover{
+        border: 1px solid rgb(255, 166, 32);
+      }
       .block_content{
         width: 100%;
         height: 100%;
@@ -110,6 +120,18 @@ export default {
         box-sizing: border-box;
         color: #333;
         cursor: pointer;
+        position: relative;
+        .hover_layer{
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 999;
+          &:hover{
+            background: rgba(255, 233, 32, 0.25);
+          }
+        }
         &>span{
           display: block;
           font-size: 12px;

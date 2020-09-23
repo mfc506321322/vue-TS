@@ -1,5 +1,102 @@
 <template>
   <div class="content_box">
+    <div class="protagonist_info_area">
+      <div class="info_block">
+        <ul class="states">
+          <li class="name">角色名: {{protagonist.name}}</li>
+          <li>等级: {{protagonist.level}}</li>
+          <li>攻击: {{protagonist.attack}}
+            <span 
+            class="attr_detail" 
+            v-if="protagonist.selectWeapon.attack"
+            >(基本:{{protagonist.basisAttack}}+武器:{{protagonist.selectWeapon.attack}})</span>
+          </li>
+          <li>防御: {{protagonist.defense}}
+            <span 
+            class="attr_detail"
+            v-if="protagonist.selectArmor.defense"
+            >(基本:{{protagonist.basisDefense}}+防具:{{protagonist.selectArmor.defense}})</span>
+          </li>
+          <li 
+            class="progress_bar"
+            :style="{
+              '--progressBar':progressBarHp,
+              '--progressColor':'rgb(255, 73, 73)'
+            }"
+          ><span>血量: {{protagonist.hp}} / {{protagonist.maxhp}}</span></li>
+          <li 
+            class="progress_bar"
+            :style="{
+              '--progressBar':progressBarExp,
+              '--progressColor':'rgb(255, 220, 0)'
+            }"
+          ><span>经验: {{protagonist.exp}} / {{protagonist.maxExp}}</span></li>
+          <li>暴击: {{protagonist.crit | percentageUnit}}</li>
+          <li>闪避: {{protagonist.dodge | percentageUnit}}</li>
+          <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
+        </ul>
+      </div>
+      <div class="info_block">
+        <ul class="menu_list">
+          <li class="menu_list_box" @click="menuClickHandle('box')">打开背包</li>
+          <li @click="menuClickHandle('skill')">打开技能栏</li>
+        </ul>
+      </div>
+      <!-- <div class="info_block">
+        <ul class="cell_content_list">
+          <li
+            v-for="(item,index) in protagonist.box"
+            :key="index"
+            @dblclick="boxItemClick(item)"
+            :class="item.styleClass"
+          >
+            <span>{{item.typeDesc}}</span>
+            <template v-if="item.species === 'weapon'">
+              <span>{{item.attack}}atk</span>
+              <span v-if="item.crit">{{item.crit | percentageUnit}}crit</span>
+            </template>
+            <template v-if="item.species === 'armor'">
+              <span>{{item.defense}}def</span>
+              <span v-if="item.dodge">{{item.dodge | percentageUnit}}dod</span>
+            </template>
+            <span v-if="item.species === 'medicine'">{{item.hp}}hp</span>
+            <span v-if="item.species === 'skill'">{{item.level}}级</span>
+            <span>{{item.price}}金</span>
+            <el-popconfirm
+              class="item_destroy_box"
+              confirmButtonText='确定'
+              cancelButtonText='取消'
+              icon="el-icon-info"
+              iconColor="red"
+              title="确定要丢弃该道具吗？"
+              @onConfirm="enterItemDestroy(item)"
+            >
+              <el-icon class="el-icon-close item_destroy" slot="reference"></el-icon>
+            </el-popconfirm>
+          </li>
+          <li class="cell_content_list_empty" v-if="protagonist.box.length === 0">空</li>
+        </ul>
+      </div> -->
+      <!-- <div class="info_block">
+        <div class="select_equip">
+          装备武器: <div class="select_equip_box" v-if="protagonist.selectWeapon.typeDesc">
+            <span>{{protagonist.selectWeapon.typeDesc}}</span>
+            <span> / {{protagonist.selectWeapon.attack}}攻击</span>
+            <span v-if="protagonist.selectWeapon.crit"> / {{protagonist.selectWeapon.crit | percentageUnit}}暴击</span>
+          </div>
+        </div>
+        <div class="select_equip">
+          装备防具: <div class="select_equip_box" v-if="protagonist.selectArmor.typeDesc">
+            <span>{{protagonist.selectArmor.typeDesc}}</span>
+            <span> / {{protagonist.selectArmor.defense}}防御</span>
+            <span v-if="protagonist.selectArmor.dodge"> / {{protagonist.selectArmor.dodge | percentageUnit}}闪避</span>
+          </div>
+        </div>
+      </div> -->
+      <!-- <Skill
+      :protagonistData="protagonist"
+      ></Skill> -->
+    </div>
     <span class="current_level">当前关卡：{{currentLevel+1}}</span>
     <v-stage
       ref="stage"
@@ -107,100 +204,6 @@
         class="pass_btn"
         @click="passForward"
       >点击前往下一关卡</button> -->
-      <button
-        @click="showFigureDialog = true"
-      >背包</button>
-    </div>
-    <div class="protagonist_info_area">
-      <div class="info_block">
-        <ul class="states">
-          <li class="name">角色名: {{protagonist.name}}</li>
-          <li>等级: {{protagonist.level}}</li>
-          <li>攻击: {{protagonist.attack}}
-            <span 
-            class="attr_detail" 
-            v-if="protagonist.selectWeapon.attack"
-            >(基本:{{protagonist.basisAttack}}+武器:{{protagonist.selectWeapon.attack}})</span>
-          </li>
-          <li>防御: {{protagonist.defense}}
-            <span 
-            class="attr_detail"
-            v-if="protagonist.selectArmor.defense"
-            >(基本:{{protagonist.basisDefense}}+防具:{{protagonist.selectArmor.defense}})</span>
-          </li>
-          <li 
-            class="progress_bar"
-            :style="{
-              '--progressBar':progressBarHp,
-              '--progressColor':'rgb(255, 73, 73)'
-            }"
-          ><span>血量: {{protagonist.hp}} / {{protagonist.maxhp}}</span></li>
-          <li 
-            class="progress_bar"
-            :style="{
-              '--progressBar':progressBarExp,
-              '--progressColor':'rgb(255, 220, 0)'
-            }"
-          ><span>经验: {{protagonist.exp}} / {{protagonist.maxExp}}</span></li>
-          <li>暴击: {{protagonist.crit | percentageUnit}}</li>
-          <li>闪避: {{protagonist.dodge | percentageUnit}}</li>
-          <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
-        </ul>
-      </div>
-      <div class="info_block">
-        <ul class="cell_content_list">
-          <li
-            v-for="(item,index) in protagonist.box"
-            :key="index"
-            @dblclick="boxItemClick(item)"
-            :class="item.styleClass"
-          >
-            <span>{{item.typeDesc}}</span>
-            <template v-if="item.species === 'weapon'">
-              <span>{{item.attack}}atk</span>
-              <span v-if="item.crit">{{item.crit | percentageUnit}}crit</span>
-            </template>
-            <template v-if="item.species === 'armor'">
-              <span>{{item.defense}}def</span>
-              <span v-if="item.dodge">{{item.dodge | percentageUnit}}dod</span>
-            </template>
-            <span v-if="item.species === 'medicine'">{{item.hp}}hp</span>
-            <span v-if="item.species === 'skill'">{{item.level}}级</span>
-            <span>{{item.price}}金</span>
-            <el-popconfirm
-              class="item_destroy_box"
-              confirmButtonText='确定'
-              cancelButtonText='取消'
-              icon="el-icon-info"
-              iconColor="red"
-              title="确定要丢弃该道具吗？"
-              @onConfirm="enterItemDestroy(item)"
-            >
-              <el-icon class="el-icon-close item_destroy" slot="reference"></el-icon>
-            </el-popconfirm>
-          </li>
-          <li class="cell_content_list_empty" v-if="protagonist.box.length === 0">空</li>
-        </ul>
-      </div>
-      <div class="info_block">
-        <div class="select_equip">
-          装备武器: <div class="select_equip_box" v-if="protagonist.selectWeapon.typeDesc">
-            <span>{{protagonist.selectWeapon.typeDesc}}</span>
-            <span> / {{protagonist.selectWeapon.attack}}攻击</span>
-            <span v-if="protagonist.selectWeapon.crit"> / {{protagonist.selectWeapon.crit | percentageUnit}}暴击</span>
-          </div>
-        </div>
-        <div class="select_equip">
-          装备防具: <div class="select_equip_box" v-if="protagonist.selectArmor.typeDesc">
-            <span>{{protagonist.selectArmor.typeDesc}}</span>
-            <span> / {{protagonist.selectArmor.defense}}防御</span>
-            <span v-if="protagonist.selectArmor.dodge"> / {{protagonist.selectArmor.dodge | percentageUnit}}闪避</span>
-          </div>
-        </div>
-      </div>
-      <Skill
-      :protagonistData="protagonist"
-      ></Skill>
     </div>
     <div class="function_area">
       <div class="function_btn_box">
@@ -269,6 +272,9 @@
       <FigureDialog
       :isShow.sync="showFigureDialog"
       :protagonist="protagonist"
+      :menuTabName="menuTabName"
+      @boxItemClick="boxItemClick"
+      @enterItemDestroy="enterItemDestroy"
       ></FigureDialog>
     </div>
   </div>
@@ -303,6 +309,7 @@ export default {
   },
   data() {
     return {
+      menuTabName:'',
       insNames:[],
       updateInfo:updateInfo,
       initMapData:[],
@@ -344,7 +351,7 @@ export default {
       nowEnemyData:{},
       showBattleDialog:false,
       showPassBtn:false,
-      showFigureDialog:true,
+      showFigureDialog:false,
       archiveShowInfo:null,
       boxLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
@@ -352,7 +359,7 @@ export default {
       }),
       itemWeight:weightRandom({
         value:[1, 2, 3, 4],
-        weight:[15, 25, 85, 10]
+        weight:[15, 25, 90, 10]
       }),
       enemyLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
@@ -789,6 +796,10 @@ export default {
       this.selectCell.itemsList.splice(index,1)
       this.mapList = _.cloneDeep(arr)
     },
+    menuClickHandle(name){
+      this.menuTabName = name
+      this.showFigureDialog = true
+    },
     boxItemClick(item){//背包道具使用
       switch(item.species){
         case 'medicine':{
@@ -1076,20 +1087,20 @@ button{
 }
 .content_box{
   border: 2px solid #000;
-  width: 900px;
+  width: 1140px;
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
   .current_level{
     position: absolute;
     top: 10px;
-    left: 10px;
+    left: 250px;
     background-color: #fff;
     z-index: 99;
   }
   .stage{
-    display: inline-block;
   }
   .info_box{
-    display: inline-block;
     vertical-align: top;
     box-sizing: border-box;
     width: 300px;
@@ -1155,17 +1166,33 @@ button{
   }
   .protagonist_info_area{
     box-sizing: border-box;
-    width: 100%;
-    min-height: 100px;
+    width: 240px;
+    height: 600px;
     background-color: #FFF5EE;
-    border-top: 2px solid #999;
+    border-right: 2px solid #999;
     padding: 10px;
     font-size: 14px;
-    display: flex;
     .info_block{
-      min-height: 80px;
-      width: 220px;
-      margin-right: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .menu_list{
+      width: 100%;
+      li{
+        cursor: pointer;
+        border: 2px solid rgb(255, 123, 15);
+        text-align: center;
+        font-size: 16px;
+        color: rgb(255, 123, 15);
+        font-weight: bold;
+        line-height: 20px;
+        margin-bottom: 10px;
+        &:hover{
+          color: #fff;
+          background-color: rgba(255, 123, 15, 0.5);
+          box-shadow: 0 0 5px rgb(255, 123, 15);
+        }
+      }
     }
     .states{
       li{
@@ -1239,7 +1266,7 @@ button{
   }
   .update_info{
     width: 300px;
-    max-height: 860px;
+    max-height: 647px;
     position: absolute;
     right: -302px;
     top: -2px;
@@ -1278,6 +1305,7 @@ button{
     background-color: #FFF5EE;
     padding: 10px;
     border-top: 2px solid #999;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;

@@ -58,20 +58,19 @@ export default {
 </script>
 <style lang="scss" scoped>
 .skill_block{
-  flex: 1;
   .skill_block_title{
-    margin-bottom: 5px;
+    margin-bottom: 10px;
   }
   .skill_list{
     width: 100%;
     height: 100%;
     display: flex;
-    max-height: 223px;
+    max-height: 400px;
     overflow-y: auto;
     flex-wrap: wrap;
     li{
-      margin-right: 5px;
-      margin-bottom: 5px;
+      margin-right: 10px;
+      margin-bottom: 10px;
       .tooltip_btn{
         position: relative;
         .skill_name{

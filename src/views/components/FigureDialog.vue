@@ -8,8 +8,8 @@
     :close-on-click-modal="false"
   >
     <div class="content_box">
-      <el-tabs type="card" class="tab_box">
-        <el-tab-pane label="背包">
+      <el-tabs type="card" class="tab_box" :value="menuTabName">
+        <el-tab-pane label="背包" name="box">
           <div class="box_content">
             <div class="content_left">
               <ul class="select_item">
@@ -32,11 +32,12 @@
             <div class="content_right">
               <BlockMenu
                 :data="boxData"
+                @dbClickBlock="dbClickBlock"
               ></BlockMenu>
             </div>
           </div>
         </el-tab-pane>
-        <el-tab-pane label="技能">
+        <el-tab-pane label="技能" name="skill">
           <Skill
           :protagonistData="protagonist"
           ></Skill>
@@ -68,6 +69,10 @@ export default {
     protagonist:{
       type:Object,
       default:() => {}
+    },
+    menuTabName:{
+      type:String,
+      default:'box'
     }
   },
   data(){
@@ -107,6 +112,10 @@ export default {
       }
       console.log(arr,nullItem)
       return arr
+    },
+    dbClickBlock(item){
+      this.$emit('boxItemClick', item)
+      this.boxData = this.boxDataHandle()
     }
   }
 }
