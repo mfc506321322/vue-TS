@@ -153,8 +153,8 @@ export default {
   methods:{
     dialogOpen(){
       this.status = 'fighting'
-      this.proAttr = this.protagonistData
-      this.enemyAttr = this.nowEnemyData
+      this.proAttr = _.cloneDeep(this.protagonistData)
+      this.enemyAttr = _.cloneDeep(this.nowEnemyData)
       this.proAttr['descName'] = this.protagonistData.name
       this.enemyAttr['descName'] = this.nowEnemyData.name + this.nowEnemyData.classDesc
       this.proAttr['buff'] = []
