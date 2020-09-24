@@ -273,7 +273,6 @@
       <FigureDialog
       :isShow.sync="showFigureDialog"
       :protagonist="protagonist"
-      :menuTabName="menuTabName"
       :dialogConfig="dialogConfig"
       :treasureData="selectCell.itemsList"
       :treasureBoxMax="selectCell.itemsMax"
@@ -315,7 +314,6 @@ export default {
   data() {
     return {
       dialogConfig:{},
-      menuTabName:'',
       insNames:[],
       updateInfo:updateInfo,
       initMapData:[],
@@ -805,11 +803,12 @@ export default {
       this.mapList = _.cloneDeep(arr)
     },
     menuClickHandle(name){
-      this.dialogConfig = {}
-      this.menuTabName = name
+      this.dialogConfig = {
+        menuTabName:name
+      }
       if(name === 'treasure'){
-        this.menuTabName = 'box'
         this.dialogConfig = {
+          menuTabName:'box',
           openTreasure:true
         }
       }

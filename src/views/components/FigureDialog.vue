@@ -8,7 +8,7 @@
     :close-on-click-modal="false"
   >
     <div class="content_box">
-      <el-tabs type="card" class="tab_box" :value="menuTabName">
+      <el-tabs type="card" class="tab_box" :value="dialogConfig.menuTabName">
         <el-tab-pane label="背包" name="box">
           <div class="box_content">
             <div class="content_left">
@@ -90,10 +90,6 @@ export default {
     treasureBoxMax:{
       type: Number,
       default: 1
-    },
-    menuTabName:{
-      type:String,
-      default:'box'
     },
     dialogConfig:{
       type:Object,
