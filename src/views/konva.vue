@@ -173,11 +173,11 @@
           >{{`${item.name}${item.classDesc}`}}</button>
         </el-popconfirm>
       </div>
-      <ul class="cell_content_list" v-show="showBoxList">
+      <!-- <ul class="cell_content_list" v-show="showBoxList">
         <li
           v-for="(item,index) in selectCell.itemsList"
           :key="index"
-          @click="itemClick(item, selectCell)"
+          @click="itemClick(item)"
           :class="item.styleClass"
         >
           <span>物品种类: {{item.speciesDesc}}-{{item.typeDesc}}</span>
@@ -194,7 +194,7 @@
           <span>价格: {{item.price}}金</span>
         </li>
         <li class="cell_content_list_empty" v-if="selectCell.itemsList.length === 0">空</li>
-      </ul>
+      </ul> -->
       <button
         v-if="showPassBtn"
         class="pass_btn"
@@ -273,8 +273,12 @@
       :isShow.sync="showFigureDialog"
       :protagonist="protagonist"
       :menuTabName="menuTabName"
+      :dialogConfig="dialogConfig"
+      :treasureData="selectCell.itemsList"
+      :treasureBoxMax="selectCell.itemsMax"
       @boxItemClick="boxItemClick"
       @enterItemDestroy="enterItemDestroy"
+      @treasureBoxClick="itemClick"
       ></FigureDialog>
     </div>
   </div>
@@ -309,6 +313,7 @@ export default {
   },
   data() {
     return {
+      dialogConfig:{},
       menuTabName:'',
       insNames:[],
       updateInfo:updateInfo,
@@ -431,6 +436,7 @@ export default {
           ...coordinates,
           points,
           itemsList,
+          itemsMax:itemsList.length,
           enemy
         }
         this.initData(obj)
@@ -762,6 +768,7 @@ export default {
       switch(data.label){
         case 'box':{
           this.showBoxList = !this.showBoxList
+          this.menuClickHandle('treasure')
           break
         }
         case 'bed':{
@@ -776,7 +783,7 @@ export default {
       this.nowEnemyData = item
       this.showBattleDialog = true
     },
-    itemClick(row, selectCell){//道具获取
+    itemClick(row){//道具获取
       if(this.protagonist.box.length >= this.protagonist.maxBox){
         return this.$message({
           message:'背包已满',
@@ -787,7 +794,7 @@ export default {
       this.protagonist.box.push(row)
       let index = ''
       let arr = this.mapList.map(item => {
-        if(item.id.join('') === selectCell.id.join('')){
+        if(item.id.join('') === this.selectCell.id.join('')){
           index = _.findIndex(item.itemsList,['id',row.id])
           item.itemsList.splice(index,1)
         }
@@ -797,7 +804,14 @@ export default {
       this.mapList = _.cloneDeep(arr)
     },
     menuClickHandle(name){
+      this.dialogConfig = {}
       this.menuTabName = name
+      if(name === 'treasure'){
+        this.menuTabName = 'box'
+        this.dialogConfig = {
+          openTreasure:true
+        }
+      }
       this.showFigureDialog = true
     },
     boxItemClick(item){//背包道具使用

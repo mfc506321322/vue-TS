@@ -2,7 +2,7 @@
   <div class="block_box">
     <ul class="block_list">
       <li
-        v-for="(item, index) in data"
+        v-for="(item, index) in boxData"
         :key="index"
         class="block_item"
       >
@@ -36,6 +36,7 @@
           </div>
           <div 
             :class="`block_content ${item.styleClass}`"
+            @click="clickBlock(item)"
             @dblclick="dbClickBlock(item)"
           >
             <div class="hover_layer">
@@ -73,10 +74,15 @@ export default {
     openDelete: {
       type: Boolean,
       default: false
+    },
+    maxNum:{
+      type: Number,
+      default: 1
     }
   },
   data() {
     return {
+      boxData:[]
     }
   },
   filters: {
@@ -92,10 +98,30 @@ export default {
   created() {
   },
   mounted() {
+    this.boxData = this.boxDataHandle()
   },
   watch: {
+    data:{
+      handler:function(){
+        if(this.data.length <= this.maxNum){
+          this.boxData = this.boxDataHandle()
+        }
+      },
+      deep:true
+    }
   },
   methods: {
+    boxDataHandle(){
+      let arr = _.cloneDeep(this.data)
+      let nullItem = this.maxNum - this.data.length
+      for(let i=1;i<=nullItem;i++){
+        arr.push({})
+      }
+      return arr
+    },
+    clickBlock(item){
+      this.$emit('clickBlock', item)
+    },
     dbClickBlock(item){
       this.$emit('dbClickBlock', item)
     },

@@ -30,8 +30,19 @@
               </ul>
             </div>
             <div class="content_right">
+              <template v-if="dialogConfig.openTreasure">
+                <span class="box_title">宝箱:</span>
+                <BlockMenu
+                  class="treasure_box"
+                  :data="treasureData"
+                  :maxNum="treasureBoxMax"
+                  @clickBlock="clickBlock"
+                ></BlockMenu>
+              </template>
+              <span class="box_title">背包:</span>
               <BlockMenu
-                :data="boxData"
+                :data="protagonist.box"
+                :maxNum="protagonist.maxBox"
                 :openDelete="true"
                 @dbClickBlock="dbClickBlock"
                 @enterItemDestroy="enterItemDestroy"
@@ -72,14 +83,25 @@ export default {
       type:Object,
       default:() => {}
     },
+    treasureData:{
+      type:Array,
+      default:() => []
+    },
+    treasureBoxMax:{
+      type: Number,
+      default: 1
+    },
     menuTabName:{
       type:String,
       default:'box'
+    },
+    dialogConfig:{
+      type:Object,
+      default:() => {}
     }
   },
   data(){
     return {
-      boxData:[]
     }
   },
   filters: {
@@ -95,33 +117,22 @@ export default {
   created() {
   },
   mounted() {
-    this.boxData = this.boxDataHandle()
   },
-  watch: {
-  },
+  watch: {},
   methods:{
     dialogOpen(){
-      this.boxData = this.boxDataHandle()
     },
     dialogClose(){
       this.$emit('update:isShow',false)
     },
-    boxDataHandle(){
-      let arr = _.cloneDeep(this.protagonist.box)
-      let nullItem = this.protagonist.maxBox - this.protagonist.box.length
-      for(let i=1;i<=nullItem;i++){
-        arr.push({})
-      }
-      console.log(arr,nullItem)
-      return arr
+    clickBlock(item){
+      this.$emit('treasureBoxClick', item)
     },
     dbClickBlock(item){
       this.$emit('boxItemClick', item)
-      this.boxData = this.boxDataHandle()
     },
     enterItemDestroy(item){
       this.$emit('enterItemDestroy', item)
-      this.boxData = this.boxDataHandle()
     }
   }
 }
@@ -168,6 +179,16 @@ export default {
           }
           .content_right{
             padding-left: 10px;
+            .box_title{
+              font-size: 14px;
+              margin-bottom: 10px;
+              display: block;
+            }
+            .treasure_box{
+              padding-bottom: 5px;
+              border-bottom: 1px solid #666;
+              margin-bottom: 10px;
+            }
           }
         }
       }
