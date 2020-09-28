@@ -1053,6 +1053,17 @@ export default {
         this.mapList = JSON.parse(localStorage.getItem('mapList'))
         this.selectCell = JSON.parse(localStorage.getItem('selectCell'))
         this.currentLevel = JSON.parse(localStorage.getItem('currentLevel'))
+
+        this.protagonist.skills = this.protagonist.skills.map(item => {
+          Object.assign(
+            item, 
+            _.find(skills, ['typeDesc', item.typeDesc]), 
+            {
+              level:item.level
+            }
+          )
+          return item
+        })
         this.$message({
           message:'读取存档成功',
           type:'success',
