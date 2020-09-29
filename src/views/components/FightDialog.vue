@@ -215,45 +215,40 @@ export default {
       },800)
     },
     fightHandle(data){
-      let newData = {
-        nfd:_.cloneDeep(data),//newFightData
-        damageBoost:[]
-      }
+      let newData = _.cloneDeep(data)
 
-      newData = this.skillHandle(newData.nfd)
+      newData = this.skillHandle(newData)
 
-      newData.nfd = this.buffHandle(newData.nfd)
+      newData = this.buffHandle(newData)
 
       newData = this.damageHandle(newData)
 
-      if(newData.nfd.identity){
-        this.proAttr.hp = newData.nfd.attr.hp
-        this.enemyAttr.hp = newData.nfd.otherAttr.hp
-        this.proAttr.buff = newData.nfd.attr.buff
-        this.enemyAttr.buff = newData.nfd.otherAttr.buff
-        this.realTimeProAttr = newData.nfd.attr
-        this.realTimeEnemyAttr = newData.nfd.otherAttr
+      if(newData.identity){
+        this.proAttr.hp = newData.attr.hp
+        this.enemyAttr.hp = newData.otherAttr.hp
+        this.proAttr.buff = newData.attr.buff
+        this.enemyAttr.buff = newData.otherAttr.buff
+        this.realTimeProAttr = newData.attr
+        this.realTimeEnemyAttr = newData.otherAttr
       }else{
-        this.proAttr.hp = newData.nfd.otherAttr.hp
-        this.enemyAttr.hp = newData.nfd.attr.hp
-        this.proAttr.buff = newData.nfd.otherAttr.buff
-        this.enemyAttr.buff = newData.nfd.attr.buff
-        this.realTimeProAttr = newData.nfd.otherAttr
-        this.realTimeEnemyAttr = newData.nfd.attr
+        this.proAttr.hp = newData.otherAttr.hp
+        this.enemyAttr.hp = newData.attr.hp
+        this.proAttr.buff = newData.otherAttr.buff
+        this.enemyAttr.buff = newData.attr.buff
+        this.realTimeProAttr = newData.otherAttr
+        this.realTimeEnemyAttr = newData.attr
       }
 
-      return newData.nfd
+      return newData
     },
     skillHandle(data){//技能触发处理
-      let newData = _.cloneDeep(data),
-      damageBoost = []
+      let newData = _.cloneDeep(data)
       newData.attr.skills.forEach(item => {
         if(newData.round % item.round === 0 && Math.random() <= item.chance && item.condition(newData)){
           switch(item.type){
-            case 'damage':{
-              damageBoost.push(item.effect())
-              break
-            }
+            // case 'damage':{
+            //   break
+            // }
             case 'debuff':
             {
               newData.otherAttr.buff = this.buffAdd(newData.otherAttr.buff, item, newData.round)
@@ -265,7 +260,7 @@ export default {
               break
             }
             default:{
-              newData.attr = item.effect(newData.attr)
+              item.effect(newData.attr)
             }
           }
           this.fightList.push({
@@ -275,42 +270,35 @@ export default {
           })
         }
       })
-      return {
-        nfd: newData,
-        damageBoost
-      }
+      return newData
     },
     damageHandle(data){//伤害计算
       let newData = _.cloneDeep(data),
       critDamage = 1,
       randomDamage = randomValue({ arr:this.randomDamageWeight }),
-      desc = newData.nfd.desc
+      desc = newData.desc
 
-      if(Math.random() <= newData.nfd.attr.crit){
+      if(Math.random() <= newData.attr.crit){//暴击
         critDamage = 1.5
-        newData.nfd.specialState = 'crit'
+        newData.specialState = 'crit'
       }
 
-      let damage = Math.floor(newData.nfd.attr.attack * (1 - (newData.nfd.otherAttr.defense * 0.06)/(newData.nfd.otherAttr.defense * 0.06 + 8)) * critDamage * randomDamage)
+      let damage = Math.floor(newData.attr.attack * (1 - (newData.otherAttr.defense * 0.06)/(newData.otherAttr.defense * 0.06 + 8)) * critDamage * randomDamage)
       
-      if(newData.damageBoost.length > 0){
-        newData.damageBoost.forEach(item => {
-          damage = Math.floor(damage * item)
-        })
-      }
+      damage = Math.floor(damage * newData.attr.damageMultiplier)//技能伤害加成
 
       if(damage <= 0){
         damage = 1
       }
 
-      if(Math.random() <= newData.nfd.otherAttr.dodge){
+      if(Math.random() <= newData.otherAttr.dodge){//闪避
         damage = 0
-        newData.nfd.specialState = 'dodge'
+        newData.specialState = 'dodge'
         desc = randomValue({ arr:fightDescData.dodgeAtk })
       }
       
-      newData.nfd.otherAttr.hp -= damage
-      newData.nfd.desc = this.descHandle(desc,newData.nfd.attr.descName,newData.nfd.otherAttr.descName,damage)
+      newData.otherAttr.hp -= damage
+      newData.desc = this.descHandle(desc,newData.attr.descName,newData.otherAttr.descName,damage)
       
       return newData
     },

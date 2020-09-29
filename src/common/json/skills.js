@@ -32,9 +32,9 @@ const skills = [
       let flag = true
       return flag
     },
-    effect: function(){
+    effect: function(data){
       let ascension = 1 + 0.05 + Number((0.5 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2))
-      return ascension
+      data.damageMultiplier = data.damageMultiplier * ascension
     }
   },
   {
@@ -53,14 +53,12 @@ const skills = [
       return flag
     },
     effect: function(data){
-      let newData = cloneDeep(data),
-      reply = Number((0.5 * (this.level * 0.04) / (this.level * 0.04 + 0.5)).toFixed(2))
+      let reply = Number((0.5 * (this.level * 0.04) / (this.level * 0.04 + 0.5)).toFixed(2))
 
-      newData.hp = newData.hp + Math.ceil(newData.maxhp * reply)
-      if(newData.hp > newData.maxhp){
-        newData.hp = newData.maxhp
+      data.hp = data.hp + Math.ceil(data.maxhp * reply)
+      if(data.hp > data.maxhp){
+        data.hp = data.maxhp
       }
-      return newData
     }
   },
   {
