@@ -63,6 +63,106 @@ const skills = [
   },
   {
     level: 1,
+    type: 'buff',
+    typeDesc: '阿罗汉神',
+    round:2,
+    chance:0.15,
+    continueRound:2,
+    desc:'@@@施展了阿罗汉神，暴击率提高',
+    skillDesc:'提升使用者的暴击率，持续2个回合',
+    condition: function(data){
+      let flag = true
+      return flag
+    },
+    effect: function(data){
+      let newData = cloneDeep(data),
+      ascension = 1 + 0.1 + Number((0.7 * (this.level * 0.01) / (this.level * 0.01 + 0.7)).toFixed(2))
+      newData.crit = Number((newData.crit * ascension).toFixed(2))
+      return newData
+    }
+  },
+  {
+    level: 1,
+    type: 'debuff',
+    typeDesc: '大智无定',
+    round:3,
+    chance:0.25,
+    continueRound:2,
+    desc:'@@@施展了大智无定，$$$暴击率下降了，持续2个回合',
+    skillDesc:'降低敌方暴击率，持续2个回合',
+    condition: function(data){
+      let flag = true
+      return flag
+    },
+    effect: function(data){
+      let newData = cloneDeep(data),
+      lower = 1 - 0.1 - Number((0.7 * (this.level * 0.01) / (this.level * 0.01 + 0.7)).toFixed(2))
+      newData.crit = Number((newData.crit * lower).toFixed(2))
+      return newData
+    }
+  },
+  {
+    level: 1,
+    type: 'buff',
+    typeDesc: '凌波微步',
+    round:2,
+    chance:0.2,
+    continueRound:2,
+    desc:'@@@施展了凌波微步，闪避率提高',
+    skillDesc:'提升使用者的闪避率，持续2个回合',
+    condition: function(data){
+      let flag = true
+      return flag
+    },
+    effect: function(data){
+      let newData = cloneDeep(data),
+      ascension = 1 + 0.1 + Number((0.8 * (this.level * 0.01) / (this.level * 0.01 + 0.7)).toFixed(2))
+      newData.dodge = Number((newData.dodge * ascension).toFixed(2))
+      return newData
+    }
+  },
+  {
+    level: 1,
+    type: 'debuff',
+    typeDesc: '降龙伏虎',
+    round:3,
+    chance:0.25,
+    continueRound:2,
+    desc:'@@@施展了降龙伏虎，$$$闪避率下降了，持续2个回合',
+    skillDesc:'降低敌方闪避率，持续2个回合',
+    condition: function(data){
+      let flag = true
+      return flag
+    },
+    effect: function(data){
+      let newData = cloneDeep(data),
+      lower = 1 - 0.1 - Number((0.8 * (this.level * 0.01) / (this.level * 0.01 + 0.7)).toFixed(2))
+      newData.dodge = Number((newData.dodge * lower).toFixed(2))
+      return newData
+    }
+  },
+  {
+    level: 1,
+    type: 'buff',
+    typeDesc: '金刚不坏',
+    round:2,
+    chance:0.15,
+    continueRound:2,
+    desc:'@@@施展了金刚不坏，防御力提高',
+    skillDesc:'提升使用者的防御力，持续2个回合',
+    condition: function(data){
+      let flag = true
+      return flag
+    },
+    effect: function(data){
+      let newData = cloneDeep(data),
+      ascension = 1 + 0.1 + Number((0.75 * (this.level * 0.01) / (this.level * 0.01 + 0.6)).toFixed(2))
+      newData.defense = Math.floor(newData.defense * ascension)
+      return newData
+    }
+  },
+  {
+    level: 1,
     type: 'debuff',
     typeDesc: '非想天则',
     round:3,
@@ -80,7 +180,7 @@ const skills = [
       newData.defense = Math.floor(newData.defense * lower)
       return newData
     }
-  }
+  },
 ]
 
 export default skills
