@@ -32,6 +32,13 @@
               <span>持续回合: {{item.continueRound}}</span>
               <span>触发几率: {{item.chance | percentageUnit}}</span>
             </template>
+            <template v-if="item.species === 'accessories'">
+              <span v-if="item.attack">攻击: {{item.attack}}</span>
+              <span v-if="item.defense">防御: {{item.defense}}</span>
+              <span v-if="item.crit">暴击: {{item.crit | percentageUnit}}</span>
+              <span v-if="item.dodge">闪避: {{item.dodge | percentageUnit}}</span>
+              <span v-if="item.maxhp">增加最大hp: {{item.maxhp}}</span>
+            </template>
             <span>价格: {{item.price}}金</span>
           </div>
           <div 
@@ -143,6 +150,9 @@ export default {
 }
 .skill_item{
   background-color: #83e976;
+}
+.accessories_item{
+  background-color: #d59bda;
 }
 .block_box{
   .block_list{

@@ -43,6 +43,26 @@
       }
 		]
   },
+	"accessoriesTemplate": {
+		"type": [
+      {
+        "name": "necklace",
+        "desc": "项链"
+      },
+      {
+        "name": "ring",
+        "desc": "戒指"
+      },
+      {
+        "name": "headwear",
+        "desc": "头饰"
+      },
+      {
+        "name": "bracelet",
+        "desc": "手镯"
+      }
+		]
+  },
   "medicineTemplate": {
     "type": [
       {

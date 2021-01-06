@@ -8,14 +8,14 @@
           <li>攻击: {{protagonist.attack}}
             <span 
             class="attr_detail" 
-            v-if="protagonist.selectWeapon.attack"
-            >(基本:{{protagonist.basisAttack}}+武器:{{protagonist.selectWeapon.attack}})</span>
+            v-if="Boolean(protagonist.attack > protagonist.basis.attack)"
+            >(基本:{{protagonist.basis.attack}}+装备:{{protagonist.attack - protagonist.basis.attack}})</span>
           </li>
           <li>防御: {{protagonist.defense}}
             <span 
             class="attr_detail"
-            v-if="protagonist.selectArmor.defense"
-            >(基本:{{protagonist.basisDefense}}+防具:{{protagonist.selectArmor.defense}})</span>
+            v-if="Boolean(protagonist.defense > protagonist.basis.defense)"
+            >(基本:{{protagonist.basis.defense}}+装备:{{protagonist.defense - protagonist.basis.defense}})</span>
           </li>
           <li 
             class="progress_bar"
@@ -337,12 +337,10 @@ export default {
         level: 1,
         attack: 8,
         defense: 6,
-        basisAttack: 8,
-        basisDefense: 6,
         maxhp: 50,
         hp: 50,
-        crit: 0,
-        dodge: 0,
+        crit: 0.03,
+        dodge: 0.02,
         damageMultiplier: 1,
         exp: 0,
         maxExp: 200,
@@ -351,7 +349,16 @@ export default {
         box: [],
         selectWeapon: {},
         selectArmor: {},
-        skills:[]
+        selectAccessories: {},
+        equipmentList:[],
+        skills:[],
+        basis:{
+          attack: 8,
+          defense: 6,
+          maxhp: 50,
+          crit: 0.03,
+          dodge: 0.02,
+        }
       },
       nowEnemyData:{},
       showBattleDialog:false,
@@ -363,8 +370,8 @@ export default {
         weight:[50, 40, 30, 20, 10]
       }),
       itemWeight:weightRandom({
-        value:[1, 2, 3, 4],
-        weight:[15, 25, 90, 10]
+        value:[1, 2, 3, 4, 5],
+        weight:[15, 20, 90, 10, 15]
       }),
       enemyLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
@@ -398,18 +405,53 @@ export default {
       this.showBoxList = false
     },
     'protagonist.box':function(val){
-      // val.forEach(item => {
-      //   switch(item.species){
-      //     case 'armor':{
-      //       this.protagonist.defense = this.protagonist.basisDefense + item.defense
-      //       break
-      //     }
-      //     case 'weapon':{
-      //       this.protagonist.attack = this.protagonist.basisAttack + item.attack
-      //       break
-      //     }
-      //   }
-      // })
+    },
+    'protagonist.equipmentList':{
+      handler:function(val){
+        let {
+          attack,
+          defense,
+          maxhp,
+          crit,
+          dodge,
+        } = this.protagonist.basis
+
+        let arr = this.protagonist.box.filter(item => {
+          return this.protagonist.equipmentList.includes(item.id)
+        })
+        arr.forEach(item => {
+          if(item.hasOwnProperty('attack')){
+            attack += item.attack
+          }
+          if(item.hasOwnProperty('defense')){
+            defense += item.defense
+          }
+          if(item.hasOwnProperty('maxhp')){
+            maxhp += item.maxhp
+          }
+          if(item.hasOwnProperty('crit')){
+            // crit = (crit * (1 + item.crit)).toFixed(2)
+            crit += item.crit
+            if(crit >= 0.9){
+              crit = 0.9
+            }
+          }
+          if(item.hasOwnProperty('dodge')){
+            // dodge = (dodge * (1 + item.dodge)).toFixed(2)
+            dodge += item.dodge
+            if(dodge >= 0.9){
+              dodge = 0.9
+            }
+          }
+        })
+
+        this.protagonist.attack = attack
+        this.protagonist.defense = defense
+        this.protagonist.maxhp = maxhp
+        this.protagonist.crit = crit
+        this.protagonist.dodge = dodge
+      },
+      deep:true
     }
   },
   methods: {
@@ -550,9 +592,11 @@ export default {
       let weaponType = itemProps.weaponTemplate.type,
       armorType = itemProps.armorTemplate.type,
       medicineType = itemProps.medicineTemplate.type,
-      arr = itemsNum.map(item => {
+      accessoriesTemplate = itemProps.accessoriesTemplate.type
+
+      let arr = itemsNum.map(item => {
         let obj = {}
-        switch(item){//1:武器 2:防具 3:药瓶 4:技能
+        switch(item){//1:武器 2:防具 3:药瓶 4:技能 5:饰品
           case 1:{
             let typeInfo = randomValue({ arr:weaponType }),
             id = randomValue({ min:10000000, max:19999999 }),
@@ -625,10 +669,75 @@ export default {
             obj.price = level * 20
             break
           }
+          case 5:{
+            let typeInfo = randomValue({ arr:accessoriesTemplate }),
+            id = randomValue({ min:50000000, max:59999999 }),
+            descRdm = randomValue({ min:1, max:99999 }).toString(36)
+            obj = {
+              id,
+              level,
+              styleClass:'accessories_item',
+              species:'accessories',
+              speciesDesc:'饰品',
+              type:typeInfo.name,
+              typeDesc:typeInfo.desc + descRdm
+            }
+
+            let random = Math.random(),
+            itemProperties = {},
+            propertieNum = 1,
+            properties = [
+              'attack',
+              'defense',
+              'maxhp',
+              'crit',
+              'dodge'
+            ]
+            if(random <= 0.25){
+              propertieNum = 2
+            }else if(random <= 0.1){
+              propertieNum = 3
+            }else if(random <= 0.02){
+              propertieNum = 4
+            }
+            itemProperties = this.equipmentWordGeneration(properties,level,propertieNum)
+            obj.price = Math.floor(obj.level * 20)
+            obj = { ...obj, ...itemProperties }
+            break
+          }
         }
         return obj
       })
       return arr
+    },
+    equipmentWordGeneration(properties, level, num){//饰品词条生成
+      let itemProperties = {},
+      arr = _.shuffle(properties)
+      for(let i = 0;i < num;i++){
+        switch(arr[i]){
+          case 'attack':{
+            itemProperties['attack'] = level * randomValue({ min:2, max:4})
+            break
+          }
+          case 'defense':{
+            itemProperties['defense'] = level * randomValue({ min:2, max:4 })
+            break
+          }
+          case 'maxhp':{
+            itemProperties['maxhp'] = level * randomValue({min:15,max:20})
+            break
+          }
+          case 'crit':{
+            itemProperties['crit'] = Number((0.3 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+            break
+          }
+          case 'dodge':{
+            itemProperties['dodge'] = Number((0.2 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+            break
+          }
+        }
+      }
+      return itemProperties
     },
     enemyRandomCreate(item){//敌人生成
       if(item.type !== 'room' || Math.random() > 0.4){
@@ -828,18 +937,6 @@ export default {
           this.boxItemAutoDestroy(item.id)
           break
         }
-        case 'armor':{
-          this.protagonist.selectArmor = item
-          this.protagonist.defense = this.protagonist.basisDefense + item.defense
-          this.protagonist.dodge = item.dodge
-          break
-        }
-        case 'weapon':{
-          this.protagonist.selectWeapon = item
-          this.protagonist.attack = this.protagonist.basisAttack + item.attack
-          this.protagonist.crit = item.crit
-          break
-        }
         case 'skill':{
           let arr = this.protagonist.skills,
           index = _.findIndex(arr,['typeDesc',item.typeDesc])
@@ -857,21 +954,43 @@ export default {
           })
           break
         }
+        case 'weapon':
+        case 'armor':
+        case 'accessories':{
+          this.wearingEquipment(item)
+          break
+        }
       }
+    },
+    wearingEquipment(item){
+      let config = {
+        weapon:'selectWeapon',
+        armor:'selectArmor',
+        accessories:'selectAccessories'
+      }
+      if(!this.protagonist.equipmentList.includes(item.id)){
+        this.protagonist.equipmentList.splice(this.protagonist.equipmentList.indexOf(this.protagonist[config[item.species]].id), 1)
+        this.protagonist.equipmentList.push(item.id)
+      }
+      this.protagonist[config[item.species]] = item
     },
     boxItemAutoDestroy(id){//背包道具删除
       let boxIndex = _.findIndex(this.protagonist.box,['id',id])
       this.protagonist.box.splice(boxIndex,1)
     },
     enterItemDestroy(item){
-      if(item.species === 'armor' || item.species === 'weapon'){
-        if(item.id === this.protagonist.selectWeapon.id || item.id === this.protagonist.selectArmor.id){
-          return this.$message({
-            message:'当前道具已装备，无法丢弃',
-            type:'error',
-            center:true
-          })
-        }
+      switch(item.species){
+        case 'weapon':
+        case 'armor':
+        case 'accessories':
+          if(this.protagonist.equipmentList.includes(item.id)){
+            return this.$message({
+              message:'当前道具已装备，无法丢弃',
+              type:'error',
+              center:true
+            })
+          }
+          break
       }
       let index = _.findIndex(this.protagonist.box,['id',item.id])
       this.protagonist.box.splice(index,1)
@@ -955,8 +1074,6 @@ export default {
         defense = randomValue({min:4,max:6}),
         hp = randomValue({min:50,max:60})
 
-        this.protagonist.basisAttack += attack
-        this.protagonist.basisDefense += defense
         this.protagonist.attack += attack
         this.protagonist.defense += defense
         this.protagonist.maxhp += hp
@@ -964,6 +1081,10 @@ export default {
         if(this.protagonist.level % 5 === 0){
           this.protagonist.maxBox++
         }
+
+        this.protagonist.basis.attack += attack
+        this.protagonist.basis.defense += defense
+        this.protagonist.basis.maxhp += hp
         setTimeout(() => {
           this.$message({
             message:'等级提升!!!',
@@ -1111,6 +1232,9 @@ button{
 }
 .skill_item{
   background-color: #83e976;
+}
+.accessories_item{
+  background-color: #d59bda;
 }
 .content_box{
   border: 2px solid #000;

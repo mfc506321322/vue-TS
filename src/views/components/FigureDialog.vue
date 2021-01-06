@@ -27,6 +27,13 @@
                     :data="[protagonist.selectArmor]"
                   ></BlockMenu>
                 </li>
+                <li>
+                  <span class="select_item_title">装备饰品:</span>
+                  <BlockMenu
+                    class="select_item_block"
+                    :data="[protagonist.selectAccessories]"
+                  ></BlockMenu>
+                </li>
               </ul>
             </div>
             <div class="content_right">
