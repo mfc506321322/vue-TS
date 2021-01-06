@@ -18,27 +18,31 @@
             <span>名称: {{item.typeDesc}}</span>
             <span>物品种类: {{item.speciesDesc}}</span>
             <span>等级: {{item.level}}</span>
-            <template v-if="item.species === 'weapon'">
-              <span>攻击: {{item.attack}}</span>
-              <span v-if="item.crit">暴击: {{item.crit | percentageUnit}}</span>
-            </template>
-            <template v-if="item.species === 'armor'">
-              <span>防御: {{item.defense}}</span>
-              <span v-if="item.dodge">闪避: {{item.dodge | percentageUnit}}</span>
-            </template>
-            <span v-if="item.species === 'medicine'">回血: {{item.hp}}</span>
-            <template v-if="item.species === 'skill'">
-              <span>冷却回合: {{item.round}}</span>
-              <span>持续回合: {{item.continueRound}}</span>
-              <span>触发几率: {{item.chance | percentageUnit}}</span>
-            </template>
-            <template v-if="item.species === 'accessories'">
-              <span v-if="item.attack">攻击: {{item.attack}}</span>
-              <span v-if="item.defense">防御: {{item.defense}}</span>
-              <span v-if="item.crit">暴击: {{item.crit | percentageUnit}}</span>
-              <span v-if="item.dodge">闪避: {{item.dodge | percentageUnit}}</span>
-              <span v-if="item.maxhp">增加最大hp: {{item.maxhp}}</span>
-            </template>
+            <div class="propertie_glossary">
+              <template v-if="item.species === 'weapon'">
+                <span>攻击: {{item.attack}}</span>
+                <span v-if="item.crit">暴击: {{item.crit | percentageUnit}}</span>
+              </template>
+              <template v-if="item.species === 'armor'">
+                <span>防御: {{item.defense}}</span>
+                <span v-if="item.dodge">闪避: {{item.dodge | percentageUnit}}</span>
+              </template>
+              <template v-if="item.species === 'medicine'">
+                <span>回血: {{item.hp}}</span>
+              </template>
+              <template v-if="item.species === 'skill'">
+                <span>冷却回合: {{item.round}}</span>
+                <span>持续回合: {{item.continueRound}}</span>
+                <span>触发几率: {{item.chance | percentageUnit}}</span>
+              </template>
+              <template v-if="item.species === 'accessories'">
+                <span v-if="item.attack">攻击: {{item.attack}}</span>
+                <span v-if="item.defense">防御: {{item.defense}}</span>
+                <span v-if="item.crit">暴击: {{item.crit | percentageUnit}}</span>
+                <span v-if="item.dodge">闪避: {{item.dodge | percentageUnit}}</span>
+                <span v-if="item.maxhp">增加最大hp: {{item.maxhp}}</span>
+              </template>
+            </div>
             <span>价格: {{item.price}}金</span>
           </div>
           <div 

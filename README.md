@@ -19,7 +19,7 @@ npm run build
 See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ### 更新计划
-- [] 多类型装备（首饰等）
+- [x] 多类型装备（首饰等）
 - [] 装备词缀
 - [x] 技能（技能书）
 - [] 角色技能树

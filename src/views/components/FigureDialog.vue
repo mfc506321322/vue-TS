@@ -30,8 +30,9 @@
                 <li>
                   <span class="select_item_title">装备饰品:</span>
                   <BlockMenu
-                    class="select_item_block"
-                    :data="[protagonist.selectAccessories]"
+                    class="select_item_block block_box_vertical"
+                    :data="protagonist.selectAccessories"
+                    :maxNum="2"
                   ></BlockMenu>
                 </li>
               </ul>
@@ -176,6 +177,9 @@ export default {
                 display: flex;
                 .select_item_title{
                   margin-right: 10px;
+                }
+                .block_box_vertical{
+                  width: 52px;
                 }
               }
             }

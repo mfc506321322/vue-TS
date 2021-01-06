@@ -17,8 +17,14 @@
     width: 120px;
     display: flex;
     flex-direction: column;
-    &>span{
+    span{
       margin-bottom: 3px;
+    }
+    .propertie_glossary{
+      color: red;
+      span{
+        display: block;
+      }
     }
   }
 }

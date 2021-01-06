@@ -349,7 +349,7 @@ export default {
         box: [],
         selectWeapon: {},
         selectArmor: {},
-        selectAccessories: {},
+        selectAccessories: [],
         equipmentList:[],
         skills:[],
         basis:{
@@ -969,10 +969,28 @@ export default {
         accessories:'selectAccessories'
       }
       if(!this.protagonist.equipmentList.includes(item.id)){
+        if(item.species === 'accessories'){
+          let arr = _.cloneDeep(this.protagonist.selectAccessories)
+          switch(arr.length){
+            case 0:
+            case 1:
+              arr.push(item)
+              break
+            case 2:
+              this.protagonist.equipmentList.splice(this.protagonist.equipmentList.indexOf(arr[0].id), 1)
+              arr[0] = arr[1]
+              arr[1] = item
+              break
+          }
+          this.protagonist.equipmentList.push(item.id)
+          this.protagonist.selectAccessories = arr
+          return true
+        }
+
         this.protagonist.equipmentList.splice(this.protagonist.equipmentList.indexOf(this.protagonist[config[item.species]].id), 1)
         this.protagonist.equipmentList.push(item.id)
+        this.protagonist[config[item.species]] = item
       }
-      this.protagonist[config[item.species]] = item
     },
     boxItemAutoDestroy(id){//背包道具删除
       let boxIndex = _.findIndex(this.protagonist.box,['id',id])
