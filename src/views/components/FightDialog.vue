@@ -25,6 +25,7 @@
             }"
           ><span>血量: {{realTimeEnemyAttr.hp}} / {{realTimeEnemyAttr.maxhp}}</span></li>
           <li>暴击: {{realTimeEnemyAttr.crit | percentageUnit}}</li>
+          <li>暴击伤害: {{realTimeEnemyAttr.critDamage | percentageUnit}}</li>
           <li>闪避: {{realTimeEnemyAttr.dodge | percentageUnit}}</li>
           <li>当前状态: 
             <p 
@@ -58,6 +59,7 @@
             }"
           ><span>血量: {{realTimeProAttr.hp}} / {{realTimeProAttr.maxhp}}</span></li>
           <li>暴击: {{realTimeProAttr.crit | percentageUnit}}</li>
+          <li>暴击伤害: {{realTimeProAttr.critDamage | percentageUnit}}</li>
           <li>闪避: {{realTimeProAttr.dodge | percentageUnit}}</li>
           <li>当前状态: 
             <p
@@ -279,7 +281,7 @@ export default {
       desc = newData.desc
 
       if(Math.random() <= newData.attr.crit){//暴击
-        critDamage = 1.5
+        critDamage = newData.attr.critDamage
         newData.specialState = 'crit'
       }
 

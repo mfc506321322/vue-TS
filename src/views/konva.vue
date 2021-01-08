@@ -32,6 +32,7 @@
             }"
           ><span>经验: {{protagonist.exp}} / {{protagonist.maxExp}}</span></li>
           <li>暴击: {{protagonist.crit | percentageUnit}}</li>
+          <li>暴击伤害: {{protagonist.critDamage | percentageUnit}}</li>
           <li>闪避: {{protagonist.dodge | percentageUnit}}</li>
           <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
         </ul>
@@ -340,6 +341,7 @@ export default {
         maxhp: 50,
         hp: 50,
         crit: 0.03,
+        critDamage: 1.5,
         dodge: 0.02,
         damageMultiplier: 1,
         exp: 0,
@@ -357,6 +359,7 @@ export default {
           defense: 6,
           maxhp: 50,
           crit: 0.03,
+          critDamage: 1.5,
           dodge: 0.02,
         }
       },
@@ -414,6 +417,7 @@ export default {
           maxhp,
           crit,
           dodge,
+          critDamage
         } = this.protagonist.basis
 
         let arr = this.protagonist.box.filter(item => {
@@ -436,6 +440,9 @@ export default {
               crit = 0.9
             }
           }
+          if(item.hasOwnProperty('critDamage')){
+            critDamage += item.critDamage
+          }
           if(item.hasOwnProperty('dodge')){
             // dodge = (dodge * (1 + item.dodge)).toFixed(2)
             dodge += item.dodge
@@ -449,6 +456,7 @@ export default {
         this.protagonist.defense = defense
         this.protagonist.maxhp = maxhp
         this.protagonist.crit = crit
+        this.protagonist.critDamage = critDamage
         this.protagonist.dodge = dodge
       },
       deep:true
@@ -611,9 +619,11 @@ export default {
               typeDesc:typeInfo.desc + descRdm,
               attack:level * randomValue({ min:6, max:9})
             }
-            obj.crit = 0
             if(Math.random() <= 0.25){
-              obj.crit = Number((0.7 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+              obj['crit'] = Number((0.7 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+            }
+            if(Math.random() <= 0.15){
+              obj['critDamage'] = Number((1 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
             }
             obj.price = Math.floor(obj.attack * 2.5)
             break
@@ -632,9 +642,8 @@ export default {
               typeDesc:typeInfo.desc + descRdm,
               defense:level * randomValue({ min:6, max:9 })
             }
-            obj.dodge = 0
             if(Math.random() <= 0.25){
-              obj.dodge = Number((0.4 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+              obj['dodge'] = Number((0.4 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
             }
             obj.price = Math.floor(obj.defense * 2)
             break
@@ -691,7 +700,8 @@ export default {
               'defense',
               'maxhp',
               'crit',
-              'dodge'
+              'dodge',
+              'critDamage'
             ]
             if(random <= 0.25){
               propertieNum = 2
@@ -731,6 +741,10 @@ export default {
             itemProperties['crit'] = Number((0.3 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
             break
           }
+          case 'critDamage':{
+            itemProperties['critDamage'] = Number((0.8 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+            break
+          }
           case 'dodge':{
             itemProperties['dodge'] = Number((0.2 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
             break
@@ -762,6 +776,7 @@ export default {
           hp: 50,
           maxhp: 50,
           crit: 0,
+          critDamage: 1.5,
           dodge: 0,
           damageMultiplier: 1,
           exp: 100,
@@ -789,6 +804,7 @@ export default {
         obj.hp = 20 + Math.floor(levelRelated * randomValue({ min:12, max:17, decimal:1 }))
         obj.maxhp = obj.hp
         obj.crit = Number((0.4 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
+        obj.critDamage = 1.5 + Number((0.6 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
         obj.dodge = Number((0.2 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
         obj.exp = obj.level * 120
         arr.push(obj)
