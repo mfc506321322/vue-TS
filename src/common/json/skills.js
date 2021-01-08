@@ -181,6 +181,51 @@ const skills = [
       return newData
     }
   },
+  {
+    level: 1,
+    type: 'buff',
+    typeDesc: '凝气一式',
+    round:2,
+    chance:0.2,
+    continueRound:4,
+    desc:'@@@施展了凝气一式，暴击伤害提高',
+    skillDesc:'提升使用者的暴击伤害提高，持续4个回合',
+    condition: function(data){
+      let flag = true
+      return flag
+    },
+    effect: function(data){
+      let newData = cloneDeep(data),
+      ascension = Number((1 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2))
+      newData.critDamage += ascension
+      return newData
+    }
+  },
+  {
+    level: 1,
+    type: 'debuff',
+    typeDesc: '七伤拳',
+    round:2,
+    chance:0.25,
+    continueRound:4,
+    desc:'@@@施展了七伤拳，$$$暴击伤害和闪避下降了，持续4个回合',
+    skillDesc:'降低敌方暴击伤害和闪避，持续4个回合',
+    condition: function(data){
+      let flag = true
+      return flag
+    },
+    effect: function(data){
+      let newData = cloneDeep(data),
+      ascension = Number((1 * (this.level * 0.04) / (this.level * 0.04 + 0.6)).toFixed(2)),
+      lower = 1 - 0.1 - Number((0.7 * (this.level * 0.01) / (this.level * 0.01 + 0.7)).toFixed(2))
+      newData.critDamage -= ascension
+      if(newData.critDamage < 1){
+        newData.critDamage = 1
+      }
+      newData.dodge = Number((newData.dodge * lower).toFixed(2))
+      return newData
+    }
+  },
 ]
 
 export default skills
