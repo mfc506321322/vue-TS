@@ -436,8 +436,8 @@ export default {
           if(item.hasOwnProperty('crit')){
             // crit = (crit * (1 + item.crit)).toFixed(2)
             crit += item.crit
-            if(crit >= 0.9){
-              crit = 0.9
+            if(crit >= 0.95){
+              crit = 0.95
             }
           }
           if(item.hasOwnProperty('critDamage')){
@@ -446,12 +446,14 @@ export default {
           if(item.hasOwnProperty('dodge')){
             // dodge = (dodge * (1 + item.dodge)).toFixed(2)
             dodge += item.dodge
-            if(dodge >= 0.9){
-              dodge = 0.9
+            if(dodge >= 0.95){
+              dodge = 0.95
             }
           }
         })
-
+        if(this.protagonist.hp > maxhp){
+          this.protagonist.hp = maxhp
+        }
         this.protagonist.attack = attack
         this.protagonist.defense = defense
         this.protagonist.maxhp = maxhp
