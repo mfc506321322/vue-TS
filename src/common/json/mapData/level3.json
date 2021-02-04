@@ -129,12 +129,18 @@
       "after": 0,
       "side": 1
     },
-    "text": "商铺",
-    "describe": "溪木街的商铺",
+    "text": "商店",
+    "describe": "溪木街崇武院旁的商铺，里面几茬武院的官兵",
     "species": "build",
     "type": "shop",
     "config": {
-      "furniture": []
+      "furniture": [
+        {
+          "text": "菜单",
+          "label": "shop",
+          "level": 3
+        }
+      ]
     }
   },
   {

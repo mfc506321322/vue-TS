@@ -243,6 +243,7 @@
           <p>获取道具：<span>点击右侧功能区箱子按钮打开道具列表，点击道具获取</span></p>
           <p>丢弃道具：<span>点击背包道具列表里的道具右上角的”X“键，丢弃道具</span></p>
           <p>使用道具&穿戴装备&学习技能：<span>双击背包道具列表里的道具进行使用或装备</span></p>
+          <p>买卖道具：<span>商店页面双击菜单内道具购买，双击背包内的道具售出</span></p>
           <p>查看已学习的技能：<span>点击“打开技能栏”按钮，查看技能列表</span></p>
           <p>进行战斗：<span>点击右侧功能区红色敌人按钮进入战斗</span></p>
           <p>战斗撤退：<span>战斗中途可以随时点击战斗窗口右下角“撤退”按钮退出战斗</span></p>
@@ -281,6 +282,14 @@
       @enterItemDestroy="enterItemDestroy"
       @treasureBoxClick="itemClick"
       ></FigureDialog>
+      <ShopDialog
+      :isShow.sync="showShopDialog"
+      :protagonist="protagonist"
+      :dialogConfig="shopDialogConfig"
+      :treasureData="selectCell.itemsList"
+      @shopItemClick="itemClick"
+      @boxItemClick="shopBoxClick"
+      ></ShopDialog>
     </div>
   </div>
 </template>
@@ -294,6 +303,7 @@ import enemyDatas from '@/common/json/enemy.json'
 import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import FightDialog from '@/views/components/FightDialog'
 import FigureDialog from '@/views/components/FigureDialog'
+import ShopDialog from '@/views/components/ShopDialog'
 import Skill from '@/views/components/Skill'
 import updateInfo from '@/common/json/updateInfo.json'
 import skills from '@/common/json/skills'
@@ -310,11 +320,14 @@ export default {
   components: {
     Skill,
     FightDialog,
-    FigureDialog
+    FigureDialog,
+    ShopDialog
   },
   data() {
     return {
       dialogConfig:{},
+      shopDialogConfig:{},
+      showShopDialog:false,
       insNames:[],
       updateInfo:updateInfo,
       initMapData:[],
@@ -346,6 +359,7 @@ export default {
         damageMultiplier: 1,
         exp: 0,
         maxExp: 200,
+        price: 0,
         coordinate: [1],
         maxBox: 15,
         box: [],
@@ -375,6 +389,14 @@ export default {
       itemWeight:weightRandom({
         value:[1, 2, 3, 4, 5],
         weight:[15, 20, 90, 10, 15]
+      }),
+      shopBoxLevelWeight:weightRandom({
+        value:[0, 1, 2, 3, 4],
+        weight:[50, 30, 20, 10, 5]
+      }),
+      shopItemWeight:weightRandom({
+        value:[1, 2, 3, 4, 5],
+        weight:[20, 30, 30, 15, 20]
       }),
       enemyLevelWeight:weightRandom({
         value:[-2, -1, 0, 1, 2],
@@ -579,17 +601,33 @@ export default {
       }
     },
     itemHandle(furniture){//道具生成
-      let arr = []
-      let boxInfo = furniture.filter(item => {
+      let arr = [],
+      boxInfo = furniture.some(item => {
         return item.label === 'box'
+      }),
+      shopInfo = furniture.some(item => {
+        return item.label === 'shop'
       })
-      if(boxInfo.length){
-        let boxLevel = this.protagonist.level + randomValue({ arr:this.boxLevelWeight }),
-        sums = randomValue({ min:3, max:5 }),
+      if(boxInfo || shopInfo){
+        let weightConfig = [],
+        levelWeight = [],
+        boxLevel = 1,
+        sums = 0,
         itemsNum = []
 
+        if(boxInfo){
+          weightConfig = this.itemWeight
+          levelWeight = this.boxLevelWeight
+          sums = randomValue({ min:3, max:5 })
+        }else if(shopInfo){
+          weightConfig = this.shopItemWeight
+          levelWeight = this.shopBoxLevelWeight
+          sums = randomValue({ min:10, max:20 })
+        }
+
+        boxLevel = this.protagonist.level + randomValue({ arr:levelWeight })
         for(let j=1;j<=sums;j++){
-          itemsNum.push(randomValue({ arr:this.itemWeight }))
+          itemsNum.push(randomValue({ arr:weightConfig }))
         }
         if(boxLevel <= 1){
           boxLevel = 1
@@ -902,6 +940,10 @@ export default {
         case 'bed':{
           break
         }
+        case 'shop':{
+          this.shopClickHandle()
+          break
+        }
       }
     },
     enemyClick(item){
@@ -911,13 +953,23 @@ export default {
       this.nowEnemyData = item
       this.showBattleDialog = true
     },
-    itemClick(row){//道具获取
+    itemClick(row, type){//道具获取
       if(this.protagonist.box.length >= this.protagonist.maxBox){
         return this.$message({
           message:'背包已满',
           type:'error',
           center:true
         })
+      }
+      if(type === 'shop'){
+        if(row.price > this.protagonist.price){
+          return this.$message({
+            message:'没钱了，买个毛线',
+            type:'warning',
+            center:true
+          })
+        }
+        this.protagonist.price -= row.price
       }
       this.protagonist.box.push(row)
       let index = ''
@@ -931,6 +983,12 @@ export default {
       this.selectCell.itemsList.splice(index,1)
       this.mapList = _.cloneDeep(arr)
     },
+    shopBoxClick(item){
+      let info = this.enterItemDestroy(item, 'shop')
+      if(info + '' != 'undefined')return true
+      this.protagonist.price += item.price
+      this.selectCell.itemsList.push(item)
+    },
     menuClickHandle(name){
       this.dialogConfig = {
         menuTabName:name
@@ -942,6 +1000,11 @@ export default {
         }
       }
       this.showFigureDialog = true
+    },
+    shopClickHandle(){
+      this.shopDialogConfig = {
+      }
+      this.showShopDialog = true
     },
     boxItemClick(item){//背包道具使用
       switch(item.species){
@@ -986,7 +1049,8 @@ export default {
         armor:'selectArmor',
         accessories:'selectAccessories'
       }
-      if(!this.protagonist.equipmentList.includes(item.id)){
+      let equipmentList = _.cloneDeep(this.protagonist.equipmentList)
+      if(!equipmentList.includes(item.id)){
         if(item.species === 'accessories'){
           let arr = _.cloneDeep(this.protagonist.selectAccessories)
           switch(arr.length){
@@ -994,19 +1058,25 @@ export default {
             case 1:
               arr.push(item)
               break
-            case 2:
-              this.protagonist.equipmentList.splice(this.protagonist.equipmentList.indexOf(arr[0].id), 1)
-              arr[0] = arr[1]
-              arr[1] = item
+            case 2:{
+              let index = equipmentList.indexOf(arr[0].id)
+              equipmentList.splice(index, 1)
+              arr = [arr[1], item]
               break
+            }
           }
-          this.protagonist.equipmentList.push(item.id)
+          equipmentList.push(item.id)
+          this.protagonist.equipmentList = equipmentList
           this.protagonist.selectAccessories = arr
           return true
         }
 
-        this.protagonist.equipmentList.splice(this.protagonist.equipmentList.indexOf(this.protagonist[config[item.species]].id), 1)
-        this.protagonist.equipmentList.push(item.id)
+        let itemId = this.protagonist[config[item.species]].id
+        if(itemId){
+          equipmentList.splice(equipmentList.indexOf(itemId), 1)
+        }
+        equipmentList.push(item.id)
+        this.protagonist.equipmentList = equipmentList
         this.protagonist[config[item.species]] = item
       }
     },
@@ -1014,14 +1084,15 @@ export default {
       let boxIndex = _.findIndex(this.protagonist.box,['id',id])
       this.protagonist.box.splice(boxIndex,1)
     },
-    enterItemDestroy(item){
+    enterItemDestroy(item, type){
+      let message = type === 'shop' ? '当前道具已装备，无法卖出' : '当前道具已装备，无法丢弃'
       switch(item.species){
         case 'weapon':
         case 'armor':
         case 'accessories':
           if(this.protagonist.equipmentList.includes(item.id)){
             return this.$message({
-              message:'当前道具已装备，无法丢弃',
+              message,
               type:'error',
               center:true
             })
@@ -1183,10 +1254,34 @@ export default {
     },
     randomMapContent(){
       let text = randomValue({ arr:enlessModeMap.name }),
-      config = {}
-
-      if(Math.random() <= 0.3){
+      config = {
+        species: 'build',
+        type: 'room',
+        config: {
+          furniture: []
+        }
+      }
+      let random = Math.random()
+      if(random <= 0.08){
         config = {
+          text:'商店',
+          describe:'此地的商店，没有什么人气',
+          species: 'build',
+          type:'shop',
+          config: {
+            furniture: [
+              {
+                text: '菜单',
+                label: 'shop',
+                level: randomValue({min:1, max:5})
+              }
+            ]
+          }
+        }
+      }else if(random <= 0.25){
+        config = {
+          species: 'build',
+          type: 'room',
           config: {
             furniture: [
               {
