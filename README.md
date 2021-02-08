@@ -31,3 +31,4 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - [] 金币宝箱（开箱乐）
 - [] 抽奖系统
 - [] 装备提升系统
+- [x] 全新战斗系统

@@ -74,12 +74,33 @@
       </div>
     </div>
     <div slot="footer" class="dialog_footer">
+      <template v-if="showFightBtn">
+        <el-button type="primary" plain @click="fightBtnClick('fight')">战斗</el-button>
+        <el-button type="primary" plain @click="fightBtnClick('defense')">防御</el-button>
+        <el-button type="primary" plain @click="menuClickHandle('box')">道具</el-button>
+        <el-button type="primary" plain disabled>技能(暂不可用)</el-button>
+        <el-dropdown @command="autoFight">
+          <el-button class="auto_fight_btn" type="primary" plain>自动战斗</el-button>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="fight">进攻优先</el-dropdown-item>
+            <el-dropdown-item command="defense">防御优先</el-dropdown-item>
+            <el-dropdown-item command="balance">平衡</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+      </template>
       <el-button plain @click="dialogClose">{{status === 'fighting' ? '撤退' : '退出'}}</el-button>
     </div>
+    <FightingFigureDialog
+    :isShow.sync="showFigureDialog"
+    :protagonist="proAttr"
+    :dialogConfig="figureDialogConfig"
+    @dbClickBlock="dbClickBlock"
+    ></FightingFigureDialog>
   </el-dialog>
 </template>
 <script>
 import fightDescData from '@/common/json/fightDescData.json'
+import FightingFigureDialog from './FightingFigureDialog'
 import _ from 'lodash'
 import {
   randomValue,
@@ -88,7 +109,9 @@ import {
 
 export default {
   name:'Dialog',
-  components: {},
+  components: {
+    FightingFigureDialog
+  },
   props:{
     isShow:{
       type:Boolean,
@@ -105,11 +128,15 @@ export default {
   },
   data(){
     return {
+      isAuto:false,
+      figureDialogConfig:{},
+      showFigureDialog:false,
       title:'战斗中',
       timer:null,
       status:'fighting',//fighting,win,lose
       fightList:[],
       count:1,
+      roundCount:0,
       proAttr:{},
       enemyAttr:{},
       realTimeProAttr:{
@@ -121,7 +148,25 @@ export default {
       randomDamageWeight:weightRandom({
         value:[0.9, 1, 1.1],
         weight:[10, 40, 10]
-      })
+      }),
+      proTypeWeight:{
+        fight:weightRandom({
+          value:['fight', 'defense'],
+          weight:[40, 10]
+        }),
+        defense:weightRandom({
+          value:['fight', 'defense'],
+          weight:[15, 40]
+        }),
+        balance:weightRandom({
+          value:['fight', 'defense'],
+          weight:[25, 10]
+        })
+      },
+      enemyTypeWeight:weightRandom({
+        value:['fight', 'defense'],
+        weight:[30, 10]
+      }),
     }
   },
   filters: {
@@ -139,6 +184,9 @@ export default {
     progressBarEnemyHp(){
       return Math.ceil(this.realTimeEnemyAttr.hp / this.realTimeEnemyAttr.maxhp * 100) + '%'
     },
+    showFightBtn(){
+      return Boolean(this.roundCount % 2 === 0 && !this.isAuto)
+    }
   },
   created(){
   },
@@ -155,6 +203,7 @@ export default {
   methods:{
     dialogOpen(){
       this.status = 'fighting'
+      //隔离数据
       this.proAttr = _.cloneDeep(this.protagonistData)
       this.enemyAttr = _.cloneDeep(this.nowEnemyData)
       this.proAttr['descName'] = this.protagonistData.name
@@ -163,13 +212,14 @@ export default {
       this.enemyAttr['buff'] = []
       this.realTimeProAttr = this.proAttr
       this.realTimeEnemyAttr = this.enemyAttr
-      this.fighting()
     },
     dialogClose(){
+      this.isAuto = false
       this.title = '战斗中'
       this.status = 'fighting'
       this.fightList = []
       this.count = 1
+      this.roundCount = 0
       this.proAttr = {}
       this.enemyAttr = {}
       this.realTimeProAttr = {
@@ -179,12 +229,40 @@ export default {
         buff:[]
       }
 
+      clearTimeout(this.timer)
       clearInterval(this.timer)
       this.timer = null
       this.$emit('update:isShow',false)
     },
-    fighting(){
-      this.timer = setInterval(() => {
+    autoFight(command){
+      this.fightBtnClick(command, true)
+    },
+    fightBtnClick(type, isAuto){
+      if(isAuto){
+        this.isAuto = true
+        this.timer = setInterval(() => {
+          this.fightBtnClickHandle(type, isAuto)
+        },800)
+      }else{
+        this.timer = setTimeout(() => {
+          this.fightBtnClickHandle(type, isAuto)
+        },800)
+        this.fightBtnClickHandle(type, isAuto)
+      }
+    },
+    fightBtnClickHandle(type, isAuto){
+      let identity = this.count % 2,
+      fightType = type
+      if(identity){
+        if(isAuto){
+          fightType = randomValue({ arr:this.proTypeWeight[type] })
+        }
+      }else{
+        fightType = randomValue({ arr:this.enemyTypeWeight })
+      }
+      this.fighting(fightType)
+    },
+    fighting(type){
         this.buffDelete()
         let pAttr = _.cloneDeep(this.proAttr),
         eAttr = _.cloneDeep(this.enemyAttr)
@@ -204,7 +282,7 @@ export default {
           fightParams.round = this.count / 2
         }
 
-        let fightData = this.fightHandle(fightParams)
+        let fightData = this.fightHandle(fightParams, type)
 
         this.count++
         this.fightList.push({
@@ -214,16 +292,22 @@ export default {
         })
 
         this.fightStateJudgment()
-      },800)
+        this.roundCount++
     },
-    fightHandle(data){
+    fightHandle(data, type){
       let newData = _.cloneDeep(data)
 
       newData = this.skillHandle(newData)
 
+      if(type === 'defense'){
+        newData = this.defenseStateHandle(newData)
+      }
+
       newData = this.buffHandle(newData)
 
-      newData = this.damageHandle(newData)
+      if(type === 'fight'){
+        newData = this.damageHandle(newData)
+      }
 
       if(newData.identity){
         this.proAttr.hp = newData.attr.hp
@@ -289,6 +373,8 @@ export default {
       
       damage = Math.floor(damage * newData.attr.damageMultiplier)//技能伤害加成
 
+      damage = Math.floor(damage * (1 - newData.otherAttr.reduceDamageMultiplier))//减伤率
+
       if(damage <= 0){
         damage = 1
       }
@@ -302,6 +388,27 @@ export default {
       newData.otherAttr.hp -= damage
       newData.desc = this.descHandle(desc,newData.attr.descName,newData.otherAttr.descName,damage)
       
+      return newData
+    },
+    defenseStateHandle(data){
+      let newData = _.cloneDeep(data),
+      defenseSkill = {
+        level: 1,
+        type: 'buff',
+        typeDesc: '防御',
+        round:1,
+        chance:1,
+        continueRound:1,
+        desc:'@@@展开架势，准备防御$$$下一次的进攻',
+        skillDesc:'提高使用者的减伤率，持续1个回合',
+        effect: function(data){
+          let newData = _.cloneDeep(data)
+          newData.reduceDamageMultiplier = 0.5
+          return newData
+        }
+      }
+      newData.attr.buff = this.buffAdd(newData.attr.buff, defenseSkill, newData.round)
+      newData.desc = this.descHandle(defenseSkill.desc, newData.attr.descName, newData.otherAttr.descName)
       return newData
     },
     buffAdd(buff, skill, createRound){//buff添加
@@ -362,7 +469,8 @@ export default {
         })
         this.status = state ? 'win' : 'lose'
         this.title = '战斗结束'
-        this.$emit('fightEnd',state,this.proAttr.hp,this.nowEnemyData)
+        this.$emit('fightEnd',state,_.cloneDeep(this.proAttr),this.nowEnemyData)
+        clearTimeout(this.timer)
         clearInterval(this.timer)
         this.timer = null
       }
@@ -377,7 +485,32 @@ export default {
         }[$1]
       })
       return text
-    }
+    },
+    menuClickHandle(name){
+      this.figureDialogConfig = {
+        menuTabName:name
+      }
+      this.showFigureDialog = true
+    },
+    dbClickBlock(item){
+      switch(item.species){
+        case 'medicine':{
+          if(this.proAttr.hp === this.proAttr.maxhp)return
+          let hp = this.proAttr.hp + item.hp
+          if(hp > this.proAttr.maxhp){
+            hp = this.proAttr.maxhp
+          }
+          this.proAttr.hp = hp
+          this.realTimeProAttr.hp = hp
+          this.boxItemAutoDestroy(item.id)
+          break
+        }
+      }
+    },
+    boxItemAutoDestroy(id){//背包道具删除
+      let boxIndex = _.findIndex(this.proAttr.box,['id',id])
+      this.proAttr.box.splice(boxIndex,1)
+    },
   }
 }
 </script>
@@ -473,6 +606,9 @@ export default {
     .el-dialog__footer{
       padding: 10px 20px;
       border-top: 1px solid #ddd;
+      .auto_fight_btn{
+        margin: 0 10px;
+      }
     }
   }
 }

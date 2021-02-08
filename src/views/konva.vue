@@ -357,6 +357,7 @@ export default {
         critDamage: 1.5,
         dodge: 0.02,
         damageMultiplier: 1,
+        reduceDamageMultiplier: 0,
         exp: 0,
         maxExp: 200,
         price: 0,
@@ -819,6 +820,7 @@ export default {
           critDamage: 1.5,
           dodge: 0,
           damageMultiplier: 1,
+          reduceDamageMultiplier: 0,
           exp: 100,
           box:[],
           skills:[],
@@ -917,13 +919,13 @@ export default {
         })
       }
 
-      if(this.selectCell.enemy.length > 0){
-        return this.$message({
-          message:'当前区域敌人尚未清除，无法前往下一区域',
-          type:'error',
-          center:true
-        })
-      }
+      // if(this.selectCell.enemy.length > 0){
+      //   return this.$message({
+      //     message:'当前区域敌人尚未清除，无法前往下一区域',
+      //     type:'error',
+      //     center:true
+      //   })
+      // }
 
       let obj = _.cloneDeep(item)
       this.selectCell = obj
@@ -1102,9 +1104,10 @@ export default {
       let index = _.findIndex(this.protagonist.box,['id',item.id])
       this.protagonist.box.splice(index,1)
     },
-    fightEnd(type,hp,enemy){//战斗结束
+    fightEnd(type,proAttr,enemy){//战斗结束
       if(type){
-        this.protagonist.hp = hp
+        this.protagonist.hp = proAttr.hp
+        this.protagonist.box = proAttr.box
         let index = ''
         let arr = this.mapList.map(item => {
           if(item.id.join('') === enemy.pid.join('')){
