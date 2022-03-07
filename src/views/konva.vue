@@ -266,12 +266,18 @@
       <div class="thanks">鸣谢：@季--提供数值系统支持</div>
     </div>
     <div class="dialog">
-      <FightDialog
+      <!-- <FightDialog
       :nowEnemyData="nowEnemyData"
       :protagonistData="protagonist"
       :isShow.sync="showBattleDialog"
       @fightEnd="fightEnd"
-      ></FightDialog>
+      ></FightDialog> -->
+      <MultiFightDialog
+      :nowEnemyData="nowEnemyData"
+      :protagonistData="protagonist"
+      :isShow.sync="showBattleDialog"
+      @fightEnd="fightEnd"
+      ></MultiFightDialog>
       <FigureDialog
       :isShow.sync="showFigureDialog"
       :protagonist="protagonist"
@@ -302,6 +308,7 @@ import itemProps from '@/common/json/itemProps.json'
 import enemyDatas from '@/common/json/enemy.json'
 import enlessModeMap from '@/common/json/mapData/enlessModeMap.json'
 import FightDialog from '@/views/components/FightDialog'
+import MultiFightDialog from '@/views/components/MultiFightDialog'
 import FigureDialog from '@/views/components/FigureDialog'
 import ShopDialog from '@/views/components/ShopDialog'
 import Skill from '@/views/components/Skill'
@@ -321,7 +328,8 @@ export default {
     Skill,
     FightDialog,
     FigureDialog,
-    ShopDialog
+    ShopDialog,
+    MultiFightDialog
   },
   data() {
     return {
@@ -356,6 +364,7 @@ export default {
         crit: 0.03,
         critDamage: 1.5,
         dodge: 0.02,
+        attRate: 0.25,
         damageMultiplier: 1,
         reduceDamageMultiplier: 0,
         exp: 0,
@@ -808,6 +817,7 @@ export default {
         let obj = {
           id:randomValue({ min:1, max:9999999 }).toString(36),
           pid:item.id,
+          isEnemy: 1,
           name: randomValue({ arr:names }),
           class: 0,
           classDesc: '',
@@ -819,6 +829,7 @@ export default {
           crit: 0,
           critDamage: 1.5,
           dodge: 0,
+          attRate: 0.15,
           damageMultiplier: 1,
           reduceDamageMultiplier: 0,
           exp: 100,

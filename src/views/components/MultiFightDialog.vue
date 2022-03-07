@@ -11,7 +11,7 @@
   :show-close="false"
   >
     <div class="content_box">
-      <div class="info_area enemy_info">
+      <div class="info_area enemy_info" v-show="showEnemyInfo">
         <ul class="states">
           <li class="name">名称: {{realTimeEnemyAttr.descName}}</li>
           <li>等级: {{realTimeEnemyAttr.level}}</li>
@@ -33,17 +33,39 @@
               :key="index"
               :class="item.type"
             >
-              <span>【{{item.name}} | {{item.continueRound}}回合】</span>
+              <span>【{{item.name}} | {{Math.ceil((item.endTime - masterTime) / 60)}} s】</span>
             </p>
           </li>
         </ul>
       </div>
-      <div class="content" ref="fightList">
-        <p
-        v-for="(item,index) in fightList"
-        :key="index"
-        :class="item.identity ? `is_right ${item.specialState}` : `${item.specialState}`"
-        >{{item.desc}}</p>
+      <div class="content">
+        <div class="enemy_area">
+          <RoleBlock
+          :data="realTimeEnemyAttr"
+          @enterBlock="enterRoleBlock"
+          ></RoleBlock>
+        </div>
+        <div class="protagonist_area">
+          <RoleBlock
+          :data="realTimeProAttr"
+          @enterBlock="enterRoleBlock"
+          ></RoleBlock>
+        </div>
+        <div class="role_progress_box">
+          <div class="role_progress_item enemy_progress_area">
+            <div
+            class="role_item"
+            ref="enemyProgressBlock"
+            >敌</div>
+          </div>
+          <div class="role_progress_bar"></div>
+          <div class="role_progress_item pro_progress_area">
+            <div
+            class="role_item"
+            ref="proProgressBlock"
+            >我</div>
+          </div>
+        </div>
       </div>
       <div class="info_area protagonist_info">
         <ul class="states">
@@ -67,7 +89,7 @@
               :key="index"
               :class="item.type"
             >
-              <span>【{{item.name}} | {{item.continueRound}}回合】</span>
+              <span>【{{item.name}} | {{Math.ceil((item.endTime - masterTime) / 60)}} s】</span>
             </p>
           </li>
         </ul>
@@ -96,11 +118,19 @@
     :dialogConfig="figureDialogConfig"
     @dbClickBlock="dbClickBlock"
     ></FightingFigureDialog>
+    <div class="fighting_info" ref="fightList">
+      <p
+      v-for="(item,index) in fightList"
+      :key="index"
+      :class="item.identity ? `is_right ${item.specialState}` : `${item.specialState}`"
+      >{{item.desc}}</p>
+    </div>
   </el-dialog>
 </template>
 <script>
 import fightDescData from '@/common/json/fightDescData.json'
 import FightingFigureDialog from './FightingFigureDialog'
+import RoleBlock from './RoleBlock'
 import _ from 'lodash'
 import {
   randomValue,
@@ -110,7 +140,8 @@ import {
 export default {
   name:'MultiFightDialog',
   components: {
-    FightingFigureDialog
+    FightingFigureDialog,
+    RoleBlock
   },
   props:{
     isShow:{
@@ -128,15 +159,18 @@ export default {
   },
   data(){
     return {
+      masterTime:0,
+      showFightBtn:false,
       isAuto:false,
+      fightStyle:'',
       figureDialogConfig:{},
       showFigureDialog:false,
+      showEnemyInfo:true,
       title:'战斗中',
       timer:null,
       status:'fighting',//fighting,win,lose
       fightList:[],
       count:1,
-      roundCount:0,
       proAttr:{},
       enemyAttr:{},
       realTimeProAttr:{
@@ -145,6 +179,7 @@ export default {
       realTimeEnemyAttr:{
         buff:[]
       },
+      rafIds:[],
       randomDamageWeight:weightRandom({
         value:[0.9, 1, 1.1],
         weight:[10, 40, 10]
@@ -184,9 +219,6 @@ export default {
     progressBarEnemyHp(){
       return Math.ceil(this.realTimeEnemyAttr.hp / this.realTimeEnemyAttr.maxhp * 100) + '%'
     },
-    showFightBtn(){
-      return Boolean(this.roundCount % 2 === 0 && !this.isAuto)
-    }
   },
   created(){
   },
@@ -212,14 +244,18 @@ export default {
       this.enemyAttr['buff'] = []
       this.realTimeProAttr = this.proAttr
       this.realTimeEnemyAttr = this.enemyAttr
+      this.$nextTick(() => {
+        this.battleProgressHandle()
+      })
     },
     dialogClose(){
+      this.masterTime = 0
       this.isAuto = false
+      this.fightStyle = ''
       this.title = '战斗中'
       this.status = 'fighting'
       this.fightList = []
       this.count = 1
-      this.roundCount = 0
       this.proAttr = {}
       this.enemyAttr = {}
       this.realTimeProAttr = {
@@ -228,11 +264,69 @@ export default {
       this.realTimeEnemyAttr = {
         buff:[]
       }
+      this.$refs.enemyProgressBlock.style.left = 0
+      this.$refs.proProgressBlock.style.left = 0
 
       clearTimeout(this.timer)
       clearInterval(this.timer)
       this.timer = null
       this.$emit('update:isShow',false)
+    },
+    enterRoleBlock(roleData, mouseType){
+      //敌方信息窗口显示
+      // if(roleData.isEnemy){
+      //   this.showEnemyInfo = mouseType
+      // }
+    },
+    battleProgressHandle(){
+      this.showFightBtn = false
+      this.rafIds = []
+      let eneDom = this.$refs.enemyProgressBlock,
+      proDom = this.$refs.proProgressBlock
+      this.animationHandle(eneDom, 240, this.realTimeEnemyAttr.attRate)
+      this.animationHandle(proDom, 240, this.realTimeProAttr.attRate, true)
+    },
+    animationHandle(domItem, distance, rate, type){
+      let nowLeft = domItem.offsetLeft,
+      framesMove = distance / 60 * rate,
+      sumMove = 0 + nowLeft,
+      rafId = null,
+      animationFn = () => {
+        sumMove += framesMove
+        domItem.style.left = sumMove + 'px'
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = window.requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        // console.log(type, rafId, this.rafIds)
+        if(type){
+          this.masterTime++
+        }
+        if(this.masterTime % 5 === 0){
+          this.buffDelete(type)
+        }
+        if(sumMove >= distance){
+          // console.log('sumMove', sumMove, this.rafIds, this.masterTime)
+          domItem.style.left = 0
+          this.rafIds.forEach((item, idx) => {
+            cancelAnimationFrame(item)
+            if(item === rafId){
+              this.rafIds.splice(idx, 1)
+            }
+          })
+          if(type){
+            if(this.isAuto){
+              this.fightBtnClickHandle(this.fightStyle, this.isAuto, true)
+            }else{
+              this.showFightBtn = true
+            }
+          }else{
+            this.fightBtnClickHandle()
+          }
+        }
+      }
+      animationFn()
     },
     autoFight(command){
       this.fightBtnClick(command, true)
@@ -240,34 +334,26 @@ export default {
     fightBtnClick(type, isAuto){
       if(isAuto){
         this.isAuto = true
-        this.timer = setInterval(() => {
-          this.fightBtnClickHandle(type, isAuto)
-        },800)
-      }else{
-        this.timer = setTimeout(() => {
-          this.fightBtnClickHandle(type, isAuto)
-        },800)
-        this.fightBtnClickHandle(type, isAuto)
+        this.fightStyle = type
       }
+      this.fightBtnClickHandle(type, isAuto, true)
     },
-    fightBtnClickHandle(type, isAuto){
-      let identity = this.count % 2,
-      fightType = type
-      if(identity){
+    fightBtnClickHandle(type, isAuto, who){
+      let fightType = type
+      if(who){
         if(isAuto){
           fightType = randomValue({ arr:this.proTypeWeight[type] })
         }
       }else{
         fightType = randomValue({ arr:this.enemyTypeWeight })
       }
-      this.fighting(fightType)
+      this.fighting(fightType, who)
     },
-    fighting(type){
-        this.buffDelete()
+    fighting(type, who){
         let pAttr = _.cloneDeep(this.proAttr),
         eAttr = _.cloneDeep(this.enemyAttr)
         
-        let identity = this.count % 2,
+        let identity = Boolean(who),
         fightParams = {
           identity,
           attr: pAttr,
@@ -292,7 +378,6 @@ export default {
         })
 
         this.fightStateJudgment()
-        this.roundCount++
     },
     fightHandle(data, type){
       let newData = _.cloneDeep(data)
@@ -330,19 +415,20 @@ export default {
     skillHandle(data){//技能触发处理
       let newData = _.cloneDeep(data)
       newData.attr.skills.forEach(item => {
-        if(newData.round % item.round === 0 && Math.random() <= item.chance && item.condition(newData)){
+        if(this.masterTime >= item.cdEnd && Math.random() <= item.chance && item.condition(newData)){
+          item.cdEnd = this.masterTime + item.cd
           switch(item.type){
             // case 'damage':{
             //   break
             // }
             case 'debuff':
             {
-              newData.otherAttr.buff = this.buffAdd(newData.otherAttr.buff, item, newData.round)
+              newData.otherAttr.buff = this.buffAdd(newData.otherAttr.buff, item, this.masterTime)
               break
             }
             case 'buff':
             {
-              newData.attr.buff = this.buffAdd(newData.attr.buff, item, newData.round)
+              newData.attr.buff = this.buffAdd(newData.attr.buff, item, this.masterTime)
               break
             }
             default:{
@@ -397,37 +483,43 @@ export default {
         type: 'buff',
         typeDesc: '防御',
         round:1,
+        duration:1 / newData.attr.attRate * 60 - 1,
+        cd:0,
+        cdEnd:this.masterTime,
         chance:1,
         continueRound:1,
-        desc:'@@@展开架势，准备防御$$$下一次的进攻',
-        skillDesc:'提高使用者的减伤率，持续1个回合',
+        desc:'@@@展开架势，准备防御$$$的进攻',
+        skillDesc:'提高使用者的减伤率，防御一轮',
         effect: function(data){
           let newData = _.cloneDeep(data)
           newData.reduceDamageMultiplier = 0.5
           return newData
         }
       }
-      newData.attr.buff = this.buffAdd(newData.attr.buff, defenseSkill, newData.round)
+      newData.attr.buff = this.buffAdd(newData.attr.buff, defenseSkill, this.masterTime)
       newData.desc = this.descHandle(defenseSkill.desc, newData.attr.descName, newData.otherAttr.descName)
       return newData
     },
-    buffAdd(buff, skill, createRound){//buff添加
+    buffAdd(buff, skill, createTime){//buff添加
       let arr = _.cloneDeep(buff),
-      flag =  _.findIndex(arr,['name',skill.typeDesc]),
+      flag = _.findIndex(arr,['name',skill.typeDesc]),
       {
         type,
         typeDesc,
-        continueRound,
+        duration,
         effect,
-        level
+        level,
+        cdEnd
       } = skill,
       newBuff = {
         id:randomValue({ min:1, max:99999999 }),
         name: typeDesc,
         type,
         level,
-        round: createRound,
-        continueRound,
+        createTime,
+        duration,
+        cdEnd,
+        endTime:createTime + duration,
         effect
       }
       if(flag > -1){
@@ -449,12 +541,14 @@ export default {
 
       return newData
     },
-    buffDelete(){//buff移除
-      let identity = this.count % 2,
-      round = identity ? (this.count + 1) / 2 : this.count / 2,
+    buffDelete(who){//buff移除
+      let identity = who,
       fn = identity ? 'proAttr' : 'enemyAttr'
+
+      if(this[fn].buff && this[fn].buff.length === 0)return
+
       this[fn].buff.forEach((item, index) => {
-        if(round - item.round >= item.continueRound){
+        if(this.masterTime >= item.endTime){
           this[fn].buff.splice(index, 1)
         }
       })
@@ -473,7 +567,9 @@ export default {
         clearTimeout(this.timer)
         clearInterval(this.timer)
         this.timer = null
+        return
       }
+      this.battleProgressHandle()
     },
     descHandle(desc,part1,part2,damage){
       let text = desc
@@ -524,15 +620,24 @@ export default {
     }
     .el-dialog__body{
       padding: 0;
+      position: relative;
     }
     .content_box{
       width: 100%;
-      display: flex;
+      position: relative;
       .info_area{
         width: 200px;
+        min-height: 230px;
+        position: absolute;
+        bottom: 0;
+        border: 1px solid #ddd;
+        border-bottom: 0;
         padding: 8px;
         box-sizing: border-box;
         color: #333;
+        &.protagonist_info{
+          right: 0;
+        }
         .states{
           li{
             margin-bottom: 3px;
@@ -571,34 +676,80 @@ export default {
         }
       }
       .content{
-        flex: 1;
-        border-left: 1px solid #ddd;
-        border-right: 1px solid #ddd;
-        padding: 8px 8px 0 8px;
+        width: 100%;
+        height: 450px;
         box-sizing: border-box;
-        min-height: 300px;
-        max-height: 500px;
         overflow-y: auto;
-        p{
-          font-size: 14px;
-          line-height: 16px;
-          margin-bottom: 15px;
-          color: rgb(202, 0, 0);
-          &.is_right{
-            color: rgb(0, 37, 201);
-            text-align: right;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        .enemy_area{
+          width: 70%;
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+          flex: 1;
+        }
+        .protagonist_area{
+          flex: 1;
+          display: flex;
+          align-items: center;
+        }
+        .role_progress_box{
+          height: 70px;
+          width: 281.5px;
+          border: 1px solid pink;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 0 10px;
+          box-sizing: border-box;
+          .role_progress_item{
+            flex: 1;
+            width: 100%;
+            position: relative;
+            box-sizing: border-box;
+            .role_item{
+              width: 20px;
+              height: 20px;
+              background-color: #f50;
+              position: absolute;
+              top:50%;
+              left: 0;
+              transform: translateY(-50%);
+              color: #fff;
+              line-height: 20px;
+              text-align: center;
+              border-radius: 2px;
+              &::after{
+                content: '';
+                width: 1px;
+                height: 5px;
+                background-color: #f50;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+              }
+            }
+            &.enemy_progress_area{
+              .role_item{
+                &::after{
+                  top: 100%;
+                }
+              }
+            }
+            &.pro_progress_area{
+              .role_item{
+                &::after{
+                  bottom: 100%;
+                }
+              }
+            }
           }
-          &.crit{
-            font-weight: bold;
-            text-shadow: 0 0 5px rgb(255, 195, 28);
-          }
-          &.dodge{
-            font-weight: bold;
-            text-shadow: 0 0 5px rgb(186, 84, 255);
-          }
-          &.skill{
-            font-weight: bold;
-            // text-shadow: 0 0 5px rgb(255, 64, 64);
+          .role_progress_bar{
+            height: 5px;
+            width: 241.5px;
+            background-color: pink;
           }
         }
       }
@@ -608,6 +759,41 @@ export default {
       border-top: 1px solid #ddd;
       .auto_fight_btn{
         margin: 0 10px;
+      }
+    }
+    .fighting_info{
+      position: absolute;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 450px;
+      background-color: #fff;
+      flex: 1;
+      border: 1px solid #ddd;
+      padding: 8px 8px 0 8px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      p{
+        font-size: 14px;
+        line-height: 16px;
+        margin-bottom: 15px;
+        color: rgb(202, 0, 0);
+        &.is_right{
+          color: rgb(0, 37, 201);
+          text-align: right;
+        }
+        &.crit{
+          font-weight: bold;
+          text-shadow: 0 0 5px rgb(255, 195, 28);
+        }
+        &.dodge{
+          font-weight: bold;
+          text-shadow: 0 0 5px rgb(186, 84, 255);
+        }
+        &.skill{
+          font-weight: bold;
+          // text-shadow: 0 0 5px rgb(255, 64, 64);
+        }
       }
     }
   }

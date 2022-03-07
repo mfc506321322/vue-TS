@@ -29,8 +29,8 @@
                 <span>回血: {{item.hp}}</span>
               </template>
               <template v-if="item.species === 'skill'">
-                <span>冷却回合: {{item.round}}</span>
-                <span>持续回合: {{item.continueRound}}</span>
+                <span>冷却时间: {{item.cd / 60}} s</span>
+                <span>持续时间: {{item.duration ? item.duration / 60 : 0}} s</span>
                 <span>触发几率: {{item.chance | percentageUnit}}</span>
               </template>
             </div>
