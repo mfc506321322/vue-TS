@@ -24,6 +24,7 @@
               <span v-if="item.crit">暴击: {{item.crit | percentageUnit}}</span>
               <span v-if="item.critDamage">暴击伤害: {{item.critDamage | percentageUnit}}</span>
               <span v-if="item.dodge">闪避: {{item.dodge | percentageUnit}}</span>
+              <span v-if="item.attRate">攻击频率: {{item.attRate}}次/s</span>
               <span v-if="item.maxhp">增加最大hp: {{item.maxhp}}</span>
               <template v-if="item.species === 'medicine'">
                 <span>回血: {{item.hp}}</span>

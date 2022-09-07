@@ -27,6 +27,7 @@
           <li>暴击: {{realTimeEnemyAttr.crit | percentageUnit}}</li>
           <li>暴击伤害: {{realTimeEnemyAttr.critDamage | percentageUnit}}</li>
           <li>闪避: {{realTimeEnemyAttr.dodge | percentageUnit}}</li>
+          <li>攻击频率: {{realTimeEnemyAttr.attRate}}次/s</li>
           <li>当前状态: 
             <p 
               v-for="(item, index) in realTimeEnemyAttr.buff"
@@ -83,6 +84,7 @@
           <li>暴击: {{realTimeProAttr.crit | percentageUnit}}</li>
           <li>暴击伤害: {{realTimeProAttr.critDamage | percentageUnit}}</li>
           <li>闪避: {{realTimeProAttr.dodge | percentageUnit}}</li>
+          <li>攻击频率: {{realTimeProAttr.attRate}}次/s</li>
           <li>当前状态: 
             <p
               v-for="(item, index) in realTimeProAttr.buff"
@@ -279,7 +281,6 @@ export default {
       // }
     },
     battleProgressHandle(){
-      this.showFightBtn = false
       this.rafIds = []
       let eneDom = this.$refs.enemyProgressBlock,
       proDom = this.$refs.proProgressBlock
@@ -339,6 +340,7 @@ export default {
       this.fightBtnClickHandle(type, isAuto, true)
     },
     fightBtnClickHandle(type, isAuto, who){
+      this.showFightBtn = false
       let fightType = type
       if(who){
         if(isAuto){
@@ -490,6 +492,10 @@ export default {
         continueRound:1,
         desc:'@@@展开架势，准备防御$$$的进攻',
         skillDesc:'提高使用者的减伤率，防御一轮',
+        condition: function(data){
+          let flag = true
+          return flag
+        },
         effect: function(data){
           let newData = _.cloneDeep(data)
           newData.reduceDamageMultiplier = 0.5
@@ -538,7 +544,7 @@ export default {
       newData.otherAttr.buff.forEach(item => {
         newData.otherAttr = item.effect(newData.otherAttr)
       })
-
+      console.log('buff处理', newData)
       return newData
     },
     buffDelete(who){//buff移除
@@ -555,6 +561,7 @@ export default {
     },
     fightStateJudgment(){//战斗结果
       if(this.enemyAttr.hp <= 0 || this.proAttr.hp <= 0){
+        this.showFightBtn = false
         let state = Boolean(this.proAttr.hp > 0)
         this.$message({
           message:state ? 'YOU WIN' : 'YOU LOSE',

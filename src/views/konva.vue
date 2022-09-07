@@ -34,6 +34,7 @@
           <li>暴击: {{protagonist.crit | percentageUnit}}</li>
           <li>暴击伤害: {{protagonist.critDamage | percentageUnit}}</li>
           <li>闪避: {{protagonist.dodge | percentageUnit}}</li>
+          <li>攻击频率: {{protagonist.attRate}}次/s</li>
           <li>背包: {{protagonist.box.length}} / {{protagonist.maxBox}}</li>
         </ul>
       </div>
@@ -385,6 +386,7 @@ export default {
           crit: 0.03,
           critDamage: 1.5,
           dodge: 0.02,
+          attRate: 0.25,
         }
       },
       nowEnemyData:{},
@@ -398,7 +400,7 @@ export default {
       }),
       itemWeight:weightRandom({
         value:[1, 2, 3, 4, 5],
-        weight:[15, 20, 90, 10, 15]
+        weight:[15, 20, 90, 1000, 15]
       }),
       shopBoxLevelWeight:weightRandom({
         value:[0, 1, 2, 3, 4],
@@ -449,7 +451,8 @@ export default {
           maxhp,
           crit,
           dodge,
-          critDamage
+          critDamage,
+          attRate
         } = this.protagonist.basis
 
         let arr = this.protagonist.box.filter(item => {
@@ -482,6 +485,9 @@ export default {
               dodge = 0.95
             }
           }
+          if(item.hasOwnProperty('attRate')){
+            attRate += item.attRate
+          }
         })
         if(this.protagonist.hp > maxhp){
           this.protagonist.hp = maxhp
@@ -492,6 +498,7 @@ export default {
         this.protagonist.crit = crit
         this.protagonist.critDamage = critDamage
         this.protagonist.dodge = dodge
+        this.protagonist.attRate = attRate
       },
       deep:true
     }
@@ -675,6 +682,9 @@ export default {
             if(Math.random() <= 0.15){
               obj['critDamage'] = Number((1 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
             }
+            if(Math.random() <= 0.15){
+              obj['attRate'] = Number((0.6 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+            }
             obj.price = Math.floor(obj.attack * 2.5)
             break
           }
@@ -751,14 +761,17 @@ export default {
               'maxhp',
               'crit',
               'dodge',
-              'critDamage'
+              'critDamage',
+              'attRate'
             ]
             if(random <= 0.25){
               propertieNum = 2
             }else if(random <= 0.1){
               propertieNum = 3
-            }else if(random <= 0.02){
+            }else if(random <= 0.05){
               propertieNum = 4
+            }else if(random <= 0.02){
+              propertieNum = 5
             }
             itemProperties = this.equipmentWordGeneration(properties,level,propertieNum)
             obj.price = Math.floor(obj.level * 20)
@@ -797,6 +810,10 @@ export default {
           }
           case 'dodge':{
             itemProperties['dodge'] = Number((0.2 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
+            break
+          }
+          case 'attRate':{
+            itemProperties['attRate'] = Number((0.3 * (level * 0.04) / (level * 0.04 + 0.6)).toFixed(2))
             break
           }
         }
@@ -859,6 +876,7 @@ export default {
         obj.crit = Number((0.4 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
         obj.critDamage = 1.5 + Number((0.6 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
         obj.dodge = Number((0.2 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)).toFixed(2))
+        obj.attRate = Number(((0.2 * (obj.level * 0.04) / (obj.level * 0.04 + 0.6)) + 0.1).toFixed(2))
         obj.exp = obj.level * 120
         arr.push(obj)
       }
