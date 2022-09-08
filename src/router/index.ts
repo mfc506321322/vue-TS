@@ -43,6 +43,13 @@ const routes: Array<RouteConfig> = [
           content: () => import('@/views/konva.vue'),
         }
       },
+      {
+        path: '/TD',
+        name: 'TD',
+        components: {
+          content: () => import('@/views/TD/index.vue'),
+        }
+      },
     ]
   }
 ]

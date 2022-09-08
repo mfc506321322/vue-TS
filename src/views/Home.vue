@@ -38,6 +38,10 @@ export default {
         {
           label:'konvaGame',
           value:'/konva'
+        },
+        {
+          label:'TD',
+          value:'/TD'
         }
       ]
     }

@@ -41,19 +41,10 @@ module.exports = {
     }
   },
   productionSourceMap:false,
-  // devServer: {
-  //   port:8080,
-  //   proxy: {
-  //     '/oauth': {
-  //       target: 'http://10.38.64.79:8088/',
-  //       changeOrigin: true
-  //     },
-  //     '/webApi': {
-  //       target: 'http://api.yunfuw.dev2/api/yjf',
-  //       changeOrigin: true
-  //     }
-  //   }
-  // },
+  devServer: {
+    host:'0.0.0.0',
+    port: 8099,
+  },
   lintOnSave: process.env.NODE_ENV !== 'production',
   css: {
     sourceMap: true,
