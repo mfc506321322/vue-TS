@@ -23,8 +23,8 @@
             x: 300,
             y: 300,
             radius: 10,
-            fill: 'blue',
-            draggable: true
+            fill: '#0033FF',
+            draggable: enableDrag
           }"
         />
         <div class="enemy_box">
@@ -42,6 +42,31 @@
         </div>
       </v-layer>
     </v-stage>
+    <div class="role_info">
+      <ul class="states">
+        <li>等级: {{roleInfo.level}}</li>
+        <li>攻击: {{roleInfo.atk}}</li>
+        <li>攻击范围: {{roleInfo.maxAtkScope}}</li>
+        <li>攻击频率: {{roleInfo.atkInterval}} 次/秒</li>
+        <li 
+          class="progress_bar"
+          :style="{
+            '--progressBar':progressBarHp,
+            '--progressColor':'rgb(255, 73, 73)'
+          }"
+        ><span>血量: {{roleInfo.hp}} / {{roleInfo.maxhp}}</span></li>
+        <li 
+          class="progress_bar"
+          :style="{
+            '--progressBar':progressBarExp,
+            '--progressColor':'rgb(255, 220, 0)'
+          }"
+        ><span>经验: {{roleInfo.exp}} / {{roleInfo.maxExp}}</span></li>
+        <li>击杀数: {{killCount}}</li>
+      </ul>
+      <button @click="pauseHandle">暂停</button>
+      <button @click="launchHandle">启动</button>
+    </div>
   </div>
 </template>
 
@@ -49,7 +74,8 @@
 let timer = null
 import _ from 'lodash'
 import {
-  randomValue
+  randomValue,
+  weightRandom
 } from '@/common/utils'
 export default {
   name: 'TD',
@@ -57,25 +83,42 @@ export default {
   },
   data(){
     return{
+      enableDrag:true,
       fps:60,
       masterTime:0,
       configKonva: {
         width: 600,
         height: 600,
       },
+      areaOffset:10,
       centerP:{},
       roleInfo:{
-        hp: 10,
+        hp: 20,
+        maxhp: 20,
         atk: 60,
         atkScope: 0,
-        atkInterval: 1
+        maxAtkScope: 110,
+        atkInterval: 1,
+        exp:0,
+        maxExp:100,
+        level:1
       },
+      roleRafId:null,
       idCount:0,
       enemyCount:0,
       enemyList:[],
       damageList:[],
       rafIds:[],
-      enemyTotal:100
+      enemyTotal:100,
+      killCount:0
+    }
+  },
+  computed:{
+    progressBarHp(){
+      return Math.ceil(this.roleInfo.hp / this.roleInfo.maxhp * 100) + '%'
+    },
+    progressBarExp(){
+      return Math.ceil(this.roleInfo.exp / this.roleInfo.maxExp * 100) + '%'
     }
   },
   created(){
@@ -93,29 +136,61 @@ export default {
   },
   methods:{
     createEnemy(){
+      let level = randomValue({ 
+        arr:weightRandom({
+          value:[1, 2, 3, 4, 5],
+          weight:[20, 50, 25, 10, 5]
+        }) 
+      })
       let enemyObj = {
         id:this.idCount++,
-        hp:100,
+        level,
+        hp:level * 50,
         def:10,
-        atk:1,
+        atk:level,
         underAtkTime:0,
-        speed:randomValue({ min:0.1, max:0.2, decimal:2 }),
+        exp:level * 5,
+        speed:Number((1 / level) / 5 + 0.1).toFixed(2),
         config:{
-          x: randomValue({ min:-10, max:this.configKonva.width + 10 }),
-          y: randomValue({ min:-10, max:this.configKonva.height + 10 }),
-          radius: 5,
-          fill: 'red'
+          x: 0,
+          y: 0,
+          radius: level * 3,
+          fill: '#ff7e7e'
         }
       }
 
-      if((enemyObj.config.x > 0 && enemyObj.config.x < this.configKonva.width) && (enemyObj.config.y > 0 && enemyObj.config.y < this.configKonva.height)){
-        return this.createEnemy()
-      }else{
-        // console.log('enemyObj', enemyObj)
-        this.enemyList.push(enemyObj)
-        this.enemyCount++
-        return enemyObj
+      let areaNo = randomValue({ 
+        arr:weightRandom({
+          value:[1, 2, 3, 4],
+          weight:[10, 10, 10, 10]
+        })
+      })
+      switch(areaNo){
+        case 1:
+          enemyObj.config.x = randomValue({ min:-this.areaOffset, max:this.configKonva.width})
+          enemyObj.config.y = randomValue({ min:-this.areaOffset, max:0})
+          break
+        case 2:
+          enemyObj.config.x = randomValue({ min:this.configKonva.width, max:this.configKonva.width + this.areaOffset})
+          enemyObj.config.y = randomValue({ min:-this.areaOffset, max:this.configKonva.height})
+          break
+        case 3:
+          enemyObj.config.x = randomValue({ min:0, max:this.configKonva.width + this.areaOffset})
+          enemyObj.config.y = randomValue({ min:this.configKonva.height, max:this.configKonva.height + this.areaOffset})
+          break
+        case 4:
+          enemyObj.config.x = randomValue({ min:-this.areaOffset, max:0})
+          enemyObj.config.y = randomValue({ min:0, max:this.configKonva.height + this.areaOffset})
+          break
       }
+
+      // if((enemyObj.config.x > 0 && enemyObj.config.x < this.configKonva.width) && (enemyObj.config.y > 0 && enemyObj.config.y < this.configKonva.height)){
+      //   return this.createEnemy()
+      // }
+      // console.log('enemyObj', enemyObj.config, areaNo)
+      this.enemyList.push(enemyObj)
+      this.enemyCount++
+      return enemyObj
     },
     start(){
       if(timer){
@@ -123,34 +198,39 @@ export default {
         timer = null
       }
       this.rafIds = []
+      this.roleRafId = null
+      this.startCreate()
+    },
+    startCreate(){
       this.roleAnimationHandle()
       timer = setInterval(() => {
-        let obj = this.createEnemy()
-        // console.log('obj', obj)
-        this.animationHandle(obj)
-
         if(this.enemyCount === this.enemyTotal){
           clearInterval(timer)
           timer = null
           console.log('enemyList', this.enemyCount)
+          return
         }
+
+        let obj = this.createEnemy()
+        // console.log('obj', obj)
+        this.animationHandle(obj)
       }, 200)
     },
     roleAnimationHandle(){
-      let roleRafId = null
+      this.roleRafId = null
       let animationFn = () => {
         let {
           atk,
-          atkScope,
+          maxAtkScope,
           atkInterval
         } = this.roleInfo
 
-        this.roleInfo.atkScope += 110 / this.fps / atkInterval
-        if(this.roleInfo.atkScope >= 110){
+        this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
+        if(this.roleInfo.atkScope >= maxAtkScope){
           this.roleInfo.atkScope = 0
         }
 
-        roleRafId = window.requestAnimationFrame(animationFn)
+        this.roleRafId = window.requestAnimationFrame(animationFn)
         this.masterTime++
       }
       animationFn()
@@ -160,7 +240,8 @@ export default {
       xStepInit = Math.abs(this.centerP.x - item.config.x),
       yStepInit = Math.abs(this.centerP.y - item.config.y),
       disInit = Math.sqrt(Math.pow(xStepInit,2) + Math.pow(yStepInit,2)) / this.fps * item.speed,
-      offsetVal = 2
+      offsetVal = 2,
+      atkOffset = 1.75
 
       let animationFn = () => {
         let x = item.config.x,
@@ -215,11 +296,10 @@ export default {
         let {
           atk,
           atkScope,
-          atkInterval
         } = this.roleInfo,
         distance = Math.sqrt(Math.pow(xDis,2) + Math.pow(yDis,2))
         
-        if((distance <= atkScope + 1.5 && distance >= atkScope - 1.5) && this.masterTime - item.underAtkTime >= 10){
+        if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
           item.underAtkTime = this.masterTime
           item.hp -= atk
 
@@ -236,6 +316,8 @@ export default {
 
           if(item.hp <= 0){
             console.log('干掉一个敌人')
+            this.killCount++
+            this.expHandle(item)
             clearEnemy()
           }
         }
@@ -243,17 +325,13 @@ export default {
         if((x <= this.centerP.x + offsetVal && x >= this.centerP.x - offsetVal) && (y <= this.centerP.y + offsetVal && y >= this.centerP.y - offsetVal)){
           clearEnemy()
           this.roleInfo.hp -= item.atk
-          console.log('受到攻击，剩余hp:', this.roleInfo.hp)
           if(this.roleInfo.hp <= 0){
-            console.log('失败')
-            if(timer){
-              clearInterval(timer)
-              timer = null
-            }
-            this.rafIds.forEach((itm, idx) => {
-              cancelAnimationFrame(itm)
+            this.$message({
+              message:'GAME OVER',
+              type:'error',
+              center:true
             })
-            this.rafIds = []
+            this.pauseHandle()
           }
         }
         
@@ -266,6 +344,46 @@ export default {
         x:pos.target.attrs.x,
         y:pos.target.attrs.y
       }
+    },
+    expHandle(enemy){
+      this.roleInfo.exp += enemy.exp
+      if(this.roleInfo.exp >= this.roleInfo.maxExp){
+        this.roleInfo.level++
+        this.roleInfo.maxAtkScope += 10
+        this.roleInfo.atk += 10
+        this.roleInfo.maxhp += 5
+        this.roleInfo.hp += 5
+        this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.1).toFixed(2))
+        this.$message({
+          message:`升级啦!~~~~~~~~~~~`,
+          type:'success',
+          center:true
+        })
+        this.roleInfo.exp = 0
+        this.roleInfo.maxExp = 50 * Math.pow( this.roleInfo.level, 2 ) + 50
+      }
+    },
+    pauseHandle(){
+      if(!this.roleRafId)return
+      this.enableDrag = false
+      if(timer){
+        clearInterval(timer)
+        timer = null
+      }
+      cancelAnimationFrame(this.roleRafId)
+      this.roleRafId = null
+      this.rafIds.forEach(item => {
+        cancelAnimationFrame(item)
+      })
+      this.rafIds = []
+    },
+    launchHandle(){
+      if(this.roleRafId)return
+      this.enableDrag = true
+      this.enemyList.forEach(item => {
+        this.animationHandle(item)
+      })
+      this.startCreate()
     }
   }
 }
@@ -273,7 +391,45 @@ export default {
 </script>
 <style lang="scss" scoped>
 .TD_box{
+  position: relative;
   border: 2px solid #333;
   width: 600px;
+}
+.role_info{
+  position: absolute;
+  left: 610px;
+  top: 0;
+  .states{
+    width: 200px;
+    li{
+      margin-bottom: 3px;
+      line-height: 18px;
+      box-sizing: border-box;
+      padding-left: 2px;
+      &:last-child{
+        margin-bottom: 0;
+      }
+      &.progress_bar{
+        background-color: rgb(202, 202, 202);
+        position: relative;
+        z-index: 1;
+        span{
+          position: relative;
+          z-index: 99;
+        }
+        &::after{
+          content: '';
+          display: block;
+          width: var(--progressBar);
+          height: 100%;
+          background-color: var(--progressColor);
+          position: absolute;
+          z-index: 2;
+          top: 0;
+          left: 0;
+        }
+      }
+    }
+  }
 }
 </style>
