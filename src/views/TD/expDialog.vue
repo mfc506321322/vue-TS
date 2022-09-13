@@ -1,0 +1,91 @@
+<template>
+  <el-dialog
+    title="升级加点"
+    :visible="isShow"
+    @open="dialogOpen"
+    @close="dialogClose"
+    class="dialog_box"
+    custom-class="dialog_content"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    :show-close="false"
+  >
+    <div class="content_box">
+      <ul class="power_list">
+        <li class="power_list_list">
+          <span>攻击力 + 10</span>
+          <el-button type="primary" @click="upgradeHandle('atk')">升级</el-button>
+        </li>
+        <li class="power_list_list">
+          <span>攻击范围 + 10</span>
+          <el-button type="primary" @click="upgradeHandle('maxAtkScope')">升级</el-button>
+        </li>
+        <li class="power_list_list">
+          <span>攻击频率 + 0.1次/秒</span>
+          <el-button type="primary" @click="upgradeHandle('atkInterval')">升级</el-button>
+        </li>
+        <li class="power_list_list">
+          <span>最大血量 + 5</span>
+          <el-button type="primary" @click="upgradeHandle('maxhp')">升级</el-button>
+        </li>
+        <li class="power_list_list">
+          <span>回复满血量</span>
+          <el-button type="primary" @click="upgradeHandle('hp')">回复</el-button>
+        </li>
+      </ul>
+    </div>
+  </el-dialog>
+</template>
+<script>
+
+export default {
+  name:'expDialog',
+  components: {
+  },
+  props:{
+    isShow:{
+      type:Boolean,
+      default:false
+    },
+  },
+  data(){
+    return {
+    }
+  },
+  filters: {},
+  computed: {
+  },
+  created() {
+  },
+  mounted() {
+  },
+  watch: {},
+  methods:{
+    dialogOpen(){
+    },
+    dialogClose(){
+      this.$emit('update:isShow',false)
+    },
+    upgradeHandle(type){
+      this.$emit('upgradeHandle', type)
+    },
+  }
+}
+</script>
+<style lang="scss" scoped>
+.dialog_box{
+  /deep/ .dialog_content{
+    width: 300px;
+    .content_box{
+      .power_list{
+        .power_list_list{
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 10px;
+        } 
+      }
+    }
+  }
+}
+</style>

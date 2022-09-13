@@ -22,9 +22,17 @@
             // y: centerP.y,
             x: 300,
             y: 300,
-            radius: 10,
+            radius: 15,
             fill: '#0033FF',
             draggable: enableDrag
+          }"
+        />
+        <v-circle
+          :config="{
+            x: centerP.x,
+            y: centerP.y,
+            radius: 2.5,
+            fill: '#ffffff'
           }"
         />
         <div class="enemy_box">
@@ -67,6 +75,10 @@
       <button @click="pauseHandle">暂停</button>
       <button @click="launchHandle">启动</button>
     </div>
+    <expDialog
+      :isShow.sync="showExpDialog"
+      @upgradeHandle="upgradeHandle"
+    />
   </div>
 </template>
 
@@ -77,12 +89,16 @@ import {
   randomValue,
   weightRandom
 } from '@/common/utils'
+import expDialog from './expDialog.vue'
+
 export default {
   name: 'TD',
   components: {
+    expDialog
   },
   data(){
     return{
+      showExpDialog:false,
       enableDrag:true,
       fps:60,
       masterTime:0,
@@ -109,7 +125,7 @@ export default {
       enemyList:[],
       damageList:[],
       rafIds:[],
-      enemyTotal:100,
+      enemyTotal:1000,
       killCount:0
     }
   },
@@ -138,8 +154,8 @@ export default {
     createEnemy(){
       let level = randomValue({ 
         arr:weightRandom({
-          value:[1, 2, 3, 4, 5],
-          weight:[20, 50, 25, 10, 5]
+          value:[1, 2, 3, 4, 5, 10],
+          weight:[20, 50, 25, 10, 5, 1]
         }) 
       })
       let enemyObj = {
@@ -149,8 +165,8 @@ export default {
         def:10,
         atk:level,
         underAtkTime:0,
-        exp:level * 5,
-        speed:Number((1 / level) / 5 + 0.1).toFixed(2),
+        exp:level * 10,
+        disInit:1.3 * (Math.pow(level, -1.2)) + 0.7,
         config:{
           x: 0,
           y: 0,
@@ -202,19 +218,19 @@ export default {
       this.startCreate()
     },
     startCreate(){
+      if(this.enemyCount === this.enemyTotal)return
       this.roleAnimationHandle()
       timer = setInterval(() => {
+        let obj = this.createEnemy()
+        this.animationHandle(obj)
+
         if(this.enemyCount === this.enemyTotal){
           clearInterval(timer)
           timer = null
           console.log('enemyList', this.enemyCount)
           return
         }
-
-        let obj = this.createEnemy()
-        // console.log('obj', obj)
-        this.animationHandle(obj)
-      }, 200)
+      }, 240)
     },
     roleAnimationHandle(){
       this.roleRafId = null
@@ -237,11 +253,11 @@ export default {
     },
     animationHandle(item){
       let rafId = null,
-      xStepInit = Math.abs(this.centerP.x - item.config.x),
-      yStepInit = Math.abs(this.centerP.y - item.config.y),
-      disInit = Math.sqrt(Math.pow(xStepInit,2) + Math.pow(yStepInit,2)) / this.fps * item.speed,
       offsetVal = 2,
-      atkOffset = 1.75
+      atkOffset = 2,
+      {
+        disInit
+      } = item
 
       let animationFn = () => {
         let x = item.config.x,
@@ -250,14 +266,10 @@ export default {
         yDis = Math.abs(this.centerP.y - y),
         xStep = 0,
         yStep = 0
-        if(xDis === 0 && yDis !== 0 ){
-          xStep = disInit
-        }else{
-          xStep = Math.cos(Math.atan(yDis / xDis)) * disInit
-        }
-        if(yDis === 0 && xDis !== 0){
+        if(xDis === 0){
           yStep = disInit
         }else{
+          xStep = Math.cos(Math.atan(yDis / xDis)) * disInit
           yStep = Math.sin(Math.atan(yDis / xDis)) * disInit
         }
 
@@ -315,7 +327,6 @@ export default {
           })
 
           if(item.hp <= 0){
-            console.log('干掉一个敌人')
             this.killCount++
             this.expHandle(item)
             clearEnemy()
@@ -348,20 +359,57 @@ export default {
     expHandle(enemy){
       this.roleInfo.exp += enemy.exp
       if(this.roleInfo.exp >= this.roleInfo.maxExp){
+        this.pauseHandle()
+        this.damageList = []
         this.roleInfo.level++
-        this.roleInfo.maxAtkScope += 10
-        this.roleInfo.atk += 10
-        this.roleInfo.maxhp += 5
-        this.roleInfo.hp += 5
-        this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.1).toFixed(2))
-        this.$message({
-          message:`升级啦!~~~~~~~~~~~`,
-          type:'success',
-          center:true
+        this.showExpDialog = true
+        setTimeout(() => {
+          this.$message({
+            message:'升级啦!~~~~~~~~~~~',
+            type:'success',
+            center:true,
+            duration: 1500
+          })
         })
         this.roleInfo.exp = 0
         this.roleInfo.maxExp = 50 * Math.pow( this.roleInfo.level, 2 ) + 50
       }
+    },
+    upgradeHandle(type){
+      switch(type){
+        case 'atk':
+          this.roleInfo.atk += 10
+          break
+        case 'maxAtkScope':
+          this.roleInfo.maxAtkScope += 10
+          break
+        case 'atkInterval':
+          this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.1).toFixed(2))
+          break
+        case 'maxhp':
+          this.roleInfo.maxhp += 5
+          this.roleInfo.hp += 5
+          break
+        case 'hp':
+          this.roleInfo.hp = this.roleInfo.maxhp
+          break
+      }
+      this.showExpDialog = false
+      this.$message({
+        message: '2秒后开始游戏, 做好准备',
+        type: 'warning',
+        center: true,
+        duration: 2000
+      })
+      setTimeout(() => {
+        this.$message({
+          message: '游戏开始',
+          type: 'success',
+          center: true,
+          duration: 1000
+        })
+        this.launchHandle()
+      }, 2000)
     },
     pauseHandle(){
       if(!this.roleRafId)return
