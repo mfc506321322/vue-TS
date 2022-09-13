@@ -18,10 +18,8 @@
         <v-circle
           @dragmove="dragBoundFunc"
           :config="{
-            // x: centerP.x,
-            // y: centerP.y,
-            x: 300,
-            y: 300,
+            x: this.configKonva.width / 2,
+            y: this.configKonva.height / 2,
             radius: 15,
             fill: '#0033FF',
             draggable: enableDrag
@@ -70,6 +68,7 @@
             '--progressColor':'rgb(255, 220, 0)'
           }"
         ><span>经验: {{roleInfo.exp}} / {{roleInfo.maxExp}}</span></li>
+        <li>当前场上敌人数量: {{enemyList.length}}</li>
         <li>击杀数: {{killCount}}</li>
       </ul>
       <button @click="pauseHandle">暂停</button>
@@ -138,14 +137,39 @@ export default {
     }
   },
   created(){
-    // this.centerP = {
-    //   x:this.configKonva.width / 2,
-    //   y:this.configKonva.height / 2
-    // }
-    this.centerP = {
-      x:300,
-      y:300
+    let sWidth = document.body.clientWidth
+    if(sWidth < 634){
+      this.configKonva.width = sWidth - 34
     }
+
+    this.centerP = {
+      x:this.configKonva.width / 2,
+      y:this.configKonva.height / 2
+    }
+
+    setTimeout(() => {
+      let sFPS = this.masterTime
+      if(sFPS >= 50 && sFPS < 70){
+        this.fps = 60
+      }else if(sFPS >= 70 && sFPS < 80){
+        this.fps = 75
+      }else if(sFPS >= 80 && sFPS < 100){
+        this.fps = 90
+      }else if(sFPS >= 110 && sFPS < 130){
+        this.fps = 120
+      }else if(sFPS >= 134 && sFPS < 154){
+        this.fps = 144
+      }else if(sFPS >= 155 && sFPS < 175){
+        this.fps = 165
+      }else if(sFPS >= 230 && sFPS < 250){
+        this.fps = 240
+      }else if(sFPS >= 350 && sFPS < 370){
+        this.fps = 360
+      }else{
+        this.fps = 60
+      }
+      console.log('当前显示器帧率：', sFPS, '设定帧率：', this.fps)
+    }, 1000)
   },
   mounted(){
     this.start()
@@ -200,9 +224,6 @@ export default {
           break
       }
 
-      // if((enemyObj.config.x > 0 && enemyObj.config.x < this.configKonva.width) && (enemyObj.config.y > 0 && enemyObj.config.y < this.configKonva.height)){
-      //   return this.createEnemy()
-      // }
       // console.log('enemyObj', enemyObj.config, areaNo)
       this.enemyList.push(enemyObj)
       this.enemyCount++
@@ -240,7 +261,7 @@ export default {
           maxAtkScope,
           atkInterval
         } = this.roleInfo
-
+        
         this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
         if(this.roleInfo.atkScope >= maxAtkScope){
           this.roleInfo.atkScope = 0
@@ -254,7 +275,7 @@ export default {
     animationHandle(item){
       let rafId = null,
       offsetVal = 2,
-      atkOffset = 2,
+      atkOffset = 3,
       {
         disInit
       } = item
@@ -310,8 +331,9 @@ export default {
           atkScope,
         } = this.roleInfo,
         distance = Math.sqrt(Math.pow(xDis,2) + Math.pow(yDis,2))
-        
+
         if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
+          // console.log(distance - atkScope, this.masterTime - item.underAtkTime)
           item.underAtkTime = this.masterTime
           item.hp -= atk
 
@@ -378,7 +400,7 @@ export default {
     upgradeHandle(type){
       switch(type){
         case 'atk':
-          this.roleInfo.atk += 10
+          this.roleInfo.atk += 15
           break
         case 'maxAtkScope':
           this.roleInfo.maxAtkScope += 10
@@ -387,8 +409,8 @@ export default {
           this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.1).toFixed(2))
           break
         case 'maxhp':
-          this.roleInfo.maxhp += 5
-          this.roleInfo.hp += 5
+          this.roleInfo.maxhp += 10
+          this.roleInfo.hp += 10
           break
         case 'hp':
           this.roleInfo.hp = this.roleInfo.maxhp
@@ -439,14 +461,18 @@ export default {
 </script>
 <style lang="scss" scoped>
 .TD_box{
-  position: relative;
-  border: 2px solid #333;
-  width: 600px;
+  overflow: hidden;
+  .stage{
+    float: left;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    /deep/ .konvajs-content{
+      border: 2px solid #333;
+    }
+  }
 }
 .role_info{
-  position: absolute;
-  left: 610px;
-  top: 0;
+  float: left;
   .states{
     width: 200px;
     li{

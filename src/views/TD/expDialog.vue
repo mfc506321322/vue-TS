@@ -13,7 +13,7 @@
     <div class="content_box">
       <ul class="power_list">
         <li class="power_list_list">
-          <span>攻击力 + 10</span>
+          <span>攻击力 + 15</span>
           <el-button type="primary" @click="upgradeHandle('atk')">升级</el-button>
         </li>
         <li class="power_list_list">
@@ -25,7 +25,7 @@
           <el-button type="primary" @click="upgradeHandle('atkInterval')">升级</el-button>
         </li>
         <li class="power_list_list">
-          <span>最大血量 + 5</span>
+          <span>最大血量 + 10</span>
           <el-button type="primary" @click="upgradeHandle('maxhp')">升级</el-button>
         </li>
         <li class="power_list_list">
