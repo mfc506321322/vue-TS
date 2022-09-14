@@ -13,15 +13,15 @@
     <div class="content_box">
       <ul class="power_list">
         <li class="power_list_list">
-          <span>攻击力 + 15</span>
+          <span>攻击力 + 20</span>
           <el-button type="primary" @click="upgradeHandle('atk')">升级</el-button>
         </li>
-        <li class="power_list_list">
+        <!-- <li class="power_list_list">
           <span>攻击范围 + 10</span>
           <el-button type="primary" @click="upgradeHandle('maxAtkScope')">升级</el-button>
-        </li>
+        </li> -->
         <li class="power_list_list">
-          <span>攻击频率 + 0.1次/秒</span>
+          <span>攻击频率 + 0.5次/秒</span>
           <el-button type="primary" @click="upgradeHandle('atkInterval')">升级</el-button>
         </li>
         <li class="power_list_list">

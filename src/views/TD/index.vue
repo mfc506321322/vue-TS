@@ -6,7 +6,7 @@
       class="stage"
     >
       <v-layer ref="layer">
-        <v-circle 
+        <!-- <v-circle 
           :config="{
             x: centerP.x,
             y: centerP.y,
@@ -14,7 +14,14 @@
             stroke: 'blue',
             strokeWidth: 1
           }"
-        />
+        /> -->
+        <div class="bullet_box">
+          <v-circle
+            v-for="(item, idx) in bulletList"
+            :key="idx"
+            :config="item.config"
+          />
+        </div>
         <v-circle
           @dragmove="dragBoundFunc"
           :config="{
@@ -52,7 +59,7 @@
       <ul class="states">
         <li>等级: {{roleInfo.level}}</li>
         <li>攻击: {{roleInfo.atk}}</li>
-        <li>攻击范围: {{roleInfo.maxAtkScope}}</li>
+        <!-- <li>攻击范围: {{roleInfo.maxAtkScope}}</li> -->
         <li>攻击频率: {{roleInfo.atkInterval}} 次/秒</li>
         <li 
           class="progress_bar"
@@ -110,10 +117,10 @@ export default {
       roleInfo:{
         hp: 20,
         maxhp: 20,
-        atk: 60,
+        atk: 80,
         atkScope: 0,
         maxAtkScope: 110,
-        atkInterval: 1,
+        atkInterval: 3,
         exp:0,
         maxExp:100,
         level:1
@@ -123,8 +130,9 @@ export default {
       enemyCount:0,
       enemyList:[],
       damageList:[],
+      bulletList:[],
       rafIds:[],
-      enemyTotal:1000,
+      enemyTotal:100,
       killCount:0
     }
   },
@@ -194,7 +202,7 @@ export default {
         config:{
           x: 0,
           y: 0,
-          radius: level * 3,
+          radius: level * 3 + 2,
           fill: '#ff7e7e'
         }
       }
@@ -229,6 +237,91 @@ export default {
       this.enemyCount++
       return enemyObj
     },
+    bulletCreate(){
+      let bulletObj = {
+        id:new Date * 1 + Math.random(),
+        config:{
+          x: this.centerP.x,
+          y: this.centerP.y,
+          radius: 3,
+          fill: '#ff00ff',
+        }
+      }
+      this.bulletList.push(bulletObj)
+      return bulletObj
+    },
+    bulletAnimationHandle(item){
+      let rafId = null,
+      xStep = Math.random() * 100,
+      yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
+      if(Math.random() <= 0.5){
+        xStep = -xStep
+      }
+      if(Math.random() <= 0.5){
+        yStep = -yStep
+      }
+      xStep = xStep / 60
+      yStep = yStep / 60
+      item['createTime'] = this.masterTime
+      
+      let animationFn = () => {
+        item.config.x += xStep
+        item.config.y += yStep
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = window.requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        item['rafId'] = rafId
+
+        let clearBulle = () => {
+          this.rafIds.forEach((itm, idx) => {
+            if(itm === rafId){
+              cancelAnimationFrame(itm)
+              this.rafIds.splice(idx, 1)
+              let itemIndex = _.findIndex(this.bulletList, {id:item.id})
+              if(itemIndex || itemIndex + '' === '0'){
+                this.bulletList.splice(itemIndex, 1)
+              }
+            }
+          })
+        }
+
+        let {
+          x,
+          y
+        } = item.config
+        this.enemyList.forEach(itm => {
+          let ex = itm.config.x,
+          ey = itm.config.y,
+          xdis = Math.abs(x - ex),
+          ydis = Math.abs(y - ey),
+          dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
+
+          if(dis <= itm.config.radius + 3){
+            console.log('攻击到了')
+            clearBulle()
+            itm.hp -= this.roleInfo.atk
+
+            this.damageList.push({
+              id:itm.id + new Date * 1 + Math.random(),
+              createTime: this.masterTime,
+              config:{
+                text: '-' + this.roleInfo.atk,
+                x,
+                y,
+                fill:'red'
+              }
+            })
+          }
+        })
+
+        if(this.masterTime - item.createTime >= 60 * 10){
+          clearBulle()
+        }
+      }
+      animationFn()
+    },
     start(){
       if(timer){
         clearInterval(timer)
@@ -251,7 +344,7 @@ export default {
           console.log('enemyList', this.enemyCount)
           return
         }
-      }, 240)
+      }, 800)
     },
     roleAnimationHandle(){
       this.roleRafId = null
@@ -261,10 +354,15 @@ export default {
           maxAtkScope,
           atkInterval
         } = this.roleInfo
-        
-        this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
-        if(this.roleInfo.atkScope >= maxAtkScope){
-          this.roleInfo.atkScope = 0
+
+        // this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
+        // if(this.roleInfo.atkScope >= maxAtkScope){
+        //   this.roleInfo.atkScope = 0
+        // }
+
+        if(this.masterTime % (Math.ceil(this.fps / atkInterval)) === 0){
+          let obj = this.bulletCreate()
+          this.bulletAnimationHandle(obj)
         }
 
         this.roleRafId = window.requestAnimationFrame(animationFn)
@@ -326,33 +424,22 @@ export default {
           })
         }
 
-        let {
-          atk,
-          atkScope,
-        } = this.roleInfo,
-        distance = Math.sqrt(Math.pow(xDis,2) + Math.pow(yDis,2))
+        // let {
+        //   atk,
+        //   atkScope,
+        // } = this.roleInfo,
+        // distance = Math.sqrt(Math.pow(xDis,2) + Math.pow(yDis,2))
 
-        if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
-          // console.log(distance - atkScope, this.masterTime - item.underAtkTime)
-          item.underAtkTime = this.masterTime
-          item.hp -= atk
+        // if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
+        //   // console.log(distance - atkScope, this.masterTime - item.underAtkTime)
+        //   item.underAtkTime = this.masterTime
+        //   item.hp -= atk
+        // }
 
-          this.damageList.push({
-            id:item.id + new Date * 1 + Math.random(),
-            createTime: this.masterTime,
-            config:{
-              text: '-' + atk,
-              x,
-              y,
-              fill:'red'
-            }
-          })
-
-          if(item.hp <= 0){
-            this.killCount++
-            this.expHandle(item)
-            clearEnemy()
-          }
+        if(item.hp <= 0){
+          this.killCount++
+          this.expHandle(item)
+          clearEnemy()
         }
 
         if((x <= this.centerP.x + offsetVal && x >= this.centerP.x - offsetVal) && (y <= this.centerP.y + offsetVal && y >= this.centerP.y - offsetVal)){
@@ -400,13 +487,13 @@ export default {
     upgradeHandle(type){
       switch(type){
         case 'atk':
-          this.roleInfo.atk += 15
+          this.roleInfo.atk += 20
           break
-        case 'maxAtkScope':
-          this.roleInfo.maxAtkScope += 10
-          break
+        // case 'maxAtkScope':
+        //   this.roleInfo.maxAtkScope += 10
+        //   break
         case 'atkInterval':
-          this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.1).toFixed(2))
+          this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.5).toFixed(2))
           break
         case 'maxhp':
           this.roleInfo.maxhp += 10
@@ -450,6 +537,9 @@ export default {
     launchHandle(){
       if(this.roleRafId)return
       this.enableDrag = true
+      this.damageList.forEach(item => {
+        this.bulletAnimationHandle(item)
+      })
       this.enemyList.forEach(item => {
         this.animationHandle(item)
       })
