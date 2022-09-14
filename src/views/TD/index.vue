@@ -60,6 +60,7 @@
         <li>等级: {{roleInfo.level}}</li>
         <li>攻击: {{roleInfo.atk}}</li>
         <!-- <li>攻击范围: {{roleInfo.maxAtkScope}}</li> -->
+        <li>子弹数量: {{roleInfo.bulletCount}}</li>
         <li>攻击频率: {{roleInfo.atkInterval}} 次/秒</li>
         <li 
           class="progress_bar"
@@ -75,15 +76,27 @@
             '--progressColor':'rgb(255, 220, 0)'
           }"
         ><span>经验: {{roleInfo.exp}} / {{roleInfo.maxExp}}</span></li>
-        <li>当前场上敌人数量: {{enemyList.length}}</li>
+        <li>剩余敌人数量: {{enemyTotal - enemyCount}}</li>
         <li>击杀数: {{killCount}}</li>
       </ul>
-      <button @click="pauseHandle">暂停</button>
-      <button @click="launchHandle">启动</button>
+      <p class="operating_instructions">
+        <span class="operating_instructions_title">操作说明</span>
+        <span>1.鼠标拖拽蓝球进行移动</span>
+        <span>2.自动向移动的反方向发射子弹</span>
+        <span>3.红球中心点撞到蓝球中心的白点会损失生命值</span>
+        <span>4.生命值归零时游戏结束</span>
+        <span>5.选择升级2秒后自动开始游戏</span>
+      </p>
+      <el-button @click="pauseHandle">暂停</el-button>
+      <el-button @click="launchHandle">启动</el-button>
     </div>
     <expDialog
       :isShow.sync="showExpDialog"
       @upgradeHandle="upgradeHandle"
+    />
+    <startDialog
+      :isShow.sync="showStartDialog"
+      @updateStartConfigHandle="updateStartConfigHandle"
     />
   </div>
 </template>
@@ -96,14 +109,17 @@ import {
   weightRandom
 } from '@/common/utils'
 import expDialog from './expDialog.vue'
+import startDialog from './startDialog.vue'
 
 export default {
   name: 'TD',
   components: {
-    expDialog
+    expDialog,
+    startDialog
   },
   data(){
     return{
+      showStartDialog:true,
       showExpDialog:false,
       enableDrag:true,
       fps:60,
@@ -114,13 +130,15 @@ export default {
       },
       areaOffset:10,
       centerP:{},
+      lastCenterP:{},
       roleInfo:{
         hp: 20,
         maxhp: 20,
-        atk: 80,
+        atk: 60,
         atkScope: 0,
         maxAtkScope: 110,
-        atkInterval: 3,
+        bulletCount: 1,
+        atkInterval: 2,
         exp:0,
         maxExp:100,
         level:1
@@ -154,35 +172,39 @@ export default {
       x:this.configKonva.width / 2,
       y:this.configKonva.height / 2
     }
-
-    setTimeout(() => {
-      let sFPS = this.masterTime
-      if(sFPS >= 50 && sFPS < 70){
-        this.fps = 60
-      }else if(sFPS >= 70 && sFPS < 80){
-        this.fps = 75
-      }else if(sFPS >= 80 && sFPS < 100){
-        this.fps = 90
-      }else if(sFPS >= 110 && sFPS < 130){
-        this.fps = 120
-      }else if(sFPS >= 134 && sFPS < 154){
-        this.fps = 144
-      }else if(sFPS >= 155 && sFPS < 175){
-        this.fps = 165
-      }else if(sFPS >= 230 && sFPS < 250){
-        this.fps = 240
-      }else if(sFPS >= 350 && sFPS < 370){
-        this.fps = 360
-      }else{
-        this.fps = 60
-      }
-      console.log('当前显示器帧率：', sFPS, '设定帧率：', this.fps)
-    }, 1000)
   },
   mounted(){
-    this.start()
   },
   methods:{
+    updateStartConfigHandle(formData){
+      this.enemyTotal = formData.enemyTotal
+
+      setTimeout(() => {
+        let sFPS = this.masterTime
+        if(sFPS >= 50 && sFPS < 70){
+          this.fps = 60
+        }else if(sFPS >= 70 && sFPS < 80){
+          this.fps = 75
+        }else if(sFPS >= 80 && sFPS < 100){
+          this.fps = 90
+        }else if(sFPS >= 110 && sFPS < 130){
+          this.fps = 120
+        }else if(sFPS >= 134 && sFPS < 154){
+          this.fps = 144
+        }else if(sFPS >= 155 && sFPS < 175){
+          this.fps = 165
+        }else if(sFPS >= 230 && sFPS < 250){
+          this.fps = 240
+        }else if(sFPS >= 350 && sFPS < 370){
+          this.fps = 360
+        }else{
+          this.fps = 60
+        }
+        console.log('当前显示器帧率：', sFPS, '设定帧率：', this.fps)
+      }, 1000)
+
+      this.start()
+    },
     createEnemy(){
       let level = randomValue({ 
         arr:weightRandom({
@@ -250,20 +272,51 @@ export default {
       this.bulletList.push(bulletObj)
       return bulletObj
     },
-    bulletAnimationHandle(item){
+    bulletAnimationHandle(item, pluralOffset){
       let rafId = null,
-      xStep = Math.random() * 100,
-      yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
-      if(Math.random() <= 0.5){
-        xStep = -xStep
+      xStep = 0,
+      yStep = 0
+      if(!this.lastCenterP.x && this.lastCenterP.x + '' !== '0'){
+        xStep = Math.random() * 100,
+        yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
+        if(Math.random() <= 0.5){
+          xStep = -xStep
+        }
+        if(Math.random() <= 0.5){
+          yStep = -yStep
+        }
+        xStep = xStep / 60
+        yStep = yStep / 60
+      }else{
+        let rx = this.centerP.x - this.lastCenterP.x,
+        ry = this.centerP.y - this.lastCenterP.y,
+        rDis = Math.sqrt(Math.pow(rx, 2) + Math.pow(ry, 2))
+
+        if(pluralOffset && pluralOffset !== 0){
+          let pluralOffsetRadian = 0.1
+          if(pluralOffset % 2 === 0){
+            pluralOffsetRadian = pluralOffset / -20
+          }else{
+            pluralOffsetRadian = (pluralOffset + 1) / 20
+          }
+
+          rx = rx < 0 ? Math.cos(Math.atan(ry / rx) + pluralOffsetRadian) * rDis * -1 : Math.cos(Math.atan(ry / rx) + pluralOffsetRadian) * rDis
+          ry = ry < 0 ? Math.sqrt(Math.pow(rDis, 2) - Math.pow(rx, 2)) * -1 : Math.sqrt(Math.pow(rDis, 2) - Math.pow(rx, 2))
+        }
+
+        if(rx === 0){
+          yStep = 100
+        }else{
+          xStep = Math.cos(Math.atan(ry / rx)) * 100
+          yStep = Math.abs(Math.sin(Math.atan(ry / rx)) * 100)
+        }
+        
+        xStep = rx < 0 ? xStep / 60 : xStep / -60
+        yStep = ry < 0 ? yStep / 60 : yStep / -60
       }
-      if(Math.random() <= 0.5){
-        yStep = -yStep
-      }
-      xStep = xStep / 60
-      yStep = yStep / 60
+
       item['createTime'] = this.masterTime
-      
+
       let animationFn = () => {
         item.config.x += xStep
         item.config.y += yStep
@@ -291,15 +344,16 @@ export default {
           x,
           y
         } = item.config
-        this.enemyList.forEach(itm => {
-          let ex = itm.config.x,
+
+        for(let i = 0;i<this.enemyList.length;i++){//for循环降低性能开销
+          let itm = this.enemyList[i],
+          ex = itm.config.x,
           ey = itm.config.y,
           xdis = Math.abs(x - ex),
           ydis = Math.abs(y - ey),
           dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
 
           if(dis <= itm.config.radius + 3){
-            console.log('攻击到了')
             clearBulle()
             itm.hp -= this.roleInfo.atk
 
@@ -313,8 +367,33 @@ export default {
                 fill:'red'
               }
             })
+            break
           }
-        })
+        }
+        // this.enemyList.forEach(itm => {
+        //   let ex = itm.config.x,
+        //   ey = itm.config.y,
+        //   xdis = Math.abs(x - ex),
+        //   ydis = Math.abs(y - ey),
+        //   dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
+
+        //   if(dis <= itm.config.radius + 3){
+        //     console.log('攻击到了')
+        //     clearBulle()
+        //     itm.hp -= this.roleInfo.atk
+
+        //     this.damageList.push({
+        //       id:itm.id + new Date * 1 + Math.random(),
+        //       createTime: this.masterTime,
+        //       config:{
+        //         text: '-' + this.roleInfo.atk,
+        //         x,
+        //         y,
+        //         fill:'red'
+        //       }
+        //     })
+        //   }
+        // })
 
         if(this.masterTime - item.createTime >= 60 * 10){
           clearBulle()
@@ -344,7 +423,7 @@ export default {
           console.log('enemyList', this.enemyCount)
           return
         }
-      }, 800)
+      }, 1000)
     },
     roleAnimationHandle(){
       this.roleRafId = null
@@ -361,8 +440,10 @@ export default {
         // }
 
         if(this.masterTime % (Math.ceil(this.fps / atkInterval)) === 0){
-          let obj = this.bulletCreate()
-          this.bulletAnimationHandle(obj)
+          for(let i=0;i<this.roleInfo.bulletCount;i++){
+            let obj = this.bulletCreate()
+            this.bulletAnimationHandle(obj, i)
+          }
         }
 
         this.roleRafId = window.requestAnimationFrame(animationFn)
@@ -460,6 +541,13 @@ export default {
     },
     dragBoundFunc(pos){
       // console.log('dragBoundFunc', pos)
+      let cachePoint = { ...this.centerP }
+      if(cachePoint.x !== pos.target.attrs.x && cachePoint.y !== pos.target.attrs.y){
+        this.lastCenterP = {
+          x: cachePoint.x,
+          y: cachePoint.y
+        }
+      }
       this.centerP = {
         x:pos.target.attrs.x,
         y:pos.target.attrs.y
@@ -492,6 +580,9 @@ export default {
         // case 'maxAtkScope':
         //   this.roleInfo.maxAtkScope += 10
         //   break
+        case 'bulletCount':
+          this.roleInfo.bulletCount += 1
+          break
         case 'atkInterval':
           this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.5).toFixed(2))
           break
@@ -537,7 +628,7 @@ export default {
     launchHandle(){
       if(this.roleRafId)return
       this.enableDrag = true
-      this.damageList.forEach(item => {
+      this.bulletList.forEach(item => {
         this.bulletAnimationHandle(item)
       })
       this.enemyList.forEach(item => {
@@ -594,6 +685,20 @@ export default {
         }
       }
     }
+  }
+}
+.operating_instructions{
+  display: flex;
+  flex-direction: column;
+  color: #333;
+  font-size: 16px;
+  margin-top: 10px;
+  .operating_instructions_title{
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  span{
+    line-height: 18px;
   }
 }
 </style>

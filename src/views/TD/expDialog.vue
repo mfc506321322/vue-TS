@@ -21,6 +21,10 @@
           <el-button type="primary" @click="upgradeHandle('maxAtkScope')">升级</el-button>
         </li> -->
         <li class="power_list_list">
+          <span>子弹数量 + 1</span>
+          <el-button type="primary" @click="upgradeHandle('bulletCount')">升级</el-button>
+        </li>
+        <li class="power_list_list">
           <span>攻击频率 + 0.5次/秒</span>
           <el-button type="primary" @click="upgradeHandle('atkInterval')">升级</el-button>
         </li>
