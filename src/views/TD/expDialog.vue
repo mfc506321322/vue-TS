@@ -29,6 +29,10 @@
           <el-button type="primary" @click="upgradeHandle('atkInterval')">升级</el-button>
         </li>
         <li class="power_list_list">
+          <span>键盘移动速度 + 30像素/秒</span>
+          <el-button type="primary" @click="upgradeHandle('speed')">升级</el-button>
+        </li>
+        <li class="power_list_list">
           <span>最大血量 + 10</span>
           <el-button type="primary" @click="upgradeHandle('maxhp')">升级</el-button>
         </li>

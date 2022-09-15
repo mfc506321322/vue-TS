@@ -12,8 +12,14 @@
   >
     <div class="content_box">
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="操作模式" prop="operatingMode">
+          <el-radio-group v-model="form.operatingMode">
+            <el-radio-button label="2">方向键移动</el-radio-button>
+            <el-radio-button label="1">鼠标移动</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="敌人数量" prop="enemyTotal">
-          <el-input-number v-model="form.enemyTotal" :min="1" :max="1000" label="敌人数量"></el-input-number>
+          <el-input-number v-model="form.enemyTotal" :min="1" :max="5000" label="敌人数量"></el-input-number>
         </el-form-item>
       </el-form>
     </div>
@@ -37,11 +43,15 @@ export default {
   data(){
     return {
       form:{
-        enemyTotal:100
+        enemyTotal:100,
+        operatingMode:'2',
       },
       rules: {
         enemyTotal: [
           { required: true, message: '请输入敌人数量', trigger: 'blur' }
+        ],
+        operatingMode: [
+          { required: true, message: '请选择操作模式', trigger: 'change' }
         ],
       }
     }
@@ -70,7 +80,7 @@ export default {
 <style lang="scss" scoped>
 .dialog_box{
   /deep/ .dialog_content{
-    width: 300px;
+    width: 350px;
     .content_box{
     }
   }

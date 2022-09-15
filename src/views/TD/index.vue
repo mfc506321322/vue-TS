@@ -25,8 +25,10 @@
         <v-circle
           @dragmove="dragBoundFunc"
           :config="{
-            x: this.configKonva.width / 2,
-            y: this.configKonva.height / 2,
+            // x: this.configKonva.width / 2,
+            // y: this.configKonva.height / 2,
+            x: centerP.x,
+            y: centerP.y,
             radius: 15,
             fill: '#0033FF',
             draggable: enableDrag
@@ -62,6 +64,7 @@
         <!-- <li>攻击范围: {{roleInfo.maxAtkScope}}</li> -->
         <li>子弹数量: {{roleInfo.bulletCount}}</li>
         <li>攻击频率: {{roleInfo.atkInterval}} 次/秒</li>
+        <li>键盘移动速度: {{roleInfo.speed * 60}} 像素/秒</li>
         <li 
           class="progress_bar"
           :style="{
@@ -76,12 +79,12 @@
             '--progressColor':'rgb(255, 220, 0)'
           }"
         ><span>经验: {{roleInfo.exp}} / {{roleInfo.maxExp}}</span></li>
-        <li>剩余敌人数量: {{enemyTotal - enemyCount}}</li>
+        <li>剩余敌人数量: {{enemyTotal - killCount}}</li>
         <li>击杀数: {{killCount}}</li>
       </ul>
       <p class="operating_instructions">
         <span class="operating_instructions_title">操作说明</span>
-        <span>1.鼠标拖拽蓝球进行移动</span>
+        <span>1.方向键控制（鼠标拖拽）蓝球进行移动</span>
         <span>2.自动向移动的反方向发射子弹</span>
         <span>3.红球中心点撞到蓝球中心的白点会损失生命值</span>
         <span>4.生命值归零时游戏结束</span>
@@ -121,7 +124,7 @@ export default {
     return{
       showStartDialog:true,
       showExpDialog:false,
-      enableDrag:true,
+      enableDrag:false,
       fps:60,
       masterTime:0,
       configKonva: {
@@ -130,7 +133,10 @@ export default {
       },
       areaOffset:10,
       centerP:{},
-      lastCenterP:{},
+      lastCenterP:{
+        x:300,
+        y:290
+      },
       roleInfo:{
         hp: 20,
         maxhp: 20,
@@ -139,6 +145,7 @@ export default {
         maxAtkScope: 110,
         bulletCount: 1,
         atkInterval: 2,
+        speed:2,
         exp:0,
         maxExp:100,
         level:1
@@ -151,7 +158,9 @@ export default {
       bulletList:[],
       rafIds:[],
       enemyTotal:100,
-      killCount:0
+      killCount:0,
+      keyCode:[],
+      operatingMode:'2'
     }
   },
   computed:{
@@ -178,6 +187,8 @@ export default {
   methods:{
     updateStartConfigHandle(formData){
       this.enemyTotal = formData.enemyTotal
+      this.operatingMode = formData.operatingMode
+      this.enableDrag = Boolean(this.operatingMode === '1')
 
       setTimeout(() => {
         let sFPS = this.masterTime
@@ -276,18 +287,18 @@ export default {
       let rafId = null,
       xStep = 0,
       yStep = 0
-      if(!this.lastCenterP.x && this.lastCenterP.x + '' !== '0'){
-        xStep = Math.random() * 100,
-        yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
-        if(Math.random() <= 0.5){
-          xStep = -xStep
-        }
-        if(Math.random() <= 0.5){
-          yStep = -yStep
-        }
-        xStep = xStep / 60
-        yStep = yStep / 60
-      }else{
+      // if(!this.lastCenterP.x && this.lastCenterP.x + '' !== '0'){
+      //   xStep = Math.random() * 100,
+      //   yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
+      //   if(Math.random() <= 0.5){
+      //     xStep = -xStep
+      //   }
+      //   if(Math.random() <= 0.5){
+      //     yStep = -yStep
+      //   }
+      //   xStep = xStep / 60
+      //   yStep = yStep / 60
+      // }else{
         let rx = this.centerP.x - this.lastCenterP.x,
         ry = this.centerP.y - this.lastCenterP.y,
         rDis = Math.sqrt(Math.pow(rx, 2) + Math.pow(ry, 2))
@@ -301,7 +312,11 @@ export default {
           }
 
           rx = rx < 0 ? Math.cos(Math.atan(ry / rx) + pluralOffsetRadian) * rDis * -1 : Math.cos(Math.atan(ry / rx) + pluralOffsetRadian) * rDis
-          ry = ry < 0 ? Math.sqrt(Math.pow(rDis, 2) - Math.pow(rx, 2)) * -1 : Math.sqrt(Math.pow(rDis, 2) - Math.pow(rx, 2))
+          if(ry === 0 && pluralOffset % 2 === 0){
+            ry = Math.sin(Math.atan(ry / rx) + pluralOffsetRadian) * rDis
+          }else{
+            ry = ry < 0 ? Math.sqrt(Math.pow(rDis, 2) - Math.pow(rx, 2)) * -1 : Math.sqrt(Math.pow(rDis, 2) - Math.pow(rx, 2))
+          }
         }
 
         if(rx === 0){
@@ -313,7 +328,7 @@ export default {
         
         xStep = rx < 0 ? xStep / 60 : xStep / -60
         yStep = ry < 0 ? yStep / 60 : yStep / -60
-      }
+      // }
 
       item['createTime'] = this.masterTime
 
@@ -370,30 +385,6 @@ export default {
             break
           }
         }
-        // this.enemyList.forEach(itm => {
-        //   let ex = itm.config.x,
-        //   ey = itm.config.y,
-        //   xdis = Math.abs(x - ex),
-        //   ydis = Math.abs(y - ey),
-        //   dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
-
-        //   if(dis <= itm.config.radius + 3){
-        //     console.log('攻击到了')
-        //     clearBulle()
-        //     itm.hp -= this.roleInfo.atk
-
-        //     this.damageList.push({
-        //       id:itm.id + new Date * 1 + Math.random(),
-        //       createTime: this.masterTime,
-        //       config:{
-        //         text: '-' + this.roleInfo.atk,
-        //         x,
-        //         y,
-        //         fill:'red'
-        //       }
-        //     })
-        //   }
-        // })
 
         if(this.masterTime - item.createTime >= 60 * 10){
           clearBulle()
@@ -408,6 +399,7 @@ export default {
       }
       this.rafIds = []
       this.roleRafId = null
+      this.keyDown()
       this.startCreate()
     },
     startCreate(){
@@ -431,13 +423,36 @@ export default {
         let {
           atk,
           maxAtkScope,
-          atkInterval
+          atkInterval,
+          speed
         } = this.roleInfo
 
         // this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
         // if(this.roleInfo.atkScope >= maxAtkScope){
         //   this.roleInfo.atkScope = 0
         // }
+
+        if(this.operatingMode === '2' && this.keyCode.length > 0){
+          let cachePoint = { ...this.centerP }
+
+          this.lastCenterP = {
+            x: cachePoint.x,
+            y: cachePoint.y
+          }
+
+          if(this.keyCode.includes(37)){
+            this.centerP.x -= speed
+          }
+          if(this.keyCode.includes(39)){
+            this.centerP.x += speed
+          }
+          if(this.keyCode.includes(38)){
+            this.centerP.y -= speed
+          }
+          if(this.keyCode.includes(40)){
+            this.centerP.y += speed
+          }
+        }
 
         if(this.masterTime % (Math.ceil(this.fps / atkInterval)) === 0){
           for(let i=0;i<this.roleInfo.bulletCount;i++){
@@ -519,8 +534,8 @@ export default {
 
         if(item.hp <= 0){
           this.killCount++
-          this.expHandle(item)
           clearEnemy()
+          this.expHandle(item)
         }
 
         if((x <= this.centerP.x + offsetVal && x >= this.centerP.x - offsetVal) && (y <= this.centerP.y + offsetVal && y >= this.centerP.y - offsetVal)){
@@ -538,6 +553,30 @@ export default {
         
       }
       animationFn()
+    },
+    keyDown(){
+      if(this.operatingMode !== '2')return
+      document.onkeydown = (e) => {
+        //事件对象兼容
+        let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
+        //键盘按键判断:左箭头-37;上箭头-38；右箭头-39;下箭头-40
+        if(e1){
+          let keys = [37, 38, 39, 40]
+          if(keys.includes(e1.keyCode)){
+            if(!this.keyCode.includes(e1.keyCode)){
+              this.keyCode.push(e1.keyCode)
+            }
+          }
+        }
+      }
+      document.onkeyup = (e) => {
+        let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
+        if(e1){
+          if(this.keyCode.includes(e1.keyCode)){
+            this.keyCode.splice(this.keyCode.indexOf(e1.keyCode), 1)
+          }
+        }
+      }
     },
     dragBoundFunc(pos){
       // console.log('dragBoundFunc', pos)
@@ -586,6 +625,9 @@ export default {
         case 'atkInterval':
           this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.5).toFixed(2))
           break
+        case 'speed':
+          this.roleInfo.speed += 0.5
+          break
         case 'maxhp':
           this.roleInfo.maxhp += 10
           this.roleInfo.hp += 10
@@ -627,7 +669,7 @@ export default {
     },
     launchHandle(){
       if(this.roleRafId)return
-      this.enableDrag = true
+      this.enableDrag = Boolean(this.operatingMode === '1')
       this.bulletList.forEach(item => {
         this.bulletAnimationHandle(item)
       })
