@@ -31,7 +31,11 @@
             y: centerP.y,
             radius: 15,
             fill: '#0033FF',
-            draggable: enableDrag
+            draggable: enableDrag,
+            shadowColor: 'black',
+            shadowBlur: 2,
+            shadowOffset: { x: 2, y: 2 },
+            shadowOpacity: 0.5
           }"
         />
         <v-circle
@@ -236,7 +240,11 @@ export default {
           x: 0,
           y: 0,
           radius: level * 3 + 2,
-          fill: '#ff7e7e'
+          fill: '#ff7e7e',
+          shadowColor: 'black',
+          shadowBlur: 2,
+          shadowOffset: { x: 2, y: 2 },
+          shadowOpacity: 0.5
         }
       }
 
@@ -277,7 +285,11 @@ export default {
           x: this.centerP.x,
           y: this.centerP.y,
           radius: 3,
-          fill: '#ff00ff',
+          fill: '#00ec00',
+          shadowColor: 'black',
+          shadowBlur: 2,
+          shadowOffset: { x: 2, y: 2 },
+          shadowOpacity: 0.5
         }
       }
       this.bulletList.push(bulletObj)
@@ -287,6 +299,7 @@ export default {
       let rafId = null,
       xStep = 0,
       yStep = 0
+
       // if(!this.lastCenterP.x && this.lastCenterP.x + '' !== '0'){
       //   xStep = Math.random() * 100,
       //   yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
@@ -299,6 +312,12 @@ export default {
       //   xStep = xStep / 60
       //   yStep = yStep / 60
       // }else{
+      // }
+
+      if(item.xStep || item.xStep + '' === '0'){
+        xStep = item.xStep
+        yStep = item.yStep
+      }else{
         let rx = this.centerP.x - this.lastCenterP.x,
         ry = this.centerP.y - this.lastCenterP.y,
         rDis = Math.sqrt(Math.pow(rx, 2) + Math.pow(ry, 2))
@@ -328,7 +347,10 @@ export default {
         
         xStep = rx < 0 ? xStep / 60 : xStep / -60
         yStep = ry < 0 ? yStep / 60 : yStep / -60
-      // }
+
+        item['xStep'] = xStep
+        item['yStep'] = yStep
+      }
 
       item['createTime'] = this.masterTime
 
@@ -452,6 +474,7 @@ export default {
           if(this.keyCode.includes(40)){
             this.centerP.y += speed
           }
+          this.borderLimit()
         }
 
         if(this.masterTime % (Math.ceil(this.fps / atkInterval)) === 0){
@@ -580,16 +603,31 @@ export default {
     },
     dragBoundFunc(pos){
       // console.log('dragBoundFunc', pos)
-      let cachePoint = { ...this.centerP }
-      if(cachePoint.x !== pos.target.attrs.x && cachePoint.y !== pos.target.attrs.y){
+      let cachePoint = { ...this.centerP },
+      {
+        x,
+        y
+      } = pos.target.attrs,
+      rlx = cachePoint.x,
+      rly = cachePoint.y
+
+      if(x >= 0 && x <= 600){
+        rlx = x
+      }
+      if(y >= 0 && y <= 600){
+        rly = y
+      }
+
+      if(cachePoint.x !== rlx && cachePoint.y !== rly){
         this.lastCenterP = {
           x: cachePoint.x,
           y: cachePoint.y
         }
       }
+
       this.centerP = {
-        x:pos.target.attrs.x,
-        y:pos.target.attrs.y
+        x:rlx,
+        y:rly
       }
     },
     expHandle(enemy){
@@ -652,6 +690,20 @@ export default {
         })
         this.launchHandle()
       }, 2000)
+    },
+    borderLimit(){
+      if(this.centerP.x <= 0){
+        this.centerP.x = 0
+      }
+      if(this.centerP.x >= 600){
+        this.centerP.x = 600
+      }
+      if(this.centerP.y <= 0){
+        this.centerP.y = 0
+      }
+      if(this.centerP.y >= 600){
+        this.centerP.y = 600
+      }
     },
     pauseHandle(){
       if(!this.roleRafId)return
