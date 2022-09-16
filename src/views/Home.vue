@@ -40,8 +40,8 @@ export default {
           value:'/konva'
         },
         {
-          label:'TD',
-          value:'/TD'
+          label:'ZS',
+          value:'/zombieSurvival'
         }
       ]
     }

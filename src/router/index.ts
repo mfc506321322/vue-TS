@@ -44,8 +44,8 @@ const routes: Array<RouteConfig> = [
         }
       },
       {
-        path: '/TD',
-        name: 'TD',
+        path: '/zombieSurvival',
+        name: 'zombieSurvival',
         components: {
           content: () => import('@/views/TD/index.vue'),
         }

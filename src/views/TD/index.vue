@@ -119,7 +119,7 @@ import expDialog from './expDialog.vue'
 import startDialog from './startDialog.vue'
 
 export default {
-  name: 'TD',
+  name: 'ZombieSurvival',
   components: {
     expDialog,
     startDialog
@@ -148,7 +148,7 @@ export default {
         atkScope: 0,
         maxAtkScope: 110,
         bulletCount: 1,
-        atkInterval: 2,
+        atkInterval: 1.25,
         speed:2,
         exp:0,
         maxExp:100,
@@ -157,6 +157,7 @@ export default {
       roleRafId:null,
       idCount:0,
       enemyCount:0,
+      enemyCreateInterval:1,
       enemyList:[],
       damageList:[],
       bulletList:[],
@@ -167,6 +168,7 @@ export default {
       operatingMode:'2'
     }
   },
+  watch:{},
   computed:{
     progressBarHp(){
       return Math.ceil(this.roleInfo.hp / this.roleInfo.maxhp * 100) + '%'
@@ -281,6 +283,7 @@ export default {
     bulletCreate(){
       let bulletObj = {
         id:new Date * 1 + Math.random(),
+        createTime:this.masterTime,
         config:{
           x: this.centerP.x,
           y: this.centerP.y,
@@ -352,7 +355,7 @@ export default {
         item['yStep'] = yStep
       }
 
-      item['createTime'] = this.masterTime
+      // item.createTime = this.masterTime
 
       let animationFn = () => {
         item.config.x += xStep
@@ -364,52 +367,55 @@ export default {
         this.rafIds.push(rafId)
         item['rafId'] = rafId
 
-        let clearBulle = () => {
-          this.rafIds.forEach((itm, idx) => {
-            if(itm === rafId){
-              cancelAnimationFrame(itm)
-              this.rafIds.splice(idx, 1)
-              let itemIndex = _.findIndex(this.bulletList, {id:item.id})
-              if(itemIndex || itemIndex + '' === '0'){
-                this.bulletList.splice(itemIndex, 1)
+        let clearBulle = (type) => {
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
+              if(!type){
+                let itemIndex = _.findIndex(this.bulletList, {id:item.id})
+                if(itemIndex || itemIndex + '' === '0'){
+                  this.bulletList.splice(itemIndex, 1)
+                }
               }
+              break
             }
-          })
-        }
-
-        let {
-          x,
-          y
-        } = item.config
-
-        for(let i = 0;i<this.enemyList.length;i++){//for循环降低性能开销
-          let itm = this.enemyList[i],
-          ex = itm.config.x,
-          ey = itm.config.y,
-          xdis = Math.abs(x - ex),
-          ydis = Math.abs(y - ey),
-          dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
-
-          if(dis <= itm.config.radius + 3){
-            clearBulle()
-            itm.hp -= this.roleInfo.atk
-
-            this.damageList.push({
-              id:itm.id + new Date * 1 + Math.random(),
-              createTime: this.masterTime,
-              config:{
-                text: '-' + this.roleInfo.atk,
-                x,
-                y,
-                fill:'red'
-              }
-            })
-            break
           }
         }
 
-        if(this.masterTime - item.createTime >= 60 * 10){
-          clearBulle()
+        if(this.masterTime - item.createTime >= 60 * 8.5){
+          clearBulle(true)
+        }else{
+          let {
+            x,
+            y
+          } = item.config
+
+          for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
+            let itm = this.enemyList[i],
+            ex = itm.config.x,
+            ey = itm.config.y,
+            xdis = Math.abs(x - ex),
+            ydis = Math.abs(y - ey),
+            dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
+
+            if(dis <= itm.config.radius + 3){
+              clearBulle()
+              itm.hp -= this.roleInfo.atk
+
+              this.damageList.push({
+                id:itm.id + new Date * 1 + Math.random(),
+                createTime: this.masterTime,
+                config:{
+                  text: '-' + this.roleInfo.atk,
+                  x,
+                  y,
+                  fill:'red'
+                }
+              })
+              break
+            }
+          }
         }
       }
       animationFn()
@@ -437,13 +443,12 @@ export default {
           console.log('enemyList', this.enemyCount)
           return
         }
-      }, 1000)
+      }, 1000 * this.enemyCreateInterval)
     },
     roleAnimationHandle(){
       this.roleRafId = null
       let animationFn = () => {
         let {
-          atk,
           maxAtkScope,
           atkInterval,
           speed
@@ -452,6 +457,15 @@ export default {
         // this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
         // if(this.roleInfo.atkScope >= maxAtkScope){
         //   this.roleInfo.atkScope = 0
+        // }
+
+        // if(this.masterTime % (60 * this.enemyCreateInterval) === 0 && this.enemyCount < this.enemyTotal){
+        //   let obj = this.createEnemy()
+        //   this.animationHandle(obj)
+
+        //   if(this.enemyCount === this.enemyTotal){
+        //     console.log('enemyList', this.enemyCount)
+        //   }
         // }
 
         if(this.operatingMode === '2' && this.keyCode.length > 0){
@@ -478,7 +492,7 @@ export default {
         }
 
         if(this.masterTime % (Math.ceil(this.fps / atkInterval)) === 0){
-          for(let i=0;i<this.roleInfo.bulletCount;i++){
+          for(let i=0, l=Math.floor(this.roleInfo.bulletCount);i<l;i++){
             let obj = this.bulletCreate()
             this.bulletAnimationHandle(obj, i)
           }
@@ -531,16 +545,17 @@ export default {
         item['rafId'] = rafId
 
         let clearEnemy = () => {
-          this.rafIds.forEach((itm, idx) => {
-            if(itm === rafId){
-              cancelAnimationFrame(itm)
-              this.rafIds.splice(idx, 1)
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
               let itemIndex = _.findIndex(this.enemyList, {id:item.id})
               if(itemIndex || itemIndex + '' === '0'){
                 this.enemyList.splice(itemIndex, 1)
               }
+              break
             }
-          })
+          }
         }
 
         // let {
@@ -579,7 +594,7 @@ export default {
     },
     keyDown(){
       if(this.operatingMode !== '2')return
-      document.onkeydown = (e) => {
+      document.body.onkeydown = (e) => {
         //事件对象兼容
         let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
         //键盘按键判断:左箭头-37;上箭头-38；右箭头-39;下箭头-40
@@ -592,7 +607,7 @@ export default {
           }
         }
       }
-      document.onkeyup = (e) => {
+      document.body.onkeyup = (e) => {
         let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
         if(e1){
           if(this.keyCode.includes(e1.keyCode)){
@@ -646,7 +661,7 @@ export default {
           })
         })
         this.roleInfo.exp = 0
-        this.roleInfo.maxExp = 50 * Math.pow( this.roleInfo.level, 2 ) + 50
+        this.roleInfo.maxExp = Math.ceil(50 * Math.pow( this.roleInfo.level, 1.5 ) + 100)
       }
     },
     upgradeHandle(type){
@@ -658,10 +673,10 @@ export default {
         //   this.roleInfo.maxAtkScope += 10
         //   break
         case 'bulletCount':
-          this.roleInfo.bulletCount += 1
+          this.roleInfo.bulletCount += 0.5
           break
         case 'atkInterval':
-          this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.5).toFixed(2))
+          this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.25).toFixed(2))
           break
         case 'speed':
           this.roleInfo.speed += 0.5
@@ -707,27 +722,35 @@ export default {
     },
     pauseHandle(){
       if(!this.roleRafId)return
-      this.enableDrag = false
       if(timer){
         clearInterval(timer)
         timer = null
       }
+      this.enableDrag = false
+
       cancelAnimationFrame(this.roleRafId)
       this.roleRafId = null
-      this.rafIds.forEach(item => {
-        cancelAnimationFrame(item)
-      })
+      for(let i=0, l=this.rafIds.length;i<l;i++){
+        cancelAnimationFrame(this.rafIds[i])
+      }
       this.rafIds = []
+
+      for(let i=0, l=this.bulletList.length;i<l;i++){
+        if(this.bulletList[i] && this.masterTime - this.bulletList[i].createTime >= 60 * 8.5){
+          this.bulletList.splice(i, 1)
+        }
+      }
     },
     launchHandle(){
       if(this.roleRafId)return
       this.enableDrag = Boolean(this.operatingMode === '1')
-      this.bulletList.forEach(item => {
-        this.bulletAnimationHandle(item)
-      })
-      this.enemyList.forEach(item => {
-        this.animationHandle(item)
-      })
+
+      for(let i=0, l=this.bulletList.length;i<l;i++){
+        this.bulletAnimationHandle(this.bulletList[i])
+      }
+      for(let i=0, l=this.enemyList.length;i<l;i++){
+        this.animationHandle(this.enemyList[i])
+      }
       this.startCreate()
     }
   }
