@@ -18,7 +18,13 @@
             <el-radio-button label="1">鼠标移动</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="敌人数量" prop="enemyTotal">
+        <el-form-item label="游戏模式" prop="gameMode">
+          <el-radio-group v-model="form.gameMode">
+            <el-radio-button label="level">关卡模式</el-radio-button>
+            <el-radio-button label="sandbox">沙盒模式</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="敌人数量" prop="enemyTotal" v-if="form.gameMode === 'sandbox'">
           <el-input-number v-model="form.enemyTotal" :min="1" :max="5000" label="敌人数量"></el-input-number>
         </el-form-item>
       </el-form>
@@ -45,6 +51,7 @@ export default {
       form:{
         enemyTotal:100,
         operatingMode:'2',
+        gameMode:'level'
       },
       rules: {
         enemyTotal: [
@@ -52,6 +59,9 @@ export default {
         ],
         operatingMode: [
           { required: true, message: '请选择操作模式', trigger: 'change' }
+        ],
+        gameMode: [
+          { required: true, message: '请选择游戏模式', trigger: 'change' }
         ],
       }
     }

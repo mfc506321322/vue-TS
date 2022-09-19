@@ -63,6 +63,7 @@
     </v-stage>
     <div class="role_info">
       <ul class="states">
+        <li>当前关卡: {{mapLevel}}</li>
         <li>等级: {{roleInfo.level}}</li>
         <li>攻击: {{roleInfo.atk}}</li>
         <!-- <li>攻击范围: {{roleInfo.maxAtkScope}}</li> -->
@@ -117,6 +118,7 @@ import {
 } from '@/common/utils'
 import expDialog from './expDialog.vue'
 import startDialog from './startDialog.vue'
+import levelInfo from './config/level.json'
 
 export default {
   name: 'ZombieSurvival',
@@ -126,6 +128,9 @@ export default {
   },
   data(){
     return{
+      mapLevel:1,
+      mapLevelInfo:levelInfo[0],
+      gameMode:'level',//sandbox, level
       gameState:'pause',//operation, pause, over, finish
       showStartDialog:true,
       showExpDialog:false,
@@ -164,7 +169,7 @@ export default {
       damageList:[],
       bulletList:[],
       rafIds:[],
-      enemyTotal:100,
+      enemyTotal:0,
       killCount:0,
       keyCode:[],
       operatingMode:'2'
@@ -173,13 +178,63 @@ export default {
   watch:{
     enemyList:function(){
       if(this.roleInfo.underAtkCount + this.killCount >= this.enemyTotal){
-        this.$message({
-          message:'成功通关！～～～～～～',
-          type:'success',
-          center:true
+        setTimeout(() => {
+          this.$message({
+            message:'成功通关！～～～～～～',
+            type:'success',
+            center:true
+          })
         })
         this.pauseHandle('finish')
+
+        if(this.gameMode !== 'level')return
+        this.$confirm('成功通关，是否进入下一关?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'success'
+        }).then(() => {
+          this.mapLevel++
+          this.$message({
+            message: '2秒后开始游戏, 做好准备',
+            type: 'warning',
+            center: true,
+            duration: 2000
+          })
+          setTimeout(() => {
+            this.$message({
+              message: '游戏开始',
+              type: 'success',
+              center: true,
+              duration: 1000
+            })
+            this.start()
+          }, 2000)
+        }).catch(() => {        
+        })
       }
+    },
+    mapLevel:function(val){
+      this.mapLevelInfo = levelInfo[val - 1]
+
+      this.idCount = 0
+      this.masterTime = 0
+      this.enemyCount = 0
+      this.killCount = 0
+      this.enemyList = []
+      this.damageList = []
+      this.bulletList = []
+      this.keyCode = []
+      this.centerP = {
+        x:this.configKonva.width / 2,
+        y:this.configKonva.height / 2
+      }
+
+      let {
+        enemyTotal,
+        enemyCreateInterval
+      } = this.mapLevelInfo
+      this.enemyTotal = enemyTotal
+      this.enemyCreateInterval = enemyCreateInterval
     }
   },
   computed:{
@@ -211,7 +266,13 @@ export default {
   },
   methods:{
     updateStartConfigHandle(formData){
-      this.enemyTotal = formData.enemyTotal
+      this.gameMode = formData.gameMode
+      if(this.gameMode === 'level'){
+        this.enemyTotal = this.mapLevelInfo.enemyTotal
+        this.enemyCreateInterval = this.mapLevelInfo.enemyCreateInterval
+      }else{
+        this.enemyTotal = formData.enemyTotal
+      }
       this.operatingMode = formData.operatingMode
       this.enableDrag = Boolean(this.operatingMode === '1')
 
@@ -246,12 +307,17 @@ export default {
       this.start()
     },
     createEnemy(){
-      let level = randomValue({ 
-        arr:weightRandom({
-          value:[1, 2, 3, 4, 5, 10],
-          weight:[20, 50, 25, 10, 5, 1]
-        }) 
+      let {
+        enemyConfig:{
+          color,
+          levelWeight,
+          areaWeight
+        }
+      } = this.mapLevelInfo,
+      level = randomValue({ 
+        arr:weightRandom(levelWeight) 
       })
+
       let enemyObj = {
         id:this.idCount++,
         level,
@@ -265,7 +331,7 @@ export default {
           x: 0,
           y: 0,
           radius: level * 3 + 2,
-          fill: '#ff7e7e',
+          fill: color,
           shadowColor: 'black',
           shadowBlur: 2,
           shadowOffset: { x: 2, y: 2 },
@@ -274,10 +340,7 @@ export default {
       }
 
       let areaNo = randomValue({ 
-        arr:weightRandom({
-          value:[1, 2, 3, 4],
-          weight:[10, 10, 10, 10]
-        })
+        arr:weightRandom(areaWeight)
       })
       switch(areaNo){
         case 1:
@@ -676,15 +739,17 @@ export default {
         this.pauseHandle('pause')
         this.damageList = []
         this.roleInfo.level++
-        this.showExpDialog = true
         setTimeout(() => {
-          this.$message({
-            message:'升级啦!~~~~~~~~~~~',
-            type:'success',
-            center:true,
-            duration: 1500
+          this.showExpDialog = true
+          setTimeout(() => {
+            this.$message({
+              message:'升级啦!~~~~~~~~~~~',
+              type:'success',
+              center:true,
+              duration: 1500
+            })
           })
-        })
+        },1)
         this.roleInfo.exp = 0
         this.roleInfo.maxExp = Math.ceil(50 * Math.pow( this.roleInfo.level, 1.5 ) + 100)
       }
@@ -715,6 +780,8 @@ export default {
           break
       }
       this.showExpDialog = false
+
+      if(this.gameState !== 'pause')return
       this.$message({
         message: '2秒后开始游戏, 做好准备',
         type: 'warning',
@@ -746,7 +813,7 @@ export default {
       }
     },
     pauseHandle(gameState){
-      if(this.gameState !== 'operation')return
+      if(gameState === 'pause' && this.gameState !== 'operation')return
       this.gameState = gameState
       if(timer){
         clearInterval(timer)

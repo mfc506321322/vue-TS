@@ -1,0 +1,98 @@
+[
+  {
+    "level": 1,
+    "enemyTotal": 20,
+    "enemyCreateInterval": 1,
+    "enemyConfig": {
+      "color": "#ff7e7e",
+      "levelWeight": {
+        "value": [1, 2, 3],
+        "weight": [50, 30, 20]
+      },
+      "areaWeight": {
+        "value": [1],
+        "weight": [1]
+      }
+    }
+  },
+  {
+    "level": 2,
+    "enemyTotal": 40,
+    "enemyCreateInterval": 0.95,
+    "enemyConfig": {
+      "color": "#ff7e7e",
+      "levelWeight": {
+        "value": [1, 2, 3],
+        "weight": [20, 20, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2],
+        "weight": [10, 10]
+      }
+    }
+  },
+  {
+    "level": 3,
+    "enemyTotal": 60,
+    "enemyCreateInterval": 0.9,
+    "enemyConfig": {
+      "color": "#ff7e7e",
+      "levelWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [20, 20, 10, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3],
+        "weight": [10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 4,
+    "enemyTotal": 80,
+    "enemyCreateInterval": 0.85,
+    "enemyConfig": {
+      "color": "#ff7e7e",
+      "levelWeight": {
+        "value": [1, 2, 3, 4, 5],
+        "weight": [20, 20, 10, 10, 5]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 5,
+    "enemyTotal": 100,
+    "enemyCreateInterval": 0.8,
+    "enemyConfig": {
+      "color": "#ff00ff",
+      "levelWeight": {
+        "value": [1, 2, 3, 4, 5],
+        "weight": [20, 20, 10, 10, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 6,
+    "enemyTotal": 50,
+    "enemyCreateInterval": 0.5,
+    "enemyConfig": {
+      "color": "#ff00ff",
+      "levelWeight": {
+        "value": [5, 10, 15],
+        "weight": [20, 20, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  }
+]
