@@ -94,7 +94,7 @@
         <span>4.生命值归零时游戏结束</span>
         <span>5.选择升级2秒后自动开始游戏</span>
       </p>
-      <el-button @click="pauseHandle">暂停</el-button>
+      <el-button @click="pauseHandle('pause')">暂停</el-button>
       <el-button @click="launchHandle">启动</el-button>
     </div>
     <expDialog
@@ -126,6 +126,7 @@ export default {
   },
   data(){
     return{
+      gameState:'pause',//operation, pause, over, finish
       showStartDialog:true,
       showExpDialog:false,
       enableDrag:false,
@@ -152,7 +153,8 @@ export default {
         speed:2,
         exp:0,
         maxExp:100,
-        level:1
+        level:1,
+        underAtkCount:0
       },
       roleRafId:null,
       idCount:0,
@@ -168,7 +170,18 @@ export default {
       operatingMode:'2'
     }
   },
-  watch:{},
+  watch:{
+    enemyList:function(){
+      if(this.roleInfo.underAtkCount + this.killCount >= this.enemyTotal){
+        this.$message({
+          message:'成功通关！～～～～～～',
+          type:'success',
+          center:true
+        })
+        this.pauseHandle('finish')
+      }
+    }
+  },
   computed:{
     progressBarHp(){
       return Math.ceil(this.roleInfo.hp / this.roleInfo.maxhp * 100) + '%'
@@ -181,6 +194,12 @@ export default {
     let sWidth = document.body.clientWidth
     if(sWidth < 634){
       this.configKonva.width = sWidth - 34
+    }
+
+    let localFps = localStorage.getItem('fps')
+    if(localFps){
+      this.fps = Number(localFps)
+      console.log('设定帧率：', this.fps)
     }
 
     this.centerP = {
@@ -196,29 +215,33 @@ export default {
       this.operatingMode = formData.operatingMode
       this.enableDrag = Boolean(this.operatingMode === '1')
 
-      setTimeout(() => {
-        let sFPS = this.masterTime
-        if(sFPS >= 50 && sFPS < 70){
-          this.fps = 60
-        }else if(sFPS >= 70 && sFPS < 80){
-          this.fps = 75
-        }else if(sFPS >= 80 && sFPS < 100){
-          this.fps = 90
-        }else if(sFPS >= 110 && sFPS < 130){
-          this.fps = 120
-        }else if(sFPS >= 134 && sFPS < 154){
-          this.fps = 144
-        }else if(sFPS >= 155 && sFPS < 175){
-          this.fps = 165
-        }else if(sFPS >= 230 && sFPS < 250){
-          this.fps = 240
-        }else if(sFPS >= 350 && sFPS < 370){
-          this.fps = 360
-        }else{
-          this.fps = 60
-        }
-        console.log('当前显示器帧率：', sFPS, '设定帧率：', this.fps)
-      }, 1000)
+      let localFps = localStorage.getItem('fps')
+      if(!localFps){
+        setTimeout(() => {
+          let sFPS = this.masterTime
+          if(sFPS >= 50 && sFPS < 70){
+            this.fps = 60
+          }else if(sFPS >= 70 && sFPS < 80){
+            this.fps = 75
+          }else if(sFPS >= 80 && sFPS < 100){
+            this.fps = 90
+          }else if(sFPS >= 110 && sFPS < 130){
+            this.fps = 120
+          }else if(sFPS >= 134 && sFPS < 154){
+            this.fps = 144
+          }else if(sFPS >= 155 && sFPS < 175){
+            this.fps = 165
+          }else if(sFPS >= 230 && sFPS < 250){
+            this.fps = 240
+          }else if(sFPS >= 350 && sFPS < 370){
+            this.fps = 360
+          }else{
+            this.fps = 60
+          }
+          localStorage.setItem('fps', this.fps)
+          console.log('当前显示器帧率：', sFPS, '设定帧率：', this.fps)
+        }, 1000)
+      }
 
       this.start()
     },
@@ -363,7 +386,7 @@ export default {
         if(rafId){
           this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
         }
-        rafId = window.requestAnimationFrame(animationFn)
+        rafId = requestAnimationFrame(animationFn)
         this.rafIds.push(rafId)
         item['rafId'] = rafId
 
@@ -425,14 +448,16 @@ export default {
         clearInterval(timer)
         timer = null
       }
+      this.gameState = 'operation'
       this.rafIds = []
       this.roleRafId = null
       this.keyDown()
       this.startCreate()
     },
     startCreate(){
-      if(this.enemyCount === this.enemyTotal)return
+      if(this.gameState !== 'operation')return
       this.roleAnimationHandle()
+      if(this.enemyCount === this.enemyTotal)return
       timer = setInterval(() => {
         let obj = this.createEnemy()
         this.animationHandle(obj)
@@ -470,7 +495,6 @@ export default {
 
         if(this.operatingMode === '2' && this.keyCode.length > 0){
           let cachePoint = { ...this.centerP }
-
           this.lastCenterP = {
             x: cachePoint.x,
             y: cachePoint.y
@@ -498,7 +522,7 @@ export default {
           }
         }
 
-        this.roleRafId = window.requestAnimationFrame(animationFn)
+        this.roleRafId = requestAnimationFrame(animationFn)
         this.masterTime++
       }
       animationFn()
@@ -540,7 +564,7 @@ export default {
         if(rafId){
           this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
         }
-        rafId = window.requestAnimationFrame(animationFn)
+        rafId = requestAnimationFrame(animationFn)
         this.rafIds.push(rafId)
         item['rafId'] = rafId
 
@@ -579,13 +603,14 @@ export default {
         if((x <= this.centerP.x + offsetVal && x >= this.centerP.x - offsetVal) && (y <= this.centerP.y + offsetVal && y >= this.centerP.y - offsetVal)){
           clearEnemy()
           this.roleInfo.hp -= item.atk
+          this.roleInfo.underAtkCount++
           if(this.roleInfo.hp <= 0){
             this.$message({
               message:'GAME OVER',
               type:'error',
               center:true
             })
-            this.pauseHandle()
+            this.pauseHandle('over')
           }
         }
         
@@ -648,7 +673,7 @@ export default {
     expHandle(enemy){
       this.roleInfo.exp += enemy.exp
       if(this.roleInfo.exp >= this.roleInfo.maxExp){
-        this.pauseHandle()
+        this.pauseHandle('pause')
         this.damageList = []
         this.roleInfo.level++
         this.showExpDialog = true
@@ -720,29 +745,29 @@ export default {
         this.centerP.y = 600
       }
     },
-    pauseHandle(){
-      if(!this.roleRafId)return
+    pauseHandle(gameState){
+      if(this.gameState !== 'operation')return
+      this.gameState = gameState
       if(timer){
         clearInterval(timer)
         timer = null
       }
       this.enableDrag = false
-
       cancelAnimationFrame(this.roleRafId)
       this.roleRafId = null
+
       for(let i=0, l=this.rafIds.length;i<l;i++){
         cancelAnimationFrame(this.rafIds[i])
       }
       this.rafIds = []
 
-      for(let i=0, l=this.bulletList.length;i<l;i++){
-        if(this.bulletList[i] && this.masterTime - this.bulletList[i].createTime >= 60 * 8.5){
-          this.bulletList.splice(i, 1)
-        }
-      }
+      this.bulletList = this.bulletList.filter(item => {
+        return this.masterTime - item.createTime < 60 * 8.5
+      })
     },
-    launchHandle(){
-      if(this.roleRafId)return
+    launchHandle(launchType){
+      if(launchType !== 'start' && this.gameState !== 'pause')return
+      this.gameState = 'operation'
       this.enableDrag = Boolean(this.operatingMode === '1')
 
       for(let i=0, l=this.bulletList.length;i<l;i++){
