@@ -36,9 +36,21 @@
           <span>最大血量 + 10</span>
           <el-button type="primary" @click="upgradeHandle('maxhp')">升级</el-button>
         </li>
-        <li class="power_list_list">
+        <li class="power_list_list reply">
           <span>回复满血量</span>
           <el-button type="primary" @click="upgradeHandle('hp')">回复</el-button>
+        </li>
+        <li class="power_list_list skill">
+          <span>技能伤害 + 50</span>
+          <el-button type="primary" @click="upgradeHandle('skill.damage')">升级</el-button>
+        </li>
+        <li class="power_list_list skill">
+          <span>技能范围 + 50像素</span>
+          <el-button type="primary" @click="upgradeHandle('skill.maxScope')">升级</el-button>
+        </li>
+        <li class="power_list_list skill">
+          <span>技能cd - 1秒</span>
+          <el-button type="primary" @click="upgradeHandle('skill.cd')" :disabled="infoData.skill.cd <= 1">升级</el-button>
         </li>
       </ul>
     </div>
@@ -54,6 +66,10 @@ export default {
     isShow:{
       type:Boolean,
       default:false
+    },
+    infoData:{
+      type:Object,
+      default:() => {}
     },
   },
   data(){
@@ -84,6 +100,9 @@ export default {
 .dialog_box{
   /deep/ .dialog_content{
     width: 300px;
+    .el-dialog__body{
+      padding: 20px 20px 10px;
+    }
     .content_box{
       .power_list{
         .power_list_list{
@@ -91,7 +110,16 @@ export default {
           align-items: center;
           justify-content: space-between;
           margin-bottom: 10px;
-        } 
+          padding-left: 5px;
+          border-radius: 4px;
+          overflow: hidden;
+        }
+        .skill{
+          background-color: rgba($color: #00FFFF, $alpha: 0.2);
+        }
+        .reply{
+          background-color: rgba($color: #ff4400, $alpha: 0.2);
+        }
       }
     }
   }

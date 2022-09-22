@@ -6,15 +6,15 @@
       class="stage"
     >
       <v-layer ref="layer">
-        <!-- <v-circle 
+        <v-circle 
           :config="{
-            x: centerP.x,
-            y: centerP.y,
+            x: roleInfo.skill.x,
+            y: roleInfo.skill.y,
             radius: roleInfo.atkScope,
             stroke: 'blue',
             strokeWidth: 1
           }"
-        /> -->
+        />
         <div class="bullet_box">
           <v-circle
             v-for="(item, idx) in bulletList"
@@ -87,13 +87,19 @@
         <li>剩余敌人数量: {{enemyTotal - killCount}}</li>
         <li>击杀数: {{killCount}}</li>
       </ul>
+      <p class="skill_info">
+        <span>技能cd: {{roleInfo.skill.nowCd ? roleInfo.skill.nowCd : '可用'}} / {{roleInfo.skill.cd}}</span>
+        <span>技能伤害: {{roleInfo.skill.damage}}</span>
+        <span>技能范围: {{roleInfo.skill.maxScope}}</span>
+      </p>
       <p class="operating_instructions">
         <span class="operating_instructions_title">操作说明</span>
         <span>1.方向键控制（鼠标拖拽）蓝球进行移动</span>
         <span>2.自动向移动的反方向发射子弹</span>
-        <span>3.红球中心点撞到蓝球中心的白点会损失生命值</span>
-        <span>4.生命值归零时游戏结束</span>
-        <span>5.选择升级2秒后自动开始游戏</span>
+        <span>3.按（Z）键释放范围攻击技能</span>
+        <span>4.红球中心点撞到蓝球中心的白点会损失生命值</span>
+        <span>5.生命值归零时游戏结束</span>
+        <span>6.选择升级2秒后自动开始游戏</span>
       </p>
       <el-button @click="pauseHandle('pause')">暂停</el-button>
       <el-button @click="launchHandle">启动</el-button>
@@ -101,6 +107,7 @@
     <expDialog
       :isShow.sync="showExpDialog"
       @upgradeHandle="upgradeHandle"
+      :infoData="roleInfo"
     />
     <startDialog
       :isShow.sync="showStartDialog"
@@ -159,7 +166,18 @@ export default {
         exp:0,
         maxExp:100,
         level:1,
-        underAtkCount:0
+        underAtkCount:0,
+        skill:{
+          skillCast: 0,
+          damage: 100,
+          maxScope: 125,
+          cd: 10,
+          nowCd: 0,
+          castTime: 0,
+          x: 0,
+          y: 0,
+          skillSpeed: 1.5
+        }
       },
       roleRafId:null,
       idCount:0,
@@ -224,6 +242,10 @@ export default {
       this.damageList = []
       this.bulletList = []
       this.keyCode = []
+      this.roleInfo.underAtkCount = 0
+      this.roleInfo.atkScope = 0
+      this.roleInfo.skill.skillCast = 0
+      this.roleInfo.skill.nowCd = 0
       this.centerP = {
         x:this.configKonva.width / 2,
         y:this.configKonva.height / 2
@@ -489,16 +511,7 @@ export default {
               clearBulle()
               itm.hp -= this.roleInfo.atk
 
-              this.damageList.push({
-                id:itm.id + new Date * 1 + Math.random(),
-                createTime: this.masterTime,
-                config:{
-                  text: '-' + this.roleInfo.atk,
-                  x,
-                  y,
-                  fill:'red'
-                }
-              })
+              this.damageCreate(itm, this.roleInfo.atk)
               break
             }
           }
@@ -555,6 +568,32 @@ export default {
         //     console.log('enemyList', this.enemyCount)
         //   }
         // }
+        let {
+          maxScope,
+          nowCd,
+          cd,
+          castTime,
+          skillSpeed,
+          skillCast
+        } = this.roleInfo.skill
+        if(this.keyCode.includes(90) && !skillCast && nowCd === 0){
+          this.roleInfo.skill.skillCast = 1
+          this.roleInfo.skill.castTime = this.masterTime
+          this.roleInfo.skill.nowCd = cd
+          this.roleInfo.skill.x = this.centerP.x
+          this.roleInfo.skill.y = this.centerP.y
+        }
+        if(this.roleInfo.skill.skillCast){
+          // this.roleInfo.atkScope += maxScope / (this.fps * 4)
+          this.roleInfo.atkScope += skillSpeed
+          if(this.roleInfo.atkScope >= maxScope){
+            this.roleInfo.atkScope = 0
+            this.roleInfo.skill.skillCast = 0
+          }
+        }
+        if(nowCd !== 0 && (this.masterTime - castTime) % 60 === 0){
+          this.roleInfo.skill.nowCd--
+        }
 
         if(this.operatingMode === '2' && this.keyCode.length > 0){
           let cachePoint = { ...this.centerP }
@@ -593,7 +632,6 @@ export default {
     animationHandle(item){
       let rafId = null,
       offsetVal = 2,
-      atkOffset = 3,
       {
         disInit
       } = item
@@ -645,17 +683,24 @@ export default {
           }
         }
 
-        // let {
-        //   atk,
-        //   atkScope,
-        // } = this.roleInfo,
-        // distance = Math.sqrt(Math.pow(xDis,2) + Math.pow(yDis,2))
+        if(this.roleInfo.skill.skillCast){
+          let {
+            atkScope,
+            skill:{
+              damage
+            }
+          } = this.roleInfo,
+          sXDis = Math.abs(this.roleInfo.skill.x - x),
+          sYDis = Math.abs(this.roleInfo.skill.y - y),
+          distance = Math.sqrt(Math.pow(sXDis,2) + Math.pow(sYDis,2)),
+          atkOffset = 2
 
-        // if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
-        //   // console.log(distance - atkScope, this.masterTime - item.underAtkTime)
-        //   item.underAtkTime = this.masterTime
-        //   item.hp -= atk
-        // }
+          if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
+            item.underAtkTime = this.masterTime
+            item.hp -= damage
+            this.damageCreate(item, damage)
+          }
+        }
 
         if(item.hp <= 0){
           this.killCount++
@@ -680,6 +725,26 @@ export default {
       }
       animationFn()
     },
+    damageCreate(item, damage){
+      let obj = { ...item },
+      {
+        config:{
+          x,
+          y
+        }
+      } = obj
+
+      this.damageList.push({
+        id:obj.id + new Date * 1 + Math.random(),
+        createTime: this.masterTime,
+        config:{
+          text: '-' + damage,
+          x,
+          y,
+          fill:'red'
+        }
+      })
+    },
     keyDown(){
       if(this.operatingMode !== '2')return
       document.body.onkeydown = (e) => {
@@ -687,7 +752,7 @@ export default {
         let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
         //键盘按键判断:左箭头-37;上箭头-38；右箭头-39;下箭头-40
         if(e1){
-          let keys = [37, 38, 39, 40]
+          let keys = [37, 38, 39, 40, 90]
           if(keys.includes(e1.keyCode)){
             if(!this.keyCode.includes(e1.keyCode)){
               this.keyCode.push(e1.keyCode)
@@ -777,6 +842,16 @@ export default {
           break
         case 'hp':
           this.roleInfo.hp = this.roleInfo.maxhp
+          break
+        case 'skill.damage':
+          this.roleInfo.skill.damage += 50
+          break
+        case 'skill.maxScope':
+          this.roleInfo.skill.maxScope += 50
+          break
+        case 'skill.cd':
+          if(this.roleInfo.skill.cd === 1)return
+          this.roleInfo.skill.cd -= 1
           break
       }
       this.showExpDialog = false
@@ -894,6 +969,16 @@ export default {
         }
       }
     }
+  }
+}
+.skill_info{
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba($color: #00FFFF, $alpha: 0.1);
+  padding: 2px;
+  span{
+    line-height: 18px;
   }
 }
 .operating_instructions{
