@@ -328,6 +328,116 @@ export default {
 
       this.start()
     },
+    start(){
+      if(timer){
+        clearInterval(timer)
+        timer = null
+      }
+      this.gameState = 'operation'
+      this.rafIds = []
+      this.roleRafId = null
+      this.keyDown()
+      this.startCreate()
+    },
+    startCreate(){
+      if(this.gameState !== 'operation')return
+      this.roleAnimationHandle()
+      if(this.enemyCount === this.enemyTotal)return
+      timer = setInterval(() => {
+        let obj = this.createEnemy()
+        this.enemyAnimationHandle(obj)
+
+        if(this.enemyCount === this.enemyTotal){
+          clearInterval(timer)
+          timer = null
+          console.log('enemyList', this.enemyCount)
+          return
+        }
+      }, 1000 * this.enemyCreateInterval)
+    },
+    roleAnimationHandle(){
+      this.roleRafId = null
+      let animationFn = () => {
+        let {
+          maxAtkScope,
+          atkInterval,
+          speed
+        } = this.roleInfo
+
+        // this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
+        // if(this.roleInfo.atkScope >= maxAtkScope){
+        //   this.roleInfo.atkScope = 0
+        // }
+
+        // if(this.masterTime % (60 * this.enemyCreateInterval) === 0 && this.enemyCount < this.enemyTotal){
+        //   let obj = this.createEnemy()
+        //   this.enemyAnimationHandle(obj)
+
+        //   if(this.enemyCount === this.enemyTotal){
+        //     console.log('enemyList', this.enemyCount)
+        //   }
+        // }
+        let {
+          maxScope,
+          nowCd,
+          cd,
+          castTime,
+          skillSpeed,
+          skillCast
+        } = this.roleInfo.skill
+        if(this.keyCode.includes(90) && !skillCast && nowCd === 0){
+          this.roleInfo.skill.skillCast = 1
+          this.roleInfo.skill.castTime = this.masterTime
+          this.roleInfo.skill.nowCd = cd
+          this.roleInfo.skill.x = this.centerP.x
+          this.roleInfo.skill.y = this.centerP.y
+        }
+        if(this.roleInfo.skill.skillCast){
+          // this.roleInfo.atkScope += maxScope / (this.fps * 4)
+          this.roleInfo.atkScope += skillSpeed
+          if(this.roleInfo.atkScope >= maxScope){
+            this.roleInfo.atkScope = 0
+            this.roleInfo.skill.skillCast = 0
+          }
+        }
+        if(nowCd !== 0 && (this.masterTime - castTime) % 60 === 0){
+          this.roleInfo.skill.nowCd--
+        }
+
+        if(this.operatingMode === '2' && this.keyCode.length > 0){
+          let cachePoint = { ...this.centerP }
+          this.lastCenterP = {
+            x: cachePoint.x,
+            y: cachePoint.y
+          }
+
+          if(this.keyCode.includes(37)){
+            this.centerP.x -= speed
+          }
+          if(this.keyCode.includes(39)){
+            this.centerP.x += speed
+          }
+          if(this.keyCode.includes(38)){
+            this.centerP.y -= speed
+          }
+          if(this.keyCode.includes(40)){
+            this.centerP.y += speed
+          }
+          this.borderLimit()
+        }
+
+        if(this.masterTime % (Math.ceil(this.fps / atkInterval)) === 0){
+          for(let i=0, l=Math.floor(this.roleInfo.bulletCount);i<l;i++){
+            let obj = this.bulletCreate()
+            this.bulletAnimationHandle(obj, i)
+          }
+        }
+
+        this.roleRafId = requestAnimationFrame(animationFn)
+        this.masterTime++
+      }
+      animationFn()
+    },
     createEnemy(){
       let {
         enemyConfig:{
@@ -387,6 +497,102 @@ export default {
       this.enemyList.push(enemyObj)
       this.enemyCount++
       return enemyObj
+    },
+    enemyAnimationHandle(item){
+      let rafId = null,
+      offsetVal = 2,
+      {
+        disInit
+      } = item
+
+      let animationFn = () => {
+        let x = item.config.x,
+        y = item.config.y,
+        xDis = Math.abs(this.centerP.x - x),
+        yDis = Math.abs(this.centerP.y - y),
+        xStep = 0,
+        yStep = 0
+        if(xDis === 0){
+          yStep = disInit
+        }else{
+          xStep = Math.cos(Math.atan(yDis / xDis)) * disInit
+          yStep = Math.sin(Math.atan(yDis / xDis)) * disInit
+        }
+
+        if(x < this.centerP.x - offsetVal){
+          item.config.x += xStep
+        }
+        if(x > this.centerP.x + offsetVal){
+          item.config.x -= xStep
+        }
+        if(y < this.centerP.y - offsetVal){
+          item.config.y += yStep
+        }
+        if(y > this.centerP.y + offsetVal){
+          item.config.y -= yStep
+        }
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        item['rafId'] = rafId
+
+        let clearEnemy = () => {
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
+              let itemIndex = _.findIndex(this.enemyList, {id:item.id})
+              if(itemIndex || itemIndex + '' === '0'){
+                this.enemyList.splice(itemIndex, 1)
+              }
+              break
+            }
+          }
+        }
+
+        if(this.roleInfo.skill.skillCast){
+          let {
+            atkScope,
+            skill:{
+              damage
+            }
+          } = this.roleInfo,
+          sXDis = Math.abs(this.roleInfo.skill.x - x),
+          sYDis = Math.abs(this.roleInfo.skill.y - y),
+          distance = Math.sqrt(Math.pow(sXDis,2) + Math.pow(sYDis,2)),
+          atkOffset = 2
+
+          if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
+            item.underAtkTime = this.masterTime
+            item.hp -= damage
+            this.damageCreate(item, damage)
+          }
+        }
+
+        if(item.hp <= 0){
+          this.killCount++
+          clearEnemy()
+          this.expHandle(item)
+        }
+
+        if((x <= this.centerP.x + offsetVal && x >= this.centerP.x - offsetVal) && (y <= this.centerP.y + offsetVal && y >= this.centerP.y - offsetVal)){
+          clearEnemy()
+          this.roleInfo.hp -= item.atk
+          this.roleInfo.underAtkCount++
+          if(this.roleInfo.hp <= 0){
+            this.$message({
+              message:'GAME OVER',
+              type:'error',
+              center:true
+            })
+            this.pauseHandle('over')
+          }
+        }
+        
+      }
+      animationFn()
     },
     bulletCreate(){
       let bulletObj = {
@@ -519,212 +725,6 @@ export default {
       }
       animationFn()
     },
-    start(){
-      if(timer){
-        clearInterval(timer)
-        timer = null
-      }
-      this.gameState = 'operation'
-      this.rafIds = []
-      this.roleRafId = null
-      this.keyDown()
-      this.startCreate()
-    },
-    startCreate(){
-      if(this.gameState !== 'operation')return
-      this.roleAnimationHandle()
-      if(this.enemyCount === this.enemyTotal)return
-      timer = setInterval(() => {
-        let obj = this.createEnemy()
-        this.animationHandle(obj)
-
-        if(this.enemyCount === this.enemyTotal){
-          clearInterval(timer)
-          timer = null
-          console.log('enemyList', this.enemyCount)
-          return
-        }
-      }, 1000 * this.enemyCreateInterval)
-    },
-    roleAnimationHandle(){
-      this.roleRafId = null
-      let animationFn = () => {
-        let {
-          maxAtkScope,
-          atkInterval,
-          speed
-        } = this.roleInfo
-
-        // this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
-        // if(this.roleInfo.atkScope >= maxAtkScope){
-        //   this.roleInfo.atkScope = 0
-        // }
-
-        // if(this.masterTime % (60 * this.enemyCreateInterval) === 0 && this.enemyCount < this.enemyTotal){
-        //   let obj = this.createEnemy()
-        //   this.animationHandle(obj)
-
-        //   if(this.enemyCount === this.enemyTotal){
-        //     console.log('enemyList', this.enemyCount)
-        //   }
-        // }
-        let {
-          maxScope,
-          nowCd,
-          cd,
-          castTime,
-          skillSpeed,
-          skillCast
-        } = this.roleInfo.skill
-        if(this.keyCode.includes(90) && !skillCast && nowCd === 0){
-          this.roleInfo.skill.skillCast = 1
-          this.roleInfo.skill.castTime = this.masterTime
-          this.roleInfo.skill.nowCd = cd
-          this.roleInfo.skill.x = this.centerP.x
-          this.roleInfo.skill.y = this.centerP.y
-        }
-        if(this.roleInfo.skill.skillCast){
-          // this.roleInfo.atkScope += maxScope / (this.fps * 4)
-          this.roleInfo.atkScope += skillSpeed
-          if(this.roleInfo.atkScope >= maxScope){
-            this.roleInfo.atkScope = 0
-            this.roleInfo.skill.skillCast = 0
-          }
-        }
-        if(nowCd !== 0 && (this.masterTime - castTime) % 60 === 0){
-          this.roleInfo.skill.nowCd--
-        }
-
-        if(this.operatingMode === '2' && this.keyCode.length > 0){
-          let cachePoint = { ...this.centerP }
-          this.lastCenterP = {
-            x: cachePoint.x,
-            y: cachePoint.y
-          }
-
-          if(this.keyCode.includes(37)){
-            this.centerP.x -= speed
-          }
-          if(this.keyCode.includes(39)){
-            this.centerP.x += speed
-          }
-          if(this.keyCode.includes(38)){
-            this.centerP.y -= speed
-          }
-          if(this.keyCode.includes(40)){
-            this.centerP.y += speed
-          }
-          this.borderLimit()
-        }
-
-        if(this.masterTime % (Math.ceil(this.fps / atkInterval)) === 0){
-          for(let i=0, l=Math.floor(this.roleInfo.bulletCount);i<l;i++){
-            let obj = this.bulletCreate()
-            this.bulletAnimationHandle(obj, i)
-          }
-        }
-
-        this.roleRafId = requestAnimationFrame(animationFn)
-        this.masterTime++
-      }
-      animationFn()
-    },
-    animationHandle(item){
-      let rafId = null,
-      offsetVal = 2,
-      {
-        disInit
-      } = item
-
-      let animationFn = () => {
-        let x = item.config.x,
-        y = item.config.y,
-        xDis = Math.abs(this.centerP.x - x),
-        yDis = Math.abs(this.centerP.y - y),
-        xStep = 0,
-        yStep = 0
-        if(xDis === 0){
-          yStep = disInit
-        }else{
-          xStep = Math.cos(Math.atan(yDis / xDis)) * disInit
-          yStep = Math.sin(Math.atan(yDis / xDis)) * disInit
-        }
-
-        if(x < this.centerP.x - offsetVal){
-          item.config.x += xStep
-        }
-        if(x > this.centerP.x + offsetVal){
-          item.config.x -= xStep
-        }
-        if(y < this.centerP.y - offsetVal){
-          item.config.y += yStep
-        }
-        if(y > this.centerP.y + offsetVal){
-          item.config.y -= yStep
-        }
-        if(rafId){
-          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
-        }
-        rafId = requestAnimationFrame(animationFn)
-        this.rafIds.push(rafId)
-        item['rafId'] = rafId
-
-        let clearEnemy = () => {
-          for(let i=0, l=this.rafIds.length;i<l;i++){
-            if(this.rafIds[i] === rafId){
-              cancelAnimationFrame(this.rafIds[i])
-              this.rafIds.splice(i, 1)
-              let itemIndex = _.findIndex(this.enemyList, {id:item.id})
-              if(itemIndex || itemIndex + '' === '0'){
-                this.enemyList.splice(itemIndex, 1)
-              }
-              break
-            }
-          }
-        }
-
-        if(this.roleInfo.skill.skillCast){
-          let {
-            atkScope,
-            skill:{
-              damage
-            }
-          } = this.roleInfo,
-          sXDis = Math.abs(this.roleInfo.skill.x - x),
-          sYDis = Math.abs(this.roleInfo.skill.y - y),
-          distance = Math.sqrt(Math.pow(sXDis,2) + Math.pow(sYDis,2)),
-          atkOffset = 2
-
-          if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
-            item.underAtkTime = this.masterTime
-            item.hp -= damage
-            this.damageCreate(item, damage)
-          }
-        }
-
-        if(item.hp <= 0){
-          this.killCount++
-          clearEnemy()
-          this.expHandle(item)
-        }
-
-        if((x <= this.centerP.x + offsetVal && x >= this.centerP.x - offsetVal) && (y <= this.centerP.y + offsetVal && y >= this.centerP.y - offsetVal)){
-          clearEnemy()
-          this.roleInfo.hp -= item.atk
-          this.roleInfo.underAtkCount++
-          if(this.roleInfo.hp <= 0){
-            this.$message({
-              message:'GAME OVER',
-              type:'error',
-              center:true
-            })
-            this.pauseHandle('over')
-          }
-        }
-        
-      }
-      animationFn()
-    },
     damageCreate(item, damage){
       let obj = { ...item },
       {
@@ -744,59 +744,6 @@ export default {
           fill:'red'
         }
       })
-    },
-    keyDown(){
-      if(this.operatingMode !== '2')return
-      document.body.onkeydown = (e) => {
-        //事件对象兼容
-        let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
-        //键盘按键判断:左箭头-37;上箭头-38；右箭头-39;下箭头-40
-        if(e1){
-          let keys = [37, 38, 39, 40, 90]
-          if(keys.includes(e1.keyCode)){
-            if(!this.keyCode.includes(e1.keyCode)){
-              this.keyCode.push(e1.keyCode)
-            }
-          }
-        }
-      }
-      document.body.onkeyup = (e) => {
-        let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
-        if(e1){
-          if(this.keyCode.includes(e1.keyCode)){
-            this.keyCode.splice(this.keyCode.indexOf(e1.keyCode), 1)
-          }
-        }
-      }
-    },
-    dragBoundFunc(pos){
-      // console.log('dragBoundFunc', pos)
-      let cachePoint = { ...this.centerP },
-      {
-        x,
-        y
-      } = pos.target.attrs,
-      rlx = cachePoint.x,
-      rly = cachePoint.y
-
-      if(x >= 0 && x <= 600){
-        rlx = x
-      }
-      if(y >= 0 && y <= 600){
-        rly = y
-      }
-
-      if(cachePoint.x !== rlx && cachePoint.y !== rly){
-        this.lastCenterP = {
-          x: cachePoint.x,
-          y: cachePoint.y
-        }
-      }
-
-      this.centerP = {
-        x:rlx,
-        y:rly
-      }
     },
     expHandle(enemy){
       this.roleInfo.exp += enemy.exp
@@ -887,6 +834,59 @@ export default {
         this.centerP.y = 600
       }
     },
+    keyDown(){
+      if(this.operatingMode !== '2')return
+      document.body.onkeydown = (e) => {
+        //事件对象兼容
+        let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
+        //键盘按键判断:左箭头-37;上箭头-38；右箭头-39;下箭头-40
+        if(e1){
+          let keys = [37, 38, 39, 40, 90]
+          if(keys.includes(e1.keyCode)){
+            if(!this.keyCode.includes(e1.keyCode)){
+              this.keyCode.push(e1.keyCode)
+            }
+          }
+        }
+      }
+      document.body.onkeyup = (e) => {
+        let e1 = e || event || window.event || arguments.callee.caller.arguments[0]
+        if(e1){
+          if(this.keyCode.includes(e1.keyCode)){
+            this.keyCode.splice(this.keyCode.indexOf(e1.keyCode), 1)
+          }
+        }
+      }
+    },
+    dragBoundFunc(pos){
+      // console.log('dragBoundFunc', pos)
+      let cachePoint = { ...this.centerP },
+      {
+        x,
+        y
+      } = pos.target.attrs,
+      rlx = cachePoint.x,
+      rly = cachePoint.y
+
+      if(x >= 0 && x <= 600){
+        rlx = x
+      }
+      if(y >= 0 && y <= 600){
+        rly = y
+      }
+
+      if(cachePoint.x !== rlx && cachePoint.y !== rly){
+        this.lastCenterP = {
+          x: cachePoint.x,
+          y: cachePoint.y
+        }
+      }
+
+      this.centerP = {
+        x:rlx,
+        y:rly
+      }
+    },
     pauseHandle(gameState){
       if(gameState === 'pause' && this.gameState !== 'operation')return
       this.gameState = gameState
@@ -916,7 +916,7 @@ export default {
         this.bulletAnimationHandle(this.bulletList[i])
       }
       for(let i=0, l=this.enemyList.length;i<l;i++){
-        this.animationHandle(this.enemyList[i])
+        this.enemyAnimationHandle(this.enemyList[i])
       }
       this.startCreate()
     }
