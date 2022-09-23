@@ -290,6 +290,22 @@ export default {
         this.enemyCreateInterval = this.mapLevelInfo.enemyCreateInterval
       }else{
         this.enemyTotal = formData.enemyTotal
+        this.mapLevelInfo = {
+          "level": 9999,
+          "enemyTotal": formData.enemyTotal,
+          "enemyCreateInterval": 0.8,
+          "enemyConfig": {
+            "color": "#ff7e7e",
+            "levelWeight": {
+              "value": [1, 2, 3, 4, 5, 10],
+              "weight": [20, 40, 30, 20, 5, 1]
+            },
+            "areaWeight": {
+              "value": [1, 2, 3, 4],
+              "weight": [10, 10, 10, 10]
+            }
+          }
+        }
       }
       this.operatingMode = formData.operatingMode
       this.enableDrag = Boolean(this.operatingMode === '1')
@@ -962,14 +978,18 @@ export default {
       this.gameState = 'operation'
       this.enableDrag = Boolean(this.operatingMode === '1')
 
+      for(let i=0, l=this.enemyList.length;i<l;i++){
+        if(!this.enemyList[i]){
+          console.log(i, this.enemyList[i], this.enemyList)
+          continue
+        }
+        this.enemyAnimationHandle(this.enemyList[i])
+      }
       for(let i=0, l=this.skillList.length;i<l;i++){
         this.skillAnimationHandle(this.skillList[i])
       }
       for(let i=0, l=this.bulletList.length;i<l;i++){
         this.bulletAnimationHandle(this.bulletList[i])
-      }
-      for(let i=0, l=this.enemyList.length;i<l;i++){
-        this.enemyAnimationHandle(this.enemyList[i])
       }
       this.startCreate()
     }
