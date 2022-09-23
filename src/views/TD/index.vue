@@ -6,15 +6,13 @@
       class="stage"
     >
       <v-layer ref="layer">
-        <v-circle 
-          :config="{
-            x: roleInfo.skill.x,
-            y: roleInfo.skill.y,
-            radius: roleInfo.atkScope,
-            stroke: 'blue',
-            strokeWidth: 1
-          }"
-        />
+        <div class="skill_box">
+          <v-circle
+            v-for="(item, idx) in skillList"
+            :key="idx"
+            :config="item.config"
+          />
+        </div>
         <div class="bullet_box">
           <v-circle
             v-for="(item, idx) in bulletList"
@@ -168,14 +166,11 @@ export default {
         level:1,
         underAtkCount:0,
         skill:{
-          skillCast: 0,
           damage: 100,
           maxScope: 125,
           cd: 10,
           nowCd: 0,
           castTime: 0,
-          x: 0,
-          y: 0,
           skillSpeed: 1.5
         }
       },
@@ -186,6 +181,7 @@ export default {
       enemyList:[],
       damageList:[],
       bulletList:[],
+      skillList:[],
       rafIds:[],
       enemyTotal:0,
       killCount:0,
@@ -241,10 +237,10 @@ export default {
       this.enemyList = []
       this.damageList = []
       this.bulletList = []
+      this.skillList = []
       this.keyCode = []
       this.roleInfo.underAtkCount = 0
       this.roleInfo.atkScope = 0
-      this.roleInfo.skill.skillCast = 0
       this.roleInfo.skill.nowCd = 0
       this.centerP = {
         x:this.configKonva.width / 2,
@@ -378,30 +374,19 @@ export default {
         //   }
         // }
         let {
-          maxScope,
           nowCd,
-          cd,
-          castTime,
-          skillSpeed,
-          skillCast
+          cd
         } = this.roleInfo.skill
-        if(this.keyCode.includes(90) && !skillCast && nowCd === 0){
-          this.roleInfo.skill.skillCast = 1
+        if(this.keyCode.includes(90) && nowCd === 0){
           this.roleInfo.skill.castTime = this.masterTime
           this.roleInfo.skill.nowCd = cd
-          this.roleInfo.skill.x = this.centerP.x
-          this.roleInfo.skill.y = this.centerP.y
+          let obj = this.skillCreate()
+          this.skillAnimationHandle(obj)
         }
-        if(this.roleInfo.skill.skillCast){
-          // this.roleInfo.atkScope += maxScope / (this.fps * 4)
-          this.roleInfo.atkScope += skillSpeed
-          if(this.roleInfo.atkScope >= maxScope){
-            this.roleInfo.atkScope = 0
-            this.roleInfo.skill.skillCast = 0
-          }
-        }
-        if(nowCd !== 0 && (this.masterTime - castTime) % 60 === 0){
-          this.roleInfo.skill.nowCd--
+        if(this.roleInfo.skill.nowCd > 0){
+          this.roleInfo.skill.nowCd = Number((this.roleInfo.skill.nowCd - (1 / this.fps)).toFixed(2))
+        }else if(this.roleInfo.skill.nowCd < 0){
+          this.roleInfo.skill.nowCd = 0
         }
 
         if(this.operatingMode === '2' && this.keyCode.length > 0){
@@ -457,6 +442,7 @@ export default {
         def:10,
         atk:level,
         underAtkTime:0,
+        underSkillAtkIds:[],
         exp:level * 10,
         disInit:1.3 * (Math.pow(level, -1.2)) + 0.7,
         config:{
@@ -552,22 +538,26 @@ export default {
           }
         }
 
-        if(this.roleInfo.skill.skillCast){
-          let {
-            atkScope,
-            skill:{
-              damage
-            }
-          } = this.roleInfo,
-          sXDis = Math.abs(this.roleInfo.skill.x - x),
-          sYDis = Math.abs(this.roleInfo.skill.y - y),
-          distance = Math.sqrt(Math.pow(sXDis,2) + Math.pow(sYDis,2)),
-          atkOffset = 2
+        if(this.skillList.length > 0){
+          for(let i=0, l=this.skillList.length;i<l;i++){
+            let {
+              id,
+              damage,
+              config:{
+                radius
+              }
+            } = this.skillList[i]
+            if(item.underSkillAtkIds.includes(id))continue
+            let sXDis = Math.abs(this.skillList[i].config.x - x),
+            sYDis = Math.abs(this.skillList[i].config.y - y),
+            distance = Math.sqrt(Math.pow(sXDis,2) + Math.pow(sYDis,2))
 
-          if((distance <= atkScope + atkOffset && distance >= atkScope - atkOffset) && this.masterTime - item.underAtkTime >= 10){
-            item.underAtkTime = this.masterTime
-            item.hp -= damage
-            this.damageCreate(item, damage)
+            if(distance <= radius){
+              item.underSkillAtkIds.push(id)
+              item.underAtkTime = this.masterTime
+              item.hp -= damage
+              this.damageCreate(item, damage)
+            }
           }
         }
 
@@ -596,7 +586,7 @@ export default {
     },
     bulletCreate(){
       let bulletObj = {
-        id:new Date * 1 + Math.random(),
+        id:new Date * 1 + Math.random() + '',
         createTime:this.masterTime,
         config:{
           x: this.centerP.x,
@@ -725,6 +715,66 @@ export default {
       }
       animationFn()
     },
+    skillCreate(){
+      let {
+        damage,
+        maxScope,
+        cd
+      } = this.roleInfo.skill
+      let skillObj = {
+        id:new Date * 1 + Math.random() + '',
+        createTime:this.masterTime,
+        damage,
+        maxScope,
+        cd,
+        config:{
+          x: this.centerP.x,
+          y: this.centerP.y,
+          radius: 0,
+          stroke: 'blue',
+          strokeWidth: 1
+        }
+      }
+      this.skillList.push(skillObj)
+      return skillObj
+    },
+    skillAnimationHandle(item){
+      let rafId = null,
+      {
+        id,
+        maxScope
+      } = item
+
+      let animationFn = () => {
+        item.config.radius += this.roleInfo.skill.skillSpeed
+
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        item['rafId'] = rafId
+
+        let clearSkill = () => {
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
+              let itemIndex = _.findIndex(this.skillList, {id:id})
+              if(itemIndex || itemIndex + '' === '0'){
+                this.skillList.splice(itemIndex, 1)
+              }
+              break
+            }
+          }
+        }
+
+        if(item.config.radius >= maxScope){
+          clearSkill()
+        }
+      }
+      animationFn()
+    },
     damageCreate(item, damage){
       let obj = { ...item },
       {
@@ -735,7 +785,7 @@ export default {
       } = obj
 
       this.damageList.push({
-        id:obj.id + new Date * 1 + Math.random(),
+        id:obj.id + new Date * 1 + Math.random() + '',
         createTime: this.masterTime,
         config:{
           text: '-' + damage,
@@ -912,6 +962,9 @@ export default {
       this.gameState = 'operation'
       this.enableDrag = Boolean(this.operatingMode === '1')
 
+      for(let i=0, l=this.skillList.length;i<l;i++){
+        this.skillAnimationHandle(this.skillList[i])
+      }
       for(let i=0, l=this.bulletList.length;i<l;i++){
         this.bulletAnimationHandle(this.bulletList[i])
       }
