@@ -20,6 +20,13 @@
             :config="item.config"
           />
         </div>
+        <div class="around_box">
+          <v-circle
+            v-for="(item, idx) in aroundList"
+            :key="idx"
+            :config="item.config"
+          />
+        </div>
         <v-circle
           @dragmove="dragBoundFunc"
           :config="{
@@ -67,7 +74,7 @@
         <!-- <li>攻击范围: {{roleInfo.maxAtkScope}}</li> -->
         <li>子弹数量: {{roleInfo.bulletCount}}</li>
         <li>攻击频率: {{roleInfo.atkInterval}} 次/秒</li>
-        <li>键盘移动速度: {{roleInfo.speed * 60}} 像素/秒</li>
+        <li>键盘移动速度: {{roleInfo.speed * fps}} 像素/秒</li>
         <li 
           class="progress_bar"
           :style="{
@@ -90,14 +97,20 @@
         <span>技能伤害: {{roleInfo.skill.damage}}</span>
         <span>技能范围: {{roleInfo.skill.maxScope}}</span>
       </p>
+      <p class="skill_info passive_info">
+        <span>被动伤害: {{roleInfo.passive.damage}}</span>
+        <span>被动持续时间: {{roleInfo.passive.duration}} 秒</span>
+        <span>被动间隔: {{roleInfo.passive.cd}} 秒</span>
+      </p>
       <p class="operating_instructions">
         <span class="operating_instructions_title">操作说明</span>
         <span>1.方向键控制（鼠标拖拽）蓝球进行移动</span>
         <span>2.自动向移动的反方向发射子弹</span>
         <span>3.按（Z）键释放范围攻击技能</span>
-        <span>4.红球中心点撞到蓝球中心的白点会损失生命值</span>
-        <span>5.生命值归零时游戏结束</span>
-        <span>6.选择升级2秒后自动开始游戏</span>
+        <span>4.按一定间隔时间自动触发被动生成防护球</span>
+        <span>5.红球中心点撞到蓝球中心的白点会损失生命值</span>
+        <span>6.生命值归零时游戏结束</span>
+        <span>7.选择升级2秒后自动开始游戏</span>
       </p>
       <el-button @click="pauseHandle('pause')">暂停</el-button>
       <el-button @click="launchHandle">启动</el-button>
@@ -172,6 +185,13 @@ export default {
           nowCd: 0,
           castTime: 0,
           skillSpeed: 1.5
+        },
+        passive:{
+          damage: 20,
+          duration: 7,
+          cd: 3,
+          aroundDis: 80,
+          arcStep: 0.0325,
         }
       },
       roleRafId:null,
@@ -182,6 +202,7 @@ export default {
       damageList:[],
       bulletList:[],
       skillList:[],
+      aroundList:[],
       rafIds:[],
       enemyTotal:0,
       killCount:0,
@@ -238,6 +259,7 @@ export default {
       this.damageList = []
       this.bulletList = []
       this.skillList = []
+      this.aroundList = []
       this.keyCode = []
       this.roleInfo.underAtkCount = 0
       this.roleInfo.atkScope = 0
@@ -405,6 +427,11 @@ export default {
           this.roleInfo.skill.nowCd = 0
         }
 
+        if(this.masterTime % (this.fps * this.roleInfo.passive.cd) === 0){
+          let obj = this.aroundCreate()
+          this.aroundAnimationHandle(obj)
+        }
+
         if(this.operatingMode === '2' && this.keyCode.length > 0){
           let cachePoint = { ...this.centerP }
           this.lastCenterP = {
@@ -457,8 +484,9 @@ export default {
         hp:level * 50,
         def:10,
         atk:level,
-        underAtkTime:0,
+        underAroundAtkTime:0,
         underSkillAtkIds:[],
+        underAroundAtkId:null,
         exp:level * 10,
         disInit:1.3 * (Math.pow(level, -1.2)) + 0.7,
         config:{
@@ -570,7 +598,6 @@ export default {
 
             if(distance <= radius){
               item.underSkillAtkIds.push(id)
-              item.underAtkTime = this.masterTime
               item.hp -= damage
               this.damageCreate(item, damage)
             }
@@ -668,8 +695,8 @@ export default {
           yStep = Math.abs(Math.sin(Math.atan(ry / rx)) * 100)
         }
         
-        xStep = rx < 0 ? xStep / 60 : xStep / -60
-        yStep = ry < 0 ? yStep / 60 : yStep / -60
+        xStep = rx < 0 ? xStep / this.fps : xStep / -this.fps
+        yStep = ry < 0 ? yStep / this.fps : yStep / -this.fps
 
         item['xStep'] = xStep
         item['yStep'] = yStep
@@ -703,12 +730,13 @@ export default {
           }
         }
 
-        if(this.masterTime - item.createTime >= 60 * 8.5){
+        if(this.masterTime - item.createTime >= this.fps * 8.5){
           clearBulle(true)
         }else{
           let {
             x,
-            y
+            y,
+            radius
           } = item.config
 
           for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
@@ -719,7 +747,7 @@ export default {
             ydis = Math.abs(y - ey),
             dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
 
-            if(dis <= itm.config.radius + 3){
+            if(dis <= itm.config.radius + radius){
               clearBulle()
               itm.hp -= this.roleInfo.atk
 
@@ -787,6 +815,103 @@ export default {
 
         if(item.config.radius >= maxScope){
           clearSkill()
+        }
+      }
+      animationFn()
+    },
+    aroundCreate(){
+      let {
+        damage,
+        duration,
+        aroundDis,
+        arcStep
+      } = this.roleInfo.passive
+      let aroundObj = {
+        id:new Date * 1 + Math.random() + '',
+        createTime: this.masterTime,
+        damage,
+        duration,
+        aroundDis,
+        arc: Math.PI / 180 * randomValue({ min:0 , max: 359 }),
+        arcStep,
+        config:{
+          x: this.centerP.x - 60,
+          y: this.centerP.y,
+          radius: 5,
+          fill: '#FFCC00',
+          shadowColor: 'black',
+          shadowBlur: 2,
+          shadowOffset: { x: 2, y: 2 },
+          shadowOpacity: 0.5
+        }
+      }
+      this.aroundList.push(aroundObj)
+      return aroundObj
+    },
+    aroundAnimationHandle(item){
+      let rafId = null,
+      {
+        id,
+        createTime,
+        damage,
+        duration,
+        aroundDis,
+        arcStep
+      } = item
+
+      let animationFn = () => {
+        item.config.x = this.centerP.x + Math.cos(item.arc) * aroundDis
+        item.config.y = this.centerP.y + Math.sin(item.arc) * aroundDis
+        item.arc += arcStep
+
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        item['rafId'] = rafId
+
+        let clearAround = () => {
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
+              let itemIndex = _.findIndex(this.aroundList, {id:id})
+              if(itemIndex || itemIndex + '' === '0'){
+                this.aroundList.splice(itemIndex, 1)
+              }
+              break
+            }
+          }
+        }
+
+        let {
+          x,
+          y,
+          radius
+        } = item.config
+
+        for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
+          let itm = this.enemyList[i],
+          ex = itm.config.x,
+          ey = itm.config.y,
+          xdis = Math.abs(x - ex),
+          ydis = Math.abs(y - ey),
+          dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
+
+          if(dis <= itm.config.radius + radius){
+            if(itm.underAroundAtkId !== id || this.masterTime - itm.underAroundAtkTime > 20){
+              itm.underAroundAtkId = id
+              itm.underAroundAtkTime = this.masterTime
+              itm.hp -= damage
+              this.damageCreate(itm, damage)
+              break
+            }
+          }
+        }
+
+        if(this.masterTime - createTime >= this.fps * duration){
+          clearAround()
         }
       }
       animationFn()
@@ -865,6 +990,16 @@ export default {
         case 'skill.cd':
           if(this.roleInfo.skill.cd === 1)return
           this.roleInfo.skill.cd -= 1
+          break
+        case 'passive.damage':
+          this.roleInfo.passive.damage += 20
+          break
+        case 'passive.duration':
+          this.roleInfo.passive.duration += 2
+          break
+        case 'passive.cd':
+          if(this.roleInfo.passive.cd <= 0.3)return
+          this.roleInfo.passive.cd = Number((this.roleInfo.passive.cd - 0.3).toFixed(2))
           break
       }
       this.showExpDialog = false
@@ -970,7 +1105,7 @@ export default {
       this.rafIds = []
 
       this.bulletList = this.bulletList.filter(item => {
-        return this.masterTime - item.createTime < 60 * 8.5
+        return this.masterTime - item.createTime < this.fps * 8.5
       })
     },
     launchHandle(launchType){
@@ -990,6 +1125,9 @@ export default {
       }
       for(let i=0, l=this.bulletList.length;i<l;i++){
         this.bulletAnimationHandle(this.bulletList[i])
+      }
+      for(let i=0, l=this.aroundList.length;i<l;i++){
+        this.aroundAnimationHandle(this.aroundList[i])
       }
       this.startCreate()
     }
@@ -1053,6 +1191,9 @@ export default {
   span{
     line-height: 18px;
   }
+}
+.passive_info{
+  background-color: rgba($color: #FFCC00, $alpha: 0.2);
 }
 .operating_instructions{
   display: flex;

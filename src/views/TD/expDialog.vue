@@ -52,6 +52,18 @@
           <span>技能cd - 1秒</span>
           <el-button type="primary" @click="upgradeHandle('skill.cd')" :disabled="infoData.skill.cd <= 1">升级</el-button>
         </li>
+        <li class="power_list_list passive">
+          <span>被动伤害 + 20</span>
+          <el-button type="primary" @click="upgradeHandle('passive.damage')">升级</el-button>
+        </li>
+        <li class="power_list_list passive">
+          <span>被动持续时间 + 2秒</span>
+          <el-button type="primary" @click="upgradeHandle('passive.duration')">升级</el-button>
+        </li>
+        <li class="power_list_list passive">
+          <span>被动间隔 - 0.3秒</span>
+          <el-button type="primary" @click="upgradeHandle('passive.cd')" :disabled="infoData.passive.cd <= 0.3">升级</el-button>
+        </li>
       </ul>
     </div>
   </el-dialog>
@@ -104,6 +116,8 @@ export default {
       padding: 20px 20px 10px;
     }
     .content_box{
+      max-height: 520px;
+      overflow-y: auto;
       .power_list{
         .power_list_list{
           display: flex;
@@ -119,6 +133,9 @@ export default {
         }
         .reply{
           background-color: rgba($color: #ff4400, $alpha: 0.2);
+        }
+        .passive{
+          background-color: rgba($color: #FFCC00, $alpha: 0.2);
         }
       }
     }

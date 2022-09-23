@@ -400,7 +400,7 @@ export default {
       }),
       itemWeight:weightRandom({
         value:[1, 2, 3, 4, 5],
-        weight:[15, 20, 90, 1000, 15]
+        weight:[15, 20, 90, 10, 15]
       }),
       shopBoxLevelWeight:weightRandom({
         value:[0, 1, 2, 3, 4],
