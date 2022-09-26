@@ -119,8 +119,14 @@
       <el-button @click="pauseHandle('pause')">暂停</el-button>
       <el-button @click="launchHandle">启动</el-button>
     </div>
+    <VirtualJoy
+      v-if="isMobile && operatingMode === '2' && keysMode === '1'"
+      @virtualJoyFn="virtualJoyFn"
+      @virtualBtnDown="virtualBtnDown"
+      @virtualBtnUp="virtualBtnUp"
+    />
     <VirtualButtons
-      v-if="isMobile && operatingMode === '2'"
+      v-if="isMobile && operatingMode === '2' && keysMode === '2'"
       @virtualBtnDown="virtualBtnDown"
       @virtualBtnUp="virtualBtnUp"
     />
@@ -131,6 +137,7 @@
     />
     <startDialog
       :isShow.sync="showStartDialog"
+      :isMobile="isMobile"
       @updateStartConfigHandle="updateStartConfigHandle"
     />
   </div>
@@ -147,19 +154,22 @@ import expDialog from './expDialog.vue'
 import startDialog from './startDialog.vue'
 import levelInfo from './config/level.json'
 import VirtualButtons from './components/VirtualButtons.vue'
+import VirtualJoy from './components/VirtualJoy.vue'
 
 export default {
   name: 'ZombieSurvival',
   components: {
     expDialog,
     startDialog,
-    VirtualButtons
+    VirtualButtons,
+    VirtualJoy
   },
   data(){
     return{
       isMobile:false,
       mapLevel:1,
       mapLevelInfo:levelInfo[0],
+      keysMode:'1',
       gameMode:'level',//sandbox, level
       gameState:'pause',//operation, pause, over, finish
       showStartDialog:true,
@@ -219,7 +229,12 @@ export default {
       enemyTotal:0,
       killCount:0,
       keyCode:[],
-      operatingMode:'2'
+      operatingMode:'2',
+      joyStep:{
+        xStep:0,
+        yStep:0,
+        type:''
+      }
     }
   },
   watch:{
@@ -322,6 +337,9 @@ export default {
   methods:{
     updateStartConfigHandle(formData){
       this.gameMode = formData.gameMode
+      if(this.isMobile){
+        this.keysMode = formData.keysMode
+      }
       if(this.gameMode === 'level'){
         this.enemyTotal = this.mapLevelInfo.enemyTotal
         this.enemyCreateInterval = this.mapLevelInfo.enemyCreateInterval
@@ -466,6 +484,12 @@ export default {
           if(this.keyCode.includes(40)){
             this.centerP.y += speed
           }
+          this.borderLimit()
+        }
+
+        if(this.isMobile && this.operatingMode === '2' && this.joyStep.type !== 'end'){
+          this.centerP.x += this.joyStep.xStep
+          this.centerP.y += this.joyStep.yStep
           this.borderLimit()
         }
 
@@ -1132,6 +1156,51 @@ export default {
       this.centerP = {
         x:rlx,
         y:rly
+      }
+    },
+    virtualJoyFn(joyP, configP, type){
+      if(type !== 'end'){
+        let cachePoint = { ...this.centerP }
+        this.lastCenterP = {
+          x: cachePoint.x,
+          y: cachePoint.y
+        }
+      }
+
+      let {
+        x,
+        y
+      } = joyP,
+      {
+        wx,
+        hy
+      } = configP,
+      {
+        speed
+      } = this.roleInfo,
+      xDis = Math.abs(x - wx),
+      yDis = Math.abs(y - hy),
+      xStep = 0,
+      yStep = 0
+
+      if(xDis === 0){
+        yStep = speed
+      }else{
+        xStep = Math.cos(Math.atan(yDis / xDis)) * speed
+        yStep = Math.sin(Math.atan(yDis / xDis)) * speed
+      }
+      
+      if(x < wx){
+        xStep *= -1 
+      }
+      if(y < hy){
+        yStep *= -1
+      }
+      
+      this.joyStep = {
+        xStep,
+        yStep,
+        type
       }
     },
     pauseHandle(gameState){

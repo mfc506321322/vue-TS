@@ -18,6 +18,12 @@
             <el-radio-button label="1">鼠标移动</el-radio-button>
           </el-radio-group>
         </el-form-item>
+        <el-form-item v-if="form.operatingMode === '2' && isMobile" label="按键模式" prop="keysMode">
+          <el-radio-group v-model="form.keysMode">
+            <el-radio-button label="1">摇杆</el-radio-button>
+            <el-radio-button label="2">按键</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="游戏模式" prop="gameMode">
           <el-radio-group v-model="form.gameMode">
             <el-radio-button label="level">关卡模式</el-radio-button>
@@ -45,13 +51,18 @@ export default {
       type:Boolean,
       default:false
     },
+    isMobile:{
+      type:Boolean,
+      default:false
+    },
   },
   data(){
     return {
       form:{
         enemyTotal:100,
         operatingMode:'2',
-        gameMode:'level'
+        gameMode:'level',
+        keysMode:'1'
       },
       rules: {
         enemyTotal: [
@@ -59,6 +70,9 @@ export default {
         ],
         operatingMode: [
           { required: true, message: '请选择操作模式', trigger: 'change' }
+        ],
+        keysMode: [
+          { required: true, message: '请选择按键模式', trigger: 'change' }
         ],
         gameMode: [
           { required: true, message: '请选择游戏模式', trigger: 'change' }
