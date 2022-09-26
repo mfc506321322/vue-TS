@@ -1061,17 +1061,21 @@ export default {
       }, 2000)
     },
     borderLimit(){
+      let {
+        width,
+        height
+      } = this.configKonva
       if(this.centerP.x <= 0){
         this.centerP.x = 0
       }
-      if(this.centerP.x >= 600){
-        this.centerP.x = 600
+      if(this.centerP.x >= width){
+        this.centerP.x = width
       }
       if(this.centerP.y <= 0){
         this.centerP.y = 0
       }
-      if(this.centerP.y >= 600){
-        this.centerP.y = 600
+      if(this.centerP.y >= height){
+        this.centerP.y = height
       }
     },
     keyDown(){
@@ -1136,13 +1140,17 @@ export default {
         x,
         y
       } = pos.target.attrs,
+      {
+        width,
+        height
+      } = this.configKonva,
       rlx = cachePoint.x,
       rly = cachePoint.y
 
-      if(x >= 0 && x <= 600){
+      if(x >= 0 && x <= width){
         rlx = x
       }
-      if(y >= 0 && y <= 600){
+      if(y >= 0 && y <= height){
         rly = y
       }
 
