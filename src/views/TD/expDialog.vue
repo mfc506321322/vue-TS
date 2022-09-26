@@ -112,6 +112,7 @@ export default {
 .dialog_box{
   /deep/ .dialog_content{
     width: 300px;
+    margin-top: 5vh !important;
     .el-dialog__body{
       padding: 20px 20px 10px;
     }

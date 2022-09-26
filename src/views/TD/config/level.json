@@ -81,6 +81,38 @@
   },
   {
     "level": 6,
+    "enemyTotal": 120,
+    "enemyCreateInterval": 0.75,
+    "enemyConfig": {
+      "color": "#ff00ff",
+      "levelWeight": {
+        "value": [1, 2, 3, 4, 5],
+        "weight": [20, 20, 20, 10, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 7,
+    "enemyTotal": 140,
+    "enemyCreateInterval": 0.7,
+    "enemyConfig": {
+      "color": "#ff00ff",
+      "levelWeight": {
+        "value": [1, 2, 3, 4, 5],
+        "weight": [10, 20, 20, 20, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 8,
     "enemyTotal": 50,
     "enemyCreateInterval": 0.5,
     "enemyConfig": {

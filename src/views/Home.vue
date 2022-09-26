@@ -12,10 +12,10 @@
 </template>
 
 <script>
-import Canvas2 from './Canvas2'
-import GoBang from './gobang'
-import RouterTable from './routerTable'
-import Konva from './konva'
+// import Canvas2 from './Canvas2'
+// import GoBang from './gobang'
+// import RouterTable from './routerTable'
+// import Konva from './konva'
 export default {
   name: 'Home',
   components: {
@@ -63,10 +63,14 @@ export default {
     li{
       padding: 5px 10px;
       margin-right: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       border: 1px solid #333;
       border-radius: 2px;
       cursor: pointer;
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       &:hover{
         background-color: #eee;
       }

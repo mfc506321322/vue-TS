@@ -75,33 +75,37 @@
         <li>子弹数量: {{roleInfo.bulletCount}}</li>
         <li>攻击频率: {{roleInfo.atkInterval}} 次/秒</li>
         <li>键盘移动速度: {{roleInfo.speed * fps}} 像素/秒</li>
-        <li 
-          class="progress_bar"
-          :style="{
-            '--progressBar':progressBarHp,
-            '--progressColor':'rgb(255, 73, 73)'
-          }"
-        ><span>血量: {{roleInfo.hp}} / {{roleInfo.maxhp}}</span></li>
-        <li 
-          class="progress_bar"
-          :style="{
-            '--progressBar':progressBarExp,
-            '--progressColor':'rgb(255, 220, 0)'
-          }"
-        ><span>经验: {{roleInfo.exp}} / {{roleInfo.maxExp}}</span></li>
-        <li>剩余敌人数量: {{enemyTotal - killCount}}</li>
-        <li>击杀数: {{killCount}}</li>
+        <div :class="isMobile && 'mobile_role_info'">
+          <li 
+            class="progress_bar"
+            :style="{
+              '--progressBar':progressBarHp,
+              '--progressColor':'rgb(255, 73, 73)'
+            }"
+          ><span>血量: {{roleInfo.hp}} / {{roleInfo.maxhp}}</span></li>
+          <li 
+            class="progress_bar"
+            :style="{
+              '--progressBar':progressBarExp,
+              '--progressColor':'rgb(255, 220, 0)'
+            }"
+          ><span>经验: {{roleInfo.exp}} / {{roleInfo.maxExp}}</span></li>
+          <li>剩余敌人数量: {{enemyTotal - killCount}}</li>
+          <li>击杀数: {{killCount}}</li>
+        </div>
       </ul>
-      <p class="skill_info">
-        <span>技能cd: {{roleInfo.skill.nowCd ? roleInfo.skill.nowCd : '可用'}} / {{roleInfo.skill.cd}}</span>
-        <span>技能伤害: {{roleInfo.skill.damage}}</span>
-        <span>技能范围: {{roleInfo.skill.maxScope}}</span>
-      </p>
-      <p class="skill_info passive_info">
-        <span>被动伤害: {{roleInfo.passive.damage}}</span>
-        <span>被动持续时间: {{roleInfo.passive.duration}} 秒</span>
-        <span>被动间隔: {{roleInfo.passive.cd}} 秒</span>
-      </p>
+      <div :class="isMobile && 'mobile_other_info'">
+        <p class="skill_info">
+          <span>技能cd: {{roleInfo.skill.nowCd ? roleInfo.skill.nowCd : '可用'}} / {{roleInfo.skill.cd}}</span>
+          <span>技能伤害: {{roleInfo.skill.damage}}</span>
+          <span>技能范围: {{roleInfo.skill.maxScope}}</span>
+        </p>
+        <p class="skill_info passive_info">
+          <span>被动伤害: {{roleInfo.passive.damage}}</span>
+          <span>被动持续时间: {{roleInfo.passive.duration}} 秒</span>
+          <span>被动间隔: {{roleInfo.passive.cd}} 秒</span>
+        </p>
+      </div>
       <p class="operating_instructions">
         <span class="operating_instructions_title">操作说明</span>
         <span>1.方向键控制（鼠标拖拽）蓝球进行移动</span>
@@ -115,6 +119,11 @@
       <el-button @click="pauseHandle('pause')">暂停</el-button>
       <el-button @click="launchHandle">启动</el-button>
     </div>
+    <VirtualButtons
+      v-if="isMobile && operatingMode === '2'"
+      @virtualBtnDown="virtualBtnDown"
+      @virtualBtnUp="virtualBtnUp"
+    />
     <expDialog
       :isShow.sync="showExpDialog"
       @upgradeHandle="upgradeHandle"
@@ -137,15 +146,18 @@ import {
 import expDialog from './expDialog.vue'
 import startDialog from './startDialog.vue'
 import levelInfo from './config/level.json'
+import VirtualButtons from './components/VirtualButtons.vue'
 
 export default {
   name: 'ZombieSurvival',
   components: {
     expDialog,
-    startDialog
+    startDialog,
+    VirtualButtons
   },
   data(){
     return{
+      isMobile:false,
       mapLevel:1,
       mapLevelInfo:levelInfo[0],
       gameMode:'level',//sandbox, level
@@ -289,6 +301,9 @@ export default {
     let sWidth = document.body.clientWidth
     if(sWidth < 634){
       this.configKonva.width = sWidth - 34
+      this.isMobile = true
+    }else{
+      this.isMobile = false
     }
 
     let localFps = localStorage.getItem('fps')
@@ -1059,6 +1074,37 @@ export default {
         }
       }
     },
+    virtualBtnDown(key){
+      // console.log('virtualBtnDown', key)
+      let keys = [37, 38, 39, 40, 90],
+      newkeys = []
+      if(key.indexOf(',') > -1){
+        newkeys = key.split(',')
+      }else{
+        newkeys = [key]
+      }
+      newkeys.forEach(item => {
+        let numKey = Number(item)
+        if(keys.includes(numKey) && !this.keyCode.includes(numKey)){
+          this.keyCode.push(numKey)
+        }
+      })
+    },
+    virtualBtnUp(key){
+      // console.log('virtualBtnUp', key)
+      let newkeys = []
+      if(key.indexOf(',') > -1){
+        newkeys = key.split(',')
+      }else{
+        newkeys = [key]
+      }
+      newkeys.forEach(item => {
+        let numKey = Number(item)
+        if(this.keyCode.includes(numKey)){
+          this.keyCode.splice(this.keyCode.indexOf(numKey), 1)
+        }
+      })
+    },
     dragBoundFunc(pos){
       // console.log('dragBoundFunc', pos)
       let cachePoint = { ...this.centerP },
@@ -1138,6 +1184,7 @@ export default {
 <style lang="scss" scoped>
 .TD_box{
   overflow: hidden;
+  position: relative;
   .stage{
     float: left;
     margin-right: 10px;
@@ -1182,6 +1229,13 @@ export default {
     }
   }
 }
+.mobile_role_info{
+  width: 150px;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  opacity: 0.5;
+}
 .skill_info{
   width: 200px;
   display: flex;
@@ -1194,6 +1248,14 @@ export default {
 }
 .passive_info{
   background-color: rgba($color: #FFCC00, $alpha: 0.2);
+}
+.mobile_other_info{
+  width: 150px;
+  overflow: hidden;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  opacity: 0.5;
 }
 .operating_instructions{
   display: flex;
