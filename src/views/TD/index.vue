@@ -61,7 +61,7 @@
             v-for="(item, idx) in damageList"
             :key="item.id"
             :config="item.config"
-            v-if="masterTime - item.createTime <= 30"
+            v-if="masterTime - item.createTime <= fpsUnifyHandle(30, 0, true)"
           />
         </div>
       </v-layer>
@@ -198,7 +198,8 @@ export default {
         maxAtkScope: 110,
         bulletCount: 1,
         atkInterval: 1.25,
-        speed:2,
+        originalSpeed: 2,
+        speed: 0,
         exp:0,
         maxExp:100,
         level:1,
@@ -334,6 +335,8 @@ export default {
       x:this.configKonva.width / 2,
       y:this.configKonva.height / 2
     }
+
+    this.roleInfo.speed = this.fpsUnifyHandle(this.roleInfo.originalSpeed)
   },
   mounted(){
   },
@@ -374,32 +377,35 @@ export default {
       this.enableDrag = Boolean(this.operatingMode === '1')
 
       let localFps = localStorage.getItem('fps')
-      if(!localFps){
-        setTimeout(() => {
-          let sFPS = this.masterTime
-          if(sFPS >= 50 && sFPS < 70){
-            this.fps = 60
-          }else if(sFPS >= 70 && sFPS < 80){
-            this.fps = 75
-          }else if(sFPS >= 80 && sFPS < 100){
-            this.fps = 90
-          }else if(sFPS >= 110 && sFPS < 130){
-            this.fps = 120
-          }else if(sFPS >= 134 && sFPS < 154){
-            this.fps = 144
-          }else if(sFPS >= 155 && sFPS < 175){
-            this.fps = 165
-          }else if(sFPS >= 230 && sFPS < 250){
-            this.fps = 240
-          }else if(sFPS >= 350 && sFPS < 370){
-            this.fps = 360
-          }else{
-            this.fps = 60
-          }
+      setTimeout(() => {
+        let sFPS = this.masterTime,
+        setFps = 60
+        
+        if(sFPS >= 50 && sFPS < 70){
+          setFps = 60
+        }else if(sFPS >= 70 && sFPS < 80){
+          setFps = 75
+        }else if(sFPS >= 80 && sFPS < 100){
+          setFps = 90
+        }else if(sFPS >= 110 && sFPS < 130){
+          setFps = 120
+        }else if(sFPS >= 134 && sFPS < 154){
+          setFps = 144
+        }else if(sFPS >= 155 && sFPS < 175){
+          setFps = 165
+        }else if(sFPS >= 230 && sFPS < 250){
+          setFps = 240
+        }else if(sFPS >= 350 && sFPS < 370){
+          setFps = 360
+        }else{
+          setFps = 60
+        }
+        if(setFps != localFps){
+          this.fps = setFps
           localStorage.setItem('fps', this.fps)
           console.log('当前显示器帧率：', sFPS, '设定帧率：', this.fps)
-        }, 1000)
-      }
+        }
+      }, 1000)
 
       this.start()
     },
@@ -501,7 +507,7 @@ export default {
           this.borderLimit()
         }
 
-        if(this.masterTime % (Math.ceil(this.fps / atkInterval)) === 0){
+        if(this.masterTime % Math.ceil(this.fps / atkInterval) === 0){
           for(let i=0, l=Math.floor(this.roleInfo.bulletCount);i<l;i++){
             let obj = this.bulletCreate()
             this.bulletAnimationHandle(obj, i)
@@ -535,7 +541,7 @@ export default {
         underSkillAtkIds:[],
         underAroundAtkId:null,
         exp:level * 10,
-        disInit:1.3 * (Math.pow(level, -1.2)) + 0.7,
+        disInit:this.fpsUnifyHandle(1.3 * (Math.pow(level, -1.2)) + 0.7),
         config:{
           x: 0,
           y: 0,
@@ -670,7 +676,6 @@ export default {
             this.pauseHandle('over')
           }
         }
-        
       }
       animationFn()
     },
@@ -695,7 +700,8 @@ export default {
     bulletAnimationHandle(item, pluralOffset){
       let rafId = null,
       xStep = 0,
-      yStep = 0
+      yStep = 0,
+      bulletDisInit = 100
 
       // if(!this.lastCenterP.x && this.lastCenterP.x + '' !== '0'){
       //   xStep = Math.random() * 100,
@@ -736,10 +742,10 @@ export default {
         }
 
         if(rx === 0){
-          yStep = 100
+          yStep = bulletDisInit
         }else{
-          xStep = Math.cos(Math.atan(ry / rx)) * 100
-          yStep = Math.abs(Math.sin(Math.atan(ry / rx)) * 100)
+          xStep = Math.cos(Math.atan(ry / rx)) * bulletDisInit
+          yStep = Math.abs(Math.sin(Math.atan(ry / rx)) * bulletDisInit)
         }
         
         xStep = rx < 0 ? xStep / this.fps : xStep / -this.fps
@@ -837,7 +843,7 @@ export default {
       } = item
 
       let animationFn = () => {
-        item.config.radius += this.roleInfo.skill.skillSpeed
+        item.config.radius += this.fpsUnifyHandle(this.roleInfo.skill.skillSpeed)
 
         if(rafId){
           this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
@@ -909,7 +915,7 @@ export default {
       let animationFn = () => {
         item.config.x = this.centerP.x + Math.cos(item.arc) * aroundDis
         item.config.y = this.centerP.y + Math.sin(item.arc) * aroundDis
-        item.arc += arcStep
+        item.arc += this.fpsUnifyHandle(arcStep)
 
         if(rafId){
           this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
@@ -1019,7 +1025,8 @@ export default {
           this.roleInfo.atkInterval = Number((this.roleInfo.atkInterval + 0.25).toFixed(2))
           break
         case 'speed':
-          this.roleInfo.speed += 0.5
+          this.roleInfo.originalSpeed += 0.5
+          this.roleInfo.speed = this.fpsUnifyHandle(this.roleInfo.originalSpeed)
           break
         case 'maxhp':
           this.roleInfo.maxhp += 10
@@ -1263,6 +1270,21 @@ export default {
         this.aroundAnimationHandle(this.aroundList[i])
       }
       this.startCreate()
+    },
+    fpsUnifyHandle(num, decimal, type){
+      if(!type){
+        if(!decimal){
+          return num * 60 / this.fps
+        }else{
+          return Number((num * 60 / this.fps).toFixed(decimal))
+        }
+      }else{
+        if(!decimal){
+          return num * (this.fps / 60)
+        }else{
+          return Number((num * (this.fps / 60)).toFixed(decimal))
+        }
+      }
     }
   }
 }
