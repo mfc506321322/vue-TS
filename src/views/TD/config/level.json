@@ -82,7 +82,7 @@
   {
     "level": 6,
     "enemyTotal": 120,
-    "enemyCreateInterval": 0.75,
+    "enemyCreateInterval": 0.8,
     "enemyConfig": {
       "color": "#ff00ff",
       "levelWeight": {
@@ -98,7 +98,7 @@
   {
     "level": 7,
     "enemyTotal": 140,
-    "enemyCreateInterval": 0.7,
+    "enemyCreateInterval": 0.75,
     "enemyConfig": {
       "color": "#ff00ff",
       "levelWeight": {
@@ -113,6 +113,54 @@
   },
   {
     "level": 8,
+    "enemyTotal": 160,
+    "enemyCreateInterval": 0.75,
+    "enemyConfig": {
+      "color": "#FF9900",
+      "levelWeight": {
+        "value": [2, 3, 4, 5, 6],
+        "weight": [10, 20, 20, 20, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 9,
+    "enemyTotal": 180,
+    "enemyCreateInterval": 0.7,
+    "enemyConfig": {
+      "color": "#FF9900",
+      "levelWeight": {
+        "value": [2, 3, 4, 5, 6],
+        "weight": [10, 10, 20, 20, 20]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 10,
+    "enemyTotal": 200,
+    "enemyCreateInterval": 0.7,
+    "enemyConfig": {
+      "color": "#FF9900",
+      "levelWeight": {
+        "value": [3, 4, 5, 6, 7],
+        "weight": [10, 20, 20, 20, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 11,
     "enemyTotal": 50,
     "enemyCreateInterval": 0.5,
     "enemyConfig": {

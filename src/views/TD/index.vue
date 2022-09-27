@@ -254,10 +254,15 @@ export default {
         this.pauseHandle('finish')
 
         if(this.gameMode !== 'level')return
-        this.$confirm('成功通关，是否进入下一关?', '提示', {
+        this.$confirm('成功通关，准备进入下一关！', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          type: 'success'
+          type: 'success',
+          center: true,
+          showClose: false,
+          showCancelButton: false,
+          closeOnClickModal: false,
+          closeOnPressEscape: false
         }).then(() => {
           this.mapLevel++
           this.$message({
@@ -885,7 +890,7 @@ export default {
         damage,
         duration,
         aroundDis,
-        arc: Math.PI / 180 * randomValue({ min:0 , max: 359 }),
+        arc: 0,
         arcStep,
         config:{
           x: this.centerP.x - 60,
@@ -897,6 +902,9 @@ export default {
           shadowOffset: { x: 2, y: 2 },
           shadowOpacity: 0.5
         }
+      }
+      if(this.aroundList.length > 0){
+        aroundObj.arc = this.aroundList[this.aroundList.length - 1].arc + (Math.PI / 180 * 130)
       }
       this.aroundList.push(aroundObj)
       return aroundObj
@@ -953,7 +961,7 @@ export default {
           dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
 
           if(dis <= itm.config.radius + radius){
-            if(itm.underAroundAtkId !== id || this.masterTime - itm.underAroundAtkTime > 20){
+            if(itm.underAroundAtkId !== id || this.masterTime - itm.underAroundAtkTime > this.fpsUnifyHandle(20, 0, true)){
               itm.underAroundAtkId = id
               itm.underAroundAtkTime = this.masterTime
               itm.hp -= damage

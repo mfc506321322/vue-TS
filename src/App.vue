@@ -13,6 +13,9 @@
   -ms-user-select:none; /*IE10*/
   user-select:none;
 }
+.el-message-box{
+  max-width: 100%;
+}
 .el-tooltip__popper.skill_tooltip_box{
   padding: 5px;
   .tooltip_content{
