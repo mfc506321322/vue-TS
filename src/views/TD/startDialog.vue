@@ -24,6 +24,12 @@
             <el-radio-button label="2">按键</el-radio-button>
           </el-radio-group>
         </el-form-item>
+        <el-form-item v-if="form.operatingMode === '2' && form.keysMode === '1' && isMobile" label="摇杆左右" prop="lOrRMode">
+          <el-radio-group v-model="form.lOrRMode">
+            <el-radio-button label="1">左</el-radio-button>
+            <el-radio-button label="2">右</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="游戏模式" prop="gameMode">
           <el-radio-group v-model="form.gameMode">
             <el-radio-button label="level">关卡模式</el-radio-button>
@@ -62,7 +68,8 @@ export default {
         enemyTotal:100,
         operatingMode:'2',
         gameMode:'level',
-        keysMode:'1'
+        keysMode:'1',
+        lOrRMode:'1'
       },
       rules: {
         enemyTotal: [
@@ -76,6 +83,9 @@ export default {
         ],
         gameMode: [
           { required: true, message: '请选择游戏模式', trigger: 'change' }
+        ],
+        lOrRMode: [
+          { required: true, message: '请选择摇杆左右', trigger: 'change' }
         ],
       }
     }

@@ -93,6 +93,7 @@
           <li>剩余敌人数量: {{enemyTotal - killCount}}</li>
           <li>击杀数: {{killCount}}</li>
         </div>
+        <li>当前fps: {{fps}}</li>
       </ul>
       <div :class="isMobile && 'mobile_other_info'">
         <p class="skill_info">
@@ -121,6 +122,7 @@
     </div>
     <VirtualJoy
       v-if="isMobile && operatingMode === '2' && keysMode === '1'"
+      :lOrRMode="lOrRMode"
       @virtualJoyFn="virtualJoyFn"
       @virtualBtnDown="virtualBtnDown"
       @virtualBtnUp="virtualBtnUp"
@@ -170,6 +172,7 @@ export default {
       mapLevel:1,
       mapLevelInfo:levelInfo[0],
       keysMode:'1',
+      lOrRMode:'1',
       gameMode:'level',//sandbox, level
       gameState:'pause',//operation, pause, over, finish
       showStartDialog:true,
@@ -233,7 +236,7 @@ export default {
       joyStep:{
         xStep:0,
         yStep:0,
-        type:''
+        type:'end'
       }
     }
   },
@@ -339,6 +342,11 @@ export default {
       this.gameMode = formData.gameMode
       if(this.isMobile){
         this.keysMode = formData.keysMode
+      }else{
+        this.keysMode = ''
+      }
+      if(this.keysMode){
+        this.lOrRMode = formData.lOrRMode
       }
       if(this.gameMode === 'level'){
         this.enemyTotal = this.mapLevelInfo.enemyTotal
@@ -487,7 +495,7 @@ export default {
           this.borderLimit()
         }
 
-        if(this.isMobile && this.operatingMode === '2' && this.joyStep.type !== 'end'){
+        if(this.operatingMode === '2' && this.keysMode === '1' && this.joyStep.type !== 'end'){
           this.centerP.x += this.joyStep.xStep
           this.centerP.y += this.joyStep.yStep
           this.borderLimit()
@@ -1021,14 +1029,16 @@ export default {
           this.roleInfo.hp = this.roleInfo.maxhp
           break
         case 'skill.damage':
-          this.roleInfo.skill.damage += 50
+          this.roleInfo.skill.damage += 40
           break
         case 'skill.maxScope':
-          this.roleInfo.skill.maxScope += 50
+          this.roleInfo.skill.maxScope += 30
           break
         case 'skill.cd':
-          if(this.roleInfo.skill.cd === 1)return
-          this.roleInfo.skill.cd -= 1
+          if(this.roleInfo.skill.cd <= 0.5){
+            return this.roleInfo.skill.cd = 0.5
+          }
+          this.roleInfo.skill.cd -= 1.5
           break
         case 'passive.damage':
           this.roleInfo.passive.damage += 20
