@@ -87,6 +87,18 @@ export default {
       e.preventDefault();
     }, false);
 
+    // document.querySelector('.virtual_joy_box').addEventListener('touchstart', (e) => {
+    //   e.preventDefault();
+    //   let {
+    //     clientX,
+    //     clientY
+    //   } = e.targetTouches[0]
+    //   console.log(e.targetTouches[0])
+    //   this.$refs.circle.getNode().x(clientX - 60)
+    //   this.$refs.circle.getNode().y(clientY - (document.body.clientHeight - 30 - this.configKonva.height))
+    //   this.$refs.stage.getNode().draw()
+    // }, false);
+
     this.$refs.circle.getNode().dragBoundFunc((pos) => {
       let x = this.configKonva.width / 2,
       y = this.configKonva.height / 2,
@@ -145,9 +157,9 @@ export default {
   width: 100%;
   height: 140px;
   position: fixed;
-  bottom: 30px;
+  bottom: 35px;
   left: 0;
-  z-index: 1998;
+  z-index: 1997;
   background-color: rgba($color: #000000, $alpha: 0.05);
   opacity: 0.6;
 }
@@ -158,18 +170,21 @@ export default {
   background: rgb(190, 208, 255);
   position: absolute;
   bottom: 0;
-  left: 60px;
+  left: 55px;
   border-radius: 50%;
+  overflow: hidden;
   &.right_joy{
-    left: 185px;
+    left: auto;
+    right: 55px;
   }
 }
 .virtual_btn{
   position: absolute;
   bottom: 20px;
-  left: 280px;
+  right: 65px;
   &.right_btn{
-    left: 55px;
+    right: auto;
+    left: 65px;
   }
 }
 

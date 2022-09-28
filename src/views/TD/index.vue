@@ -117,8 +117,10 @@
         <span>6.生命值归零时游戏结束</span>
         <span>7.选择升级2秒后自动开始游戏</span>
       </p>
-      <el-button @click="pauseHandle('pause')">暂停</el-button>
-      <el-button @click="launchHandle">启动</el-button>
+      <div :class="`${isMobile ? lOrRMode === '2' ? 'mobile_function_btn right_function_btn' : 'mobile_function_btn' : ''}`">
+        <el-button size="mini" @click="pauseHandle('pause')">暂停</el-button>
+        <el-button size="mini" @click="launchHandle">启动</el-button>
+      </div>
     </div>
     <VirtualJoy
       v-if="isMobile && operatingMode === '2' && keysMode === '1'"
@@ -1386,6 +1388,22 @@ export default {
   }
   span{
     line-height: 18px;
+  }
+}
+.mobile_function_btn{
+  position: fixed;
+  z-index: 1998;
+  bottom: 140px;
+  right: 10px;
+  .el-button{
+    padding: 7px;
+  }
+  /deep/ .el-button+.el-button{
+    margin-left: 5px;
+  }
+  &.right_function_btn{
+    right: auto;
+    left: 10px;
   }
 }
 </style>

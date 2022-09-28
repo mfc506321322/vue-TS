@@ -58,6 +58,8 @@ export default {
 .home{
   padding: 15px;
   box-sizing: border-box;
+  height: 100vh;
+  overflow-y: auto;
   .router_btn{
     display: flex;
     li{

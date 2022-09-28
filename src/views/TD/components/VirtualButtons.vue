@@ -123,7 +123,7 @@ export default {
     width: 170px;
     height: 170px;
     opacity: 0.85;
-    z-index: 1998;
+    z-index: 1997;
     .button_box{
       position: absolute;
       top: 0;
