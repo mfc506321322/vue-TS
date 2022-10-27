@@ -27,6 +27,26 @@
             :config="item.config"
           />
         </div>
+        <!-- <v-rect
+          ref="shockWave"
+          :config="{
+            x: centerP.x,
+            y: centerP.y,
+            width: 900,
+            height: 50,
+            offset: {
+              x: 0,
+              y: 25
+            },
+            cornerRadius: 25,
+            fillLinearGradientStartPoint: { x: 0, y: 0 },
+            fillLinearGradientEndPoint: { x: 0, y: 50 },
+            fillLinearGradientColorStops: [0, 'red', 0.5,  'yellow', 1, 'red'],
+            shadowBlur: 5,
+            shadowColor: 'red',
+            rotate: 30
+          }"
+        /> -->
         <v-circle
           @dragmove="dragBoundFunc"
           :config="{
@@ -451,6 +471,9 @@ export default {
           atkInterval,
           speed
         } = this.roleInfo
+
+        // this.$refs.shockWave.getNode().rotate(1)
+        // this.$refs.shockWave.getNode().width(this.masterTime)
 
         // this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
         // if(this.roleInfo.atkScope >= maxAtkScope){
