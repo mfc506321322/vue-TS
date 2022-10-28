@@ -15,7 +15,7 @@
         <el-form-item label="操作模式" prop="operatingMode">
           <el-radio-group v-model="form.operatingMode">
             <el-radio-button label="2">方向键移动</el-radio-button>
-            <el-radio-button label="1">鼠标移动</el-radio-button>
+            <el-radio-button label="1" disabled>鼠标移动</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item v-if="form.operatingMode === '2' && isMobile" label="按键模式" prop="keysMode">

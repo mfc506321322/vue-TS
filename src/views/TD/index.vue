@@ -1,9 +1,20 @@
 <template>
   <div class="TD_box">
+    <div 
+      class="stage_box"
+      :style="{
+        'width':stageBoxConfig.width + 'px',
+        'height':stageBoxConfig.height  + 'px'
+      }"
+    >
     <v-stage
       ref="stage"
       :config="configKonva"
       class="stage"
+      :style="{
+        '--stageTop':(-1 * screenRoleY) + 'px',
+        '--stageLeft':(-1 * screenRoleX) + 'px'
+      }"
     >
       <v-layer ref="layer">
         <div class="skill_box">
@@ -86,6 +97,7 @@
         </div>
       </v-layer>
     </v-stage>
+    </div>
     <div class="role_info">
       <ul class="states">
         <li>当前关卡: {{mapLevel}}</li>
@@ -202,9 +214,13 @@ export default {
       enableDrag:false,
       fps:60,
       masterTime:0,
-      configKonva: {
+      stageBoxConfig: {
         width: 600,
-        height: 600,
+        height: 600
+      },
+      configKonva: {
+        width: 800,
+        height: 800
       },
       areaOffset:10,
       centerP:{},
@@ -322,10 +338,10 @@ export default {
       this.roleInfo.underAtkCount = 0
       this.roleInfo.atkScope = 0
       this.roleInfo.skill.nowCd = 0
-      this.centerP = {
-        x:this.configKonva.width / 2,
-        y:this.configKonva.height / 2
-      }
+      // this.centerP = {
+      //   x:this.stageBoxConfig.width / 2,
+      //   y:this.stageBoxConfig.height / 2
+      // }
 
       let {
         enemyTotal,
@@ -341,12 +357,18 @@ export default {
     },
     progressBarExp(){
       return Math.ceil(this.roleInfo.exp / this.roleInfo.maxExp * 100) + '%'
-    }
+    },
+    screenRoleX(){
+      return this.centerP.x - this.stageBoxConfig.width / 2
+    },
+    screenRoleY(){
+      return this.centerP.y - this.stageBoxConfig.height / 2
+    },
   },
   created(){
     let sWidth = document.body.clientWidth
     if(sWidth < 634){
-      this.configKonva.width = sWidth - 34
+      this.stageBoxConfig.width = sWidth - 34
       this.isMobile = true
     }else{
       this.isMobile = false
@@ -359,8 +381,8 @@ export default {
     }
 
     this.centerP = {
-      x:this.configKonva.width / 2,
-      y:this.configKonva.height / 2
+      x:this.stageBoxConfig.width / 2,
+      y:this.stageBoxConfig.height / 2
     }
 
     this.roleInfo.speed = this.fpsUnifyHandle(this.roleInfo.originalSpeed)
@@ -586,23 +608,30 @@ export default {
 
       let areaNo = randomValue({ 
         arr:weightRandom(areaWeight)
-      })
+      }),
+      sWidth = this.stageBoxConfig.width,
+      sHeight = this.stageBoxConfig.height,
+      realWidth = sWidth + this.screenRoleX,
+      realHeight = sHeight + this.screenRoleY,
+      realOffsetX = -this.areaOffset + this.screenRoleX,
+      realOffsetY = -this.areaOffset + this.screenRoleY
+
       switch(areaNo){
         case 1:
-          enemyObj.config.x = randomValue({ min:-this.areaOffset, max:this.configKonva.width})
-          enemyObj.config.y = randomValue({ min:-this.areaOffset, max:0})
+          enemyObj.config.x = randomValue({ min:realOffsetX, max:realWidth})
+          enemyObj.config.y = randomValue({ min:realOffsetY, max:0})
           break
         case 2:
-          enemyObj.config.x = randomValue({ min:this.configKonva.width, max:this.configKonva.width + this.areaOffset})
-          enemyObj.config.y = randomValue({ min:-this.areaOffset, max:this.configKonva.height})
+          enemyObj.config.x = randomValue({ min:realWidth, max:realWidth + this.areaOffset})
+          enemyObj.config.y = randomValue({ min:realOffsetY, max:realHeight})
           break
         case 3:
-          enemyObj.config.x = randomValue({ min:0, max:this.configKonva.width + this.areaOffset})
-          enemyObj.config.y = randomValue({ min:this.configKonva.height, max:this.configKonva.height + this.areaOffset})
+          enemyObj.config.x = randomValue({ min:0, max:realWidth + this.areaOffset})
+          enemyObj.config.y = randomValue({ min:realHeight, max:realHeight + this.areaOffset})
           break
         case 4:
-          enemyObj.config.x = randomValue({ min:-this.areaOffset, max:0})
-          enemyObj.config.y = randomValue({ min:0, max:this.configKonva.height + this.areaOffset})
+          enemyObj.config.x = randomValue({ min:realOffsetX, max:0})
+          enemyObj.config.y = randomValue({ min:0, max:realHeight + this.areaOffset})
           break
       }
 
@@ -814,7 +843,7 @@ export default {
         }
 
         if(this.masterTime - item.createTime >= this.fps * 8.5){
-          clearBulle(true)
+          clearBulle()
         }else{
           let {
             x,
@@ -1277,9 +1306,9 @@ export default {
       }
       this.rafIds = []
 
-      this.bulletList = this.bulletList.filter(item => {
-        return this.masterTime - item.createTime < this.fps * 8.5
-      })
+      // this.bulletList = this.bulletList.filter(item => {
+      //   return this.masterTime - item.createTime < this.fps * 8.5
+      // })
     },
     launchHandle(launchType){
       if(launchType !== 'start' && this.gameState !== 'pause')return
@@ -1327,12 +1356,25 @@ export default {
 .TD_box{
   overflow: hidden;
   position: relative;
-  .stage{
+  .stage_box{
+    background-color: #eee;
     float: left;
     margin-right: 10px;
     margin-bottom: 10px;
+    border: 2px solid #333;
+    overflow: hidden;
+    position: relative;
+  }
+  .stage{
+    background-color: #fff;
+    position: absolute;
+    top: 0;
+    left: 0;
+    // transition: transform 0.3s;
+    // transition-timing-function: linear;
+    transform: translate3d(var(--stageLeft), var(--stageTop), 0);
     /deep/ .konvajs-content{
-      border: 2px solid #333;
+      border: 2px solid #ff7e7e;
     }
   }
 }
