@@ -59,6 +59,7 @@
           }"
         /> -->
         <v-circle
+          ref="role"
           @dragmove="dragBoundFunc"
           :config="{
             // x: this.configKonva.width / 2,
@@ -242,6 +243,8 @@ export default {
         maxExp:100,
         level:1,
         underAtkCount:0,
+        underAnimationTime:0,
+        defaultFill:'#0033FF',
         skill:{
           damage: 100,
           maxScope: 125,
@@ -276,7 +279,9 @@ export default {
         xStep:0,
         yStep:0,
         type:'end'
-      }
+      },
+      scintillationColor:'#eee',
+      scintillationDuration:20,
     }
   },
   watch:{
@@ -386,6 +391,7 @@ export default {
     }
 
     this.roleInfo.speed = this.fpsUnifyHandle(this.roleInfo.originalSpeed)
+    this.scintillationDuration = this.fps / 3
   },
   mounted(){
   },
@@ -491,7 +497,9 @@ export default {
         let {
           maxAtkScope,
           atkInterval,
-          speed
+          speed,
+          defaultFill,
+          underAnimationTime
         } = this.roleInfo
 
         // this.$refs.shockWave.getNode().rotate(1)
@@ -566,6 +574,25 @@ export default {
           }
         }
 
+        if(underAnimationTime){
+          let item = this.$refs.role.getNode(),
+          poor = this.masterTime - underAnimationTime,
+          scintillationInterval = Math.floor(this.scintillationDuration / 2)
+
+          if(poor >= this.scintillationDuration){
+            item.attrs.fill = defaultFill
+            this.roleInfo.underAnimationTime = 0
+          }else{
+            if(poor % scintillationInterval === 0){
+              // console.log('poor1', poor, scintillationInterval)
+              item.attrs.fill = this.scintillationColor
+            }else if(poor % scintillationInterval === Math.floor(scintillationInterval / 2)){
+              // console.log('poor2', poor, scintillationInterval, Math.floor(scintillationInterval / 2))
+              item.attrs.fill = defaultFill
+            }
+          }
+        }
+
         this.roleRafId = requestAnimationFrame(animationFn)
         this.masterTime++
       }
@@ -594,6 +621,7 @@ export default {
         underAroundAtkId:null,
         exp:level * 10,
         disInit:this.fpsUnifyHandle(1.3 * (Math.pow(level, -1.2)) + 0.7),
+        defaultFill: color,
         config:{
           x: 0,
           y: 0,
@@ -694,6 +722,22 @@ export default {
           }
         }
 
+        if(item.underAnimationTime){
+          let poor = this.masterTime - item.underAnimationTime,
+          scintillationInterval = Math.floor(this.scintillationDuration / 2)
+
+          if(poor >= this.scintillationDuration){
+            item.config.fill = item.defaultFill
+            item.underAnimationTime = 0
+          }else{
+            if(poor % scintillationInterval === 0){
+              item.config.fill = this.scintillationColor
+            }else if(poor % scintillationInterval === Math.floor(scintillationInterval / 2)){
+              item.config.fill = item.defaultFill
+            }
+          }
+        }
+
         if(this.skillList.length > 0){
           for(let i=0, l=this.skillList.length;i<l;i++){
             let {
@@ -726,6 +770,7 @@ export default {
           clearEnemy()
           this.roleInfo.hp -= item.atk
           this.roleInfo.underAtkCount++
+          this.roleInfo['underAnimationTime'] = this.masterTime
           if(this.roleInfo.hp <= 0){
             this.$message({
               message:'GAME OVER',
@@ -1039,6 +1084,9 @@ export default {
           y
         }
       } = obj
+
+      item['underAnimationTime'] = this.masterTime
+      item.config.fill = this.scintillationColor
 
       this.damageList.push({
         id:obj.id + new Date * 1 + Math.random() + '',

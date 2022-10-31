@@ -164,7 +164,7 @@
     "enemyTotal": 50,
     "enemyCreateInterval": 0.5,
     "enemyConfig": {
-      "color": "#ff00ff",
+      "color": "#FF9900",
       "levelWeight": {
         "value": [5, 10, 15],
         "weight": [20, 20, 10]
