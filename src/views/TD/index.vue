@@ -16,48 +16,14 @@
         '--stageLeft':(-1 * screenRoleX) + 'px'
       }"
     >
-      <v-layer ref="layer">
-        <div class="skill_box">
-          <v-circle
-            v-for="(item, idx) in skillList"
-            :key="idx"
-            :config="item.config"
-          />
-        </div>
-        <div class="bullet_box">
-          <v-circle
-            v-for="(item, idx) in bulletList"
-            :key="idx"
-            :config="item.config"
-          />
-        </div>
-        <div class="around_box">
-          <v-circle
-            v-for="(item, idx) in aroundList"
-            :key="idx"
-            :config="item.config"
-          />
-        </div>
-        <!-- <v-rect
-          ref="shockWave"
-          :config="{
-            x: centerP.x,
-            y: centerP.y,
-            width: 900,
-            height: 50,
-            offset: {
-              x: 0,
-              y: 25
-            },
-            cornerRadius: 25,
-            fillLinearGradientStartPoint: { x: 0, y: 0 },
-            fillLinearGradientEndPoint: { x: 0, y: 50 },
-            fillLinearGradientColorStops: [0, 'red', 0.5,  'yellow', 1, 'red'],
-            shadowBlur: 5,
-            shadowColor: 'red',
-            rotate: 30
-          }"
-        /> -->
+      <v-layer ref="layer_0">
+        <v-rect
+          v-for="(item, idx) in bgList"
+          :key="idx"
+          :config="item"
+        />
+      </v-layer>
+      <v-layer ref="layer_1">
         <v-circle
           ref="role"
           @dragmove="dragBoundFunc"
@@ -94,6 +60,49 @@
             :key="item.id"
             :config="item.config"
             v-if="masterTime - item.createTime <= fpsUnifyHandle(30, 0, true)"
+          />
+        </div>
+      </v-layer>
+      <v-layer ref="layer_2">
+        <!-- <v-rect
+          ref="shockWave"
+          :config="{
+            x: centerP.x,
+            y: centerP.y,
+            width: 900,
+            height: 50,
+            offset: {
+              x: 0,
+              y: 25
+            },
+            cornerRadius: 25,
+            fillLinearGradientStartPoint: { x: 0, y: 0 },
+            fillLinearGradientEndPoint: { x: 0, y: 50 },
+            fillLinearGradientColorStops: [0, 'red', 0.5,  'yellow', 1, 'red'],
+            shadowBlur: 5,
+            shadowColor: 'red',
+            rotate: 30
+          }"
+        /> -->
+        <div class="skill_box">
+          <v-circle
+            v-for="(item, idx) in skillList"
+            :key="idx"
+            :config="item.config"
+          />
+        </div>
+        <div class="bullet_box">
+          <v-circle
+            v-for="(item, idx) in bulletList"
+            :key="idx"
+            :config="item.config"
+          />
+        </div>
+        <div class="around_box">
+          <v-circle
+            v-for="(item, idx) in aroundList"
+            :key="idx"
+            :config="item.config"
           />
         </div>
       </v-layer>
@@ -270,6 +279,7 @@ export default {
       bulletList:[],
       skillList:[],
       aroundList:[],
+      bgList:[],
       rafIds:[],
       enemyTotal:0,
       killCount:0,
@@ -392,8 +402,21 @@ export default {
 
     this.roleInfo.speed = this.fpsUnifyHandle(this.roleInfo.originalSpeed)
     this.scintillationDuration = this.fps / 3
+
+    let bgWidth = 40,
+    bgXlength = this.configKonva.width / bgWidth
+    for(let i = 0;i < Math.pow(bgXlength, 2);i++){
+      this.bgList.push({
+        x: i % bgXlength * bgWidth,
+        y: Math.floor(i / bgXlength) * bgWidth,
+        width: bgWidth,
+        height: bgWidth,
+        fill: Math.floor(i / bgXlength) % 2 === 0 ? i % 2 === 0 ? '#f9f9f9' : '#fff' : i % 2 === 0 ? '#fff' : '#f9f9f9'
+      })
+    }
   },
   mounted(){
+    this.$refs.layer_0.getNode().cache()
   },
   methods:{
     updateStartConfigHandle(formData){
@@ -493,6 +516,8 @@ export default {
     },
     roleAnimationHandle(){
       this.roleRafId = null
+      let roleItem = this.$refs.role.getNode()
+      
       let animationFn = () => {
         let {
           maxAtkScope,
@@ -575,20 +600,17 @@ export default {
         }
 
         if(underAnimationTime){
-          let item = this.$refs.role.getNode(),
-          poor = this.masterTime - underAnimationTime,
+          let poor = this.masterTime - underAnimationTime,
           scintillationInterval = Math.floor(this.scintillationDuration / 2)
 
           if(poor >= this.scintillationDuration){
-            item.attrs.fill = defaultFill
+            roleItem.attrs.fill = defaultFill
             this.roleInfo.underAnimationTime = 0
           }else{
             if(poor % scintillationInterval === 0){
-              // console.log('poor1', poor, scintillationInterval)
-              item.attrs.fill = this.scintillationColor
+              roleItem.attrs.fill = this.scintillationColor
             }else if(poor % scintillationInterval === Math.floor(scintillationInterval / 2)){
-              // console.log('poor2', poor, scintillationInterval, Math.floor(scintillationInterval / 2))
-              item.attrs.fill = defaultFill
+              roleItem.attrs.fill = defaultFill
             }
           }
         }
