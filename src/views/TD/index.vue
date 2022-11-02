@@ -61,6 +61,13 @@
             :config="item.config"
             v-if="masterTime - item.createTime <= fpsUnifyHandle(30, 0, true)"
           />
+          <div class="explosion_box">
+            <v-circle
+              v-for="(item, idx) in explosionList"
+              :key="idx"
+              :config="item.config"
+            />
+          </div>
         </div>
       </v-layer>
       <v-layer ref="layer_2">
@@ -279,6 +286,7 @@ export default {
       bulletList:[],
       skillList:[],
       aroundList:[],
+      explosionList:[],
       bgList:[],
       rafIds:[],
       enemyTotal:0,
@@ -349,10 +357,12 @@ export default {
       this.bulletList = []
       this.skillList = []
       this.aroundList = []
+      this.explosionList = []
       this.keyCode = []
       this.roleInfo.underAtkCount = 0
       this.roleInfo.atkScope = 0
       this.roleInfo.skill.nowCd = 0
+      this.$refs.role.getNode().attrs.fill = this.roleInfo.defaultFill
       // this.centerP = {
       //   x:this.stageBoxConfig.width / 2,
       //   y:this.stageBoxConfig.height / 2
@@ -731,6 +741,9 @@ export default {
         item['rafId'] = rafId
 
         let clearEnemy = () => {
+          let obj = this.explosionCreate(item)
+          this.explosionAnimationHandle(obj)
+
           for(let i=0, l=this.rafIds.length;i<l;i++){
             if(this.rafIds[i] === rafId){
               cancelAnimationFrame(this.rafIds[i])
@@ -1121,6 +1134,72 @@ export default {
         }
       })
     },
+    explosionCreate(item){
+      let {
+        defaultFill,
+        config:{
+          x,
+          y,
+          radius,
+        }
+      } = item,
+      spreadScope = 10,
+      explosionObj = {
+        id: new Date * 1 + Math.random() + '',
+        createTime: this.masterTime,
+        maxScope: radius + spreadScope,
+        spreadScope,
+        duration: this.fpsUnifyHandle(15),
+        config:{
+          x,
+          y,
+          radius,
+          stroke: defaultFill,
+          strokeWidth: 2
+        }
+      }
+      this.explosionList.push(explosionObj)
+      return explosionObj
+    },
+    explosionAnimationHandle(item){
+      let rafId = null,
+      {
+        id,
+        maxScope,
+        duration,
+        spreadScope
+      } = item
+
+      let animationFn = () => {
+        item.config.radius += spreadScope / duration
+
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        item['rafId'] = rafId
+
+        let clearExplosion = () => {
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
+              let itemIndex = _.findIndex(this.explosionList, {id:id})
+              if(itemIndex || itemIndex + '' === '0'){
+                this.explosionList.splice(itemIndex, 1)
+              }
+              break
+            }
+          }
+        }
+
+        if(item.config.radius >= maxScope){
+          clearExplosion()
+        }
+      }
+      animationFn()
+    },
     expHandle(enemy){
       this.roleInfo.exp += enemy.exp
       if(this.roleInfo.exp >= this.roleInfo.maxExp){
@@ -1400,6 +1479,9 @@ export default {
       }
       for(let i=0, l=this.aroundList.length;i<l;i++){
         this.aroundAnimationHandle(this.aroundList[i])
+      }
+      for(let i=0, l=this.explosionList.length;i<l;i++){
+        this.explosionAnimationHandle(this.explosionList[i])
       }
       this.startCreate()
     },
