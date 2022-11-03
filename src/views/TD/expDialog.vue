@@ -64,6 +64,22 @@
           <span>被动间隔 - 0.3秒</span>
           <el-button type="primary" @click="upgradeHandle('passive.cd')" :disabled="infoData.passive.cd <= 0.3">升级</el-button>
         </li>
+        <li class="power_list_list reflection">
+          <span>反弹伤害 + 20</span>
+          <el-button type="primary" @click="upgradeHandle('reflection.damage')">升级</el-button>
+        </li>
+        <li class="power_list_list reflection">
+          <span>反弹持续时间 + 2秒</span>
+          <el-button type="primary" @click="upgradeHandle('reflection.duration')">升级</el-button>
+        </li>
+        <li class="power_list_list reflection">
+          <span>发射间隔 - 0.3秒</span>
+          <el-button type="primary" @click="upgradeHandle('reflection.cd')" :disabled="infoData.reflection.cd <= 0.3">升级</el-button>
+        </li>
+        <li class="power_list_list reflection">
+          <span>反弹速度倍率 + 0.3倍</span>
+          <el-button type="primary" @click="upgradeHandle('reflection.speed')">升级</el-button>
+        </li>
       </ul>
     </div>
   </el-dialog>
@@ -137,6 +153,9 @@ export default {
         }
         .passive{
           background-color: rgba($color: #FFCC00, $alpha: 0.2);
+        }
+        .reflection{
+          background-color: rgba($color: #9900FF, $alpha: 0.2);
         }
       }
     }

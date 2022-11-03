@@ -112,6 +112,13 @@
             :config="item.config"
           />
         </div>
+        <div class="reflection_box">
+          <v-ring
+            v-for="(item, idx) in reflectionList"
+            :key="idx"
+            :config="item.config"
+          />
+        </div>
       </v-layer>
     </v-stage>
     </div>
@@ -154,6 +161,12 @@
           <span>被动伤害: {{roleInfo.passive.damage}}</span>
           <span>被动持续时间: {{roleInfo.passive.duration}} 秒</span>
           <span>被动间隔: {{roleInfo.passive.cd}} 秒</span>
+        </p>
+        <p class="skill_info reflection_info">
+          <span>反射伤害: {{roleInfo.reflection.damage}}</span>
+          <span>反射持续时间: {{roleInfo.reflection.duration}} 秒</span>
+          <span>发射间隔: {{roleInfo.reflection.cd}} 秒</span>
+          <span>反射速度倍率: {{roleInfo.reflection.speed}} 倍</span>
         </p>
       </div>
       <p class="operating_instructions">
@@ -275,6 +288,13 @@ export default {
           cd: 3,
           aroundDis: 80,
           arcStep: 0.0325,
+        },
+        reflection:{
+          damage: 40,
+          duration: 6,
+          cd: 3,
+          speed: 2.5,
+          through: 2
         }
       },
       roleRafId:null,
@@ -286,6 +306,7 @@ export default {
       bulletList:[],
       skillList:[],
       aroundList:[],
+      reflectionList:[],
       explosionList:[],
       bgList:[],
       rafIds:[],
@@ -358,6 +379,7 @@ export default {
       this.skillList = []
       this.aroundList = []
       this.explosionList = []
+      this.reflectionList = []
       this.keyCode = []
       this.roleInfo.underAtkCount = 0
       this.roleInfo.atkScope = 0
@@ -607,6 +629,11 @@ export default {
             let obj = this.bulletCreate()
             this.bulletAnimationHandle(obj, i)
           }
+        }
+
+        if(this.masterTime % (this.fps * this.roleInfo.reflection.cd) === 0){
+          let obj = this.reflectionCreate()
+          this.reflectionAnimationHandle(obj)
         }
 
         if(underAnimationTime){
@@ -1200,6 +1227,127 @@ export default {
       }
       animationFn()
     },
+    reflectionCreate(){
+      let xStep = Math.random() * 100,
+      yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
+
+      if(Math.random() <= 0.5){
+        xStep = -xStep
+      }
+      if(Math.random() <= 0.5){
+        yStep = -yStep
+      }
+      xStep = xStep / this.fps * this.roleInfo.reflection.speed
+      yStep = yStep / this.fps * this.roleInfo.reflection.speed
+
+      let obj = {
+        id:new Date * 1 + Math.random() + '',
+        createTime:this.masterTime,
+        atkEnemyId:'',
+        through:0,
+        xStep,
+        yStep,
+        nowReflection:'',
+        config:{
+          x: this.centerP.x,
+          y: this.centerP.y,
+          innerRadius: 2,
+          outerRadius: 4,
+          fill: '#9900FF',
+          shadowColor: 'black',
+          shadowBlur: 2,
+          shadowOffset: { x: 2, y: 2 },
+          shadowOpacity: 0.5
+        }
+      }
+
+      this.reflectionList.push(obj)
+      return obj
+    },
+    reflectionAnimationHandle(item){
+      let rafId = null,
+      {
+        damage,
+        duration,
+        through
+      } = this.roleInfo.reflection
+
+      let animationFn = () => {
+        if(item.config.x <= this.screenRoleX && item.nowReflection !== '4'){
+          item.nowReflection = '4'
+          item.xStep = -item.xStep
+        }else if(item.config.x >= this.screenRoleX + this.stageBoxConfig.width && item.nowReflection !== '2'){
+          item.nowReflection = '2'
+          item.xStep = -item.xStep
+        }else if(item.config.y <= this.screenRoleY && item.nowReflection !== '1'){
+          item.nowReflection = '1'
+          item.yStep = -item.yStep
+        }else if(item.config.y >= this.screenRoleY + this.stageBoxConfig.height && item.nowReflection !== '3'){
+          item.nowReflection = '3'
+          item.yStep = -item.yStep
+        }
+
+        item.config.x += item.xStep
+        item.config.y += item.yStep
+
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        item['rafId'] = rafId
+
+        let clearReflection = () => {
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
+              let itemIndex = _.findIndex(this.reflectionList, {id:item.id})
+              if(itemIndex || itemIndex + '' === '0'){
+                this.reflectionList.splice(itemIndex, 1)
+              }
+              break
+            }
+          }
+        }
+
+        if(this.masterTime - item.createTime >= this.fps * duration){
+          clearReflection()
+        }else{
+          let {
+            atkEnemyId,
+            config:{
+              x,
+              y,
+              outerRadius
+            }
+          } = item
+
+          for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
+            let itm = this.enemyList[i],
+            ex = itm.config.x,
+            ey = itm.config.y,
+            xdis = Math.abs(x - ex),
+            ydis = Math.abs(y - ey),
+            dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
+
+            if(dis <= itm.config.radius + outerRadius && atkEnemyId !== itm.id){
+              itm.hp -= damage
+
+              item.atkEnemyId = itm.id
+              // ++item.through
+              // if(item.through > through){
+              //   clearReflection()
+              // }
+
+              this.damageCreate(itm, damage)
+              break
+            }
+          }
+        }
+      }
+      animationFn()
+    },
     expHandle(enemy){
       this.roleInfo.exp += enemy.exp
       if(this.roleInfo.exp >= this.roleInfo.maxExp){
@@ -1266,7 +1414,20 @@ export default {
           break
         case 'passive.cd':
           if(this.roleInfo.passive.cd <= 0.3)return
-          this.roleInfo.passive.cd = Number((this.roleInfo.passive.cd - 0.3).toFixed(2))
+          this.roleInfo.passive.cd = Number((this.roleInfo.passive.cd - 0.3).toFixed(1))
+          break
+        case 'reflection.damage':
+          this.roleInfo.reflection.damage += 20
+          break
+        case 'reflection.duration':
+          this.roleInfo.reflection.duration += 2
+          break
+        case 'reflection.cd':
+          if(this.roleInfo.reflection.cd <= 0.3)return
+          this.roleInfo.reflection.cd = Number((this.roleInfo.reflection.cd - 0.3).toFixed(1))
+          break
+        case 'reflection.speed':
+          this.roleInfo.reflection.speed += 0.3
           break
       }
       this.showExpDialog = false
@@ -1477,6 +1638,9 @@ export default {
       for(let i=0, l=this.bulletList.length;i<l;i++){
         this.bulletAnimationHandle(this.bulletList[i])
       }
+      for(let i=0, l=this.reflectionList.length;i<l;i++){
+        this.reflectionAnimationHandle(this.reflectionList[i])
+      }
       for(let i=0, l=this.aroundList.length;i<l;i++){
         this.aroundAnimationHandle(this.aroundList[i])
       }
@@ -1584,6 +1748,9 @@ export default {
 }
 .passive_info{
   background-color: rgba($color: #FFCC00, $alpha: 0.2);
+}
+.reflection_info{
+  background-color: rgba($color: #9900FF, $alpha: 0.2);
 }
 .mobile_other_info{
   width: 150px;
