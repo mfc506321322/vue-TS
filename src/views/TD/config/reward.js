@@ -246,7 +246,7 @@ const rewardConfig = [
     unit: '%',
     icon: 'el-icon-finished',
     handle: function(item, other){
-      item.reflection.speed += 30
+      item.reflection.speed = Number((item.reflection.speed + 0.3).toFixed(1))
       return item
     }
   },

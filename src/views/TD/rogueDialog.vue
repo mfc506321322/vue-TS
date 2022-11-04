@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    title="奖励选择"
+    :title="special ? '特殊奖励选择' : '奖励选择'"
     :visible="isShow"
     @open="dialogOpen"
     @close="dialogClose"
@@ -32,6 +32,7 @@
   </el-dialog>
 </template>
 <script>
+import _ from 'lodash'
 import {
   randomValue,
   weightRandom
@@ -54,7 +55,8 @@ export default {
   },
   data(){
     return {
-      rewardList:[]
+      rewardList:[],
+      special:false
     }
   },
   filters: {},
@@ -67,11 +69,19 @@ export default {
   watch: {},
   methods:{
     dialogOpen(){
-      // this.rewardList = rewardConfig
-      do {
-        let item = rewardConfig[randomValue({min:0, max:rewardConfig.length -1 })]
-        this.rewardList.push(item)
-      } while (this.rewardList.length < 3);
+      if(this.infoData.level % 5 === 0){
+        this.special = true
+        this.rewardList = rewardConfig
+      }else{
+        this.special = false
+        do {
+          let item = rewardConfig[randomValue({min:0, max:rewardConfig.length -1 })],
+          isFind = _.find(this.rewardList, ['title', item.title])
+          if(!isFind){
+            this.rewardList.push(item)
+          }
+        } while (this.rewardList.length < 3);
+      }
     },
     dialogClose(){
       this.rewardList = []
@@ -110,6 +120,9 @@ export default {
             padding: 15px;
             text-align: center;
           }
+        }
+        .bullet{
+          background-color: rgba($color: #00ec00, $alpha: 0.1);
         }
         .skill{
           background-color: rgba($color: #00FFFF, $alpha: 0.1);
