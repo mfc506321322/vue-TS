@@ -21,7 +21,7 @@
         <el-form-item v-if="form.operatingMode === '2' && isMobile" label="按键模式" prop="keysMode">
           <el-radio-group v-model="form.keysMode">
             <el-radio-button label="1">摇杆</el-radio-button>
-            <el-radio-button label="2">按键</el-radio-button>
+            <el-radio-button label="2" disabled>按键</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item v-if="form.operatingMode === '2' && form.keysMode === '1' && isMobile" label="摇杆左右" prop="lOrRMode">

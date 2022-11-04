@@ -152,21 +152,21 @@
         <li>当前fps: {{fps}}</li>
       </ul>
       <div :class="isMobile && 'mobile_other_info'">
-        <p class="skill_info">
-          <span>技能cd: {{roleInfo.skill.nowCd ? roleInfo.skill.nowCd : '可用'}} / {{roleInfo.skill.cd}}</span>
-          <span>技能伤害: {{roleInfo.skill.damage}}</span>
-          <span>技能范围: {{roleInfo.skill.maxScope}}</span>
+        <p class="skill_info" v-if="roleInfo.skill.get">
+          <span>震荡波cd: {{roleInfo.skill.nowCd ? roleInfo.skill.nowCd : '可用'}} / {{roleInfo.skill.cd}}</span>
+          <span>震荡波伤害: {{roleInfo.skill.damage}}</span>
+          <span>震荡波范围: {{roleInfo.skill.maxScope}}</span>
         </p>
-        <p class="skill_info passive_info">
-          <span>被动伤害: {{roleInfo.passive.damage}}</span>
-          <span>被动持续时间: {{roleInfo.passive.duration}} 秒</span>
-          <span>被动间隔: {{roleInfo.passive.cd}} 秒</span>
+        <p class="skill_info passive_info" v-if="roleInfo.passive.get">
+          <span>环绕弹伤害: {{roleInfo.passive.damage}}</span>
+          <span>环绕弹持续时间: {{roleInfo.passive.duration}} 秒</span>
+          <span>环绕弹间隔: {{roleInfo.passive.cd}} 秒</span>
         </p>
-        <p class="skill_info reflection_info">
-          <span>反射伤害: {{roleInfo.reflection.damage}}</span>
-          <span>反射持续时间: {{roleInfo.reflection.duration}} 秒</span>
-          <span>发射间隔: {{roleInfo.reflection.cd}} 秒</span>
-          <span>反射速度倍率: {{roleInfo.reflection.speed}} 倍</span>
+        <p class="skill_info reflection_info" v-if="roleInfo.reflection.get">
+          <span>反射弹伤害: {{roleInfo.reflection.damage}}</span>
+          <span>反射弹持续时间: {{roleInfo.reflection.duration}} 秒</span>
+          <span>发射弹间隔: {{roleInfo.reflection.cd}} 秒</span>
+          <span>反射弹速度倍率: {{roleInfo.reflection.speed}} 倍</span>
         </p>
       </div>
       <p class="operating_instructions">
@@ -201,6 +201,11 @@
       @upgradeHandle="upgradeHandle"
       :infoData="roleInfo"
     />
+    <rogueDialog
+      :isShow.sync="showRogueDialog"
+      @rogueHandle="rogueHandle"
+      :infoData="roleInfo"
+    />
     <startDialog
       :isShow.sync="showStartDialog"
       :isMobile="isMobile"
@@ -218,6 +223,7 @@ import {
 } from '@/common/utils'
 import expDialog from './expDialog.vue'
 import startDialog from './startDialog.vue'
+import rogueDialog from './rogueDialog.vue'
 import levelInfo from './config/level.json'
 import VirtualButtons from './components/VirtualButtons.vue'
 import VirtualJoy from './components/VirtualJoy.vue'
@@ -228,7 +234,8 @@ export default {
     expDialog,
     startDialog,
     VirtualButtons,
-    VirtualJoy
+    VirtualJoy,
+    rogueDialog
   },
   data(){
     return{
@@ -241,6 +248,7 @@ export default {
       gameState:'pause',//operation, pause, over, finish
       showStartDialog:true,
       showExpDialog:false,
+      showRogueDialog:false,
       enableDrag:false,
       fps:60,
       masterTime:0,
@@ -275,6 +283,7 @@ export default {
         underAnimationTime:0,
         defaultFill:'#0033FF',
         skill:{
+          get: false,
           damage: 100,
           maxScope: 125,
           cd: 10,
@@ -283,6 +292,7 @@ export default {
           skillSpeed: 1.5
         },
         passive:{
+          get: false,
           damage: 20,
           duration: 7,
           cd: 3,
@@ -290,6 +300,7 @@ export default {
           arcStep: 0.0325,
         },
         reflection:{
+          get: false,
           damage: 40,
           duration: 6,
           cd: 3,
@@ -575,27 +586,8 @@ export default {
         //     console.log('enemyList', this.enemyCount)
         //   }
         // }
-        let {
-          nowCd,
-          cd
-        } = this.roleInfo.skill
-        if(this.keyCode.includes(90) && nowCd === 0){
-          this.roleInfo.skill.castTime = this.masterTime
-          this.roleInfo.skill.nowCd = cd
-          let obj = this.skillCreate()
-          this.skillAnimationHandle(obj)
-        }
-        if(this.roleInfo.skill.nowCd > 0){
-          this.roleInfo.skill.nowCd = Number((this.roleInfo.skill.nowCd - (1 / this.fps)).toFixed(2))
-        }else if(this.roleInfo.skill.nowCd < 0){
-          this.roleInfo.skill.nowCd = 0
-        }
 
-        if(this.masterTime % (this.fps * this.roleInfo.passive.cd) === 0){
-          let obj = this.aroundCreate()
-          this.aroundAnimationHandle(obj)
-        }
-
+        //角色移动
         if(this.operatingMode === '2' && this.keyCode.length > 0){
           let cachePoint = { ...this.centerP }
           this.lastCenterP = {
@@ -624,6 +616,7 @@ export default {
           this.borderLimit()
         }
 
+        //各技能生成
         if(this.masterTime % Math.ceil(this.fps / atkInterval) === 0){
           for(let i=0, l=Math.floor(this.roleInfo.bulletCount);i<l;i++){
             let obj = this.bulletCreate()
@@ -631,11 +624,39 @@ export default {
           }
         }
 
-        if(this.masterTime % (this.fps * this.roleInfo.reflection.cd) === 0){
-          let obj = this.reflectionCreate()
-          this.reflectionAnimationHandle(obj)
+        if(this.roleInfo.skill.get){
+          let {
+            nowCd,
+            cd
+          } = this.roleInfo.skill
+          if(this.keyCode.includes(90) && nowCd === 0){
+            this.roleInfo.skill.castTime = this.masterTime
+            this.roleInfo.skill.nowCd = cd
+            let obj = this.skillCreate()
+            this.skillAnimationHandle(obj)
+          }
+          if(this.roleInfo.skill.nowCd > 0){
+            this.roleInfo.skill.nowCd = Number((this.roleInfo.skill.nowCd - (1 / this.fps)).toFixed(2))
+          }else if(this.roleInfo.skill.nowCd < 0){
+            this.roleInfo.skill.nowCd = 0
+          }
         }
 
+        if(this.roleInfo.passive.get){
+          if(this.masterTime % (this.fps * this.roleInfo.passive.cd) === 0){
+            let obj = this.aroundCreate()
+            this.aroundAnimationHandle(obj)
+          }
+        }
+
+        if(this.roleInfo.reflection.get){
+          if(this.masterTime % (this.fps * this.roleInfo.reflection.cd) === 0){
+            let obj = this.reflectionCreate()
+            this.reflectionAnimationHandle(obj)
+          }
+        }
+
+        //受伤闪烁特效
         if(underAnimationTime){
           let poor = this.masterTime - underAnimationTime,
           scintillationInterval = Math.floor(this.scintillationDuration / 2)
@@ -868,20 +889,6 @@ export default {
       xStep = 0,
       yStep = 0,
       bulletDisInit = 100
-
-      // if(!this.lastCenterP.x && this.lastCenterP.x + '' !== '0'){
-      //   xStep = Math.random() * 100,
-      //   yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
-      //   if(Math.random() <= 0.5){
-      //     xStep = -xStep
-      //   }
-      //   if(Math.random() <= 0.5){
-      //     yStep = -yStep
-      //   }
-      //   xStep = xStep / 60
-      //   yStep = yStep / 60
-      // }else{
-      // }
 
       if(item.xStep || item.xStep + '' === '0'){
         xStep = item.xStep
@@ -1355,7 +1362,8 @@ export default {
         this.damageList = []
         this.roleInfo.level++
         setTimeout(() => {
-          this.showExpDialog = true
+          // this.showExpDialog = true
+          this.showRogueDialog = true
           setTimeout(() => {
             this.$message({
               message:'升级啦!~~~~~~~~~~~',
@@ -1431,6 +1439,36 @@ export default {
           break
       }
       this.showExpDialog = false
+
+      if(this.gameState !== 'pause')return
+      this.$message({
+        message: '2秒后开始游戏, 做好准备',
+        type: 'warning',
+        center: true,
+        duration: 2000
+      })
+      setTimeout(() => {
+        this.$message({
+          message: '游戏开始',
+          type: 'success',
+          center: true,
+          duration: 1000
+        })
+        this.launchHandle()
+      }, 2000)
+    },
+    rogueHandle(selectItem){
+      selectItem.handle(this.roleInfo, {
+        fpsUnifyHandle:this.fpsUnifyHandle
+      })
+      switch(selectItem.class){
+        case 'skill':
+        case 'passive':
+        case 'reflection':
+          this.roleInfo[selectItem.class].get = true
+          break
+      }
+      this.showRogueDialog = false
 
       if(this.gameState !== 'pause')return
       this.$message({
@@ -1740,7 +1778,7 @@ export default {
   width: 200px;
   display: flex;
   flex-direction: column;
-  background-color: rgba($color: #00FFFF, $alpha: 0.1);
+  background-color: rgba($color: #00FFFF, $alpha: 0.2);
   padding: 2px;
   span{
     line-height: 18px;
@@ -1753,7 +1791,7 @@ export default {
   background-color: rgba($color: #9900FF, $alpha: 0.2);
 }
 .mobile_other_info{
-  width: 150px;
+  width: 170px;
   overflow: hidden;
   position: absolute;
   top: 5px;
