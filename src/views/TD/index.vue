@@ -119,6 +119,14 @@
             :config="item.config"
           />
         </div>
+        <div 
+          class="light_box"
+          v-for="(item, idx) in lightList"
+          :key="idx"
+        >
+          <v-rect :config="item.rect"/>
+          <v-circle :config="item.circle"/>
+        </div>
       </v-layer>
     </v-stage>
     </div>
@@ -151,7 +159,7 @@
         </div>
         <li>当前fps: {{fps}}</li>
       </ul>
-      <div :class="isMobile && 'mobile_other_info'">
+      <div :class="isMobile && 'mobile_other_info'" v-if="showSkillInfo">
         <p class="skill_info" v-if="roleInfo.skill.get">
           <span>震荡波cd: {{roleInfo.skill.nowCd ? roleInfo.skill.nowCd : '可用'}} / {{roleInfo.skill.cd}}</span>
           <span>震荡波伤害: {{roleInfo.skill.damage}}</span>
@@ -168,6 +176,11 @@
           <span>发射弹间隔: {{roleInfo.reflection.cd}} 秒</span>
           <span>反射弹速度倍率: {{roleInfo.reflection.speed}} 倍</span>
         </p>
+        <p class="skill_info light_info" v-if="roleInfo.light.get">
+          <span>耀斑轰击伤害: {{roleInfo.light.damage}}</span>
+          <span>耀斑轰击范围: {{roleInfo.light.maxScope}}</span>
+          <span>耀斑轰击间隔: {{roleInfo.light.cd}} 秒</span>
+        </p>
       </div>
       <p class="operating_instructions">
         <span class="operating_instructions_title">操作说明</span>
@@ -180,6 +193,7 @@
         <span>7.选择升级2秒后自动开始游戏</span>
       </p>
       <div :class="`${isMobile ? lOrRMode === '2' ? 'mobile_function_btn right_function_btn' : 'mobile_function_btn' : ''}`">
+        <el-button size="mini" @click="showSkillInfo = !showSkillInfo">{{showSkillInfo ? '隐藏属性' : '显示属性'}}</el-button>
         <el-button size="mini" @click="pauseHandle('pause')">暂停</el-button>
         <el-button size="mini" @click="launchHandle">启动</el-button>
       </div>
@@ -249,6 +263,7 @@ export default {
       showStartDialog:true,
       showExpDialog:false,
       showRogueDialog:false,
+      showSkillInfo:true,
       enableDrag:false,
       fps:60,
       masterTime:0,
@@ -306,6 +321,12 @@ export default {
           cd: 3,
           speed: 2.5,
           through: 2
+        },
+        light:{
+          get: false,
+          damage: 40,
+          maxScope: 30,
+          cd: 3,
         }
       },
       roleRafId:null,
@@ -319,6 +340,7 @@ export default {
       aroundList:[],
       reflectionList:[],
       explosionList:[],
+      lightList:[],
       bgList:[],
       rafIds:[],
       enemyTotal:0,
@@ -391,6 +413,7 @@ export default {
       this.aroundList = []
       this.explosionList = []
       this.reflectionList = []
+      this.lightList = []
       this.keyCode = []
       this.roleInfo.underAtkCount = 0
       this.roleInfo.atkScope = 0
@@ -656,6 +679,13 @@ export default {
           }
         }
 
+        if(this.roleInfo.light.get && this.enemyList.length > 0){
+          if(this.masterTime % (this.fps * this.roleInfo.light.cd) === 0){
+            let obj = this.lightCreate()
+            this.lightAnimationHandle(obj)
+          }
+        }
+
         //受伤闪烁特效
         if(underAnimationTime){
           let poor = this.masterTime - underAnimationTime,
@@ -693,13 +723,12 @@ export default {
       let enemyObj = {
         id:this.idCount++,
         level,
-        hp:level * 50,
-        def:10,
-        atk:level,
+        hp:level * 60,
+        atk:level + 1,
         underAroundAtkTime:0,
         underSkillAtkIds:[],
         underAroundAtkId:null,
-        exp:level * 10,
+        exp:level * 15,
         disInit:this.fpsUnifyHandle(1.3 * (Math.pow(level, -1.2)) + 0.7),
         defaultFill: color,
         config:{
@@ -1355,6 +1384,118 @@ export default {
       }
       animationFn()
     },
+    lightCreate(){
+      let cacheList = _.cloneDeep(this.enemyList),
+      rdNum = randomValue({min: 0, max: cacheList.length - 1}),
+      rdEnemy = cacheList[rdNum],
+      {
+        config:{
+          x,
+          y
+        }
+      } = rdEnemy,
+      obj = {
+        id:new Date * 1 + Math.random() + '',
+        createTime:this.masterTime,
+        damage:this.roleInfo.light.damage,
+        maxScope:this.roleInfo.light.maxScope,
+        finish:0,
+        rect:{
+          x,
+          y: y - 70,
+          width: 8,
+          height: 0,
+          offset: {
+            x: 4,
+            y: 0
+          },
+          fillLinearGradientStartPoint: { x: 0, y: 0 },
+          fillLinearGradientEndPoint: { x: 8, y: 0 },
+          fillLinearGradientColorStops: [0, 'red', 0.5,  'yellow', 1, 'red'],
+          shadowBlur: 5,
+          shadowColor: '#FF6600'
+        },
+        circle:{
+          x,
+          y,
+          radius: 0,
+          stroke: '#FF6600',
+          strokeWidth: 2,
+          shadowBlur: 5,
+          shadowColor: '#FF6600'
+        }
+      }
+      this.lightList.push(obj)
+      return obj
+    },
+    lightAnimationHandle(item){
+      let rafId = null,
+      {
+        id,
+        maxScope
+      } = item
+
+      let animationFn = () => {
+        if(item.rect.height < 70 && !item.finish){
+          item.rect.height += this.fpsUnifyHandle(5)
+        }else{
+          item.finish = 1
+          if(item.rect.height > 0){
+            item.rect.y += this.fpsUnifyHandle(5)
+            item.rect.height -= this.fpsUnifyHandle(5)
+          }
+          item.circle.radius += this.fpsUnifyHandle(2)
+        }
+
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        item['rafId'] = rafId
+
+        let clearLight = () => {
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
+              let itemIndex = _.findIndex(this.lightList, {id})
+              if(itemIndex || itemIndex + '' === '0'){
+                this.lightList.splice(itemIndex, 1)
+              }
+              break
+            }
+          }
+        }
+
+        let {
+          damage,
+          circle:{
+            x,
+            y,
+            radius
+          }
+        } = item
+        for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
+          let itm = this.enemyList[i]
+          if(itm.underSkillAtkIds.includes(id))continue
+          let sXDis = Math.abs(x - itm.config.x),
+          sYDis = Math.abs(y - itm.config.y),
+          distance = Math.sqrt(Math.pow(sXDis,2) + Math.pow(sYDis,2))
+
+          if(distance <= radius){
+            itm.underSkillAtkIds.push(id)
+            itm.hp -= damage
+            this.damageCreate(itm, damage)
+          }
+        }
+
+        if(item.circle.radius >= maxScope){
+          clearLight()
+        }
+      }
+      animationFn()
+    },
     expHandle(enemy){
       this.roleInfo.exp += enemy.exp
       if(this.roleInfo.exp >= this.roleInfo.maxExp){
@@ -1465,6 +1606,7 @@ export default {
         case 'skill':
         case 'passive':
         case 'reflection':
+        case 'light':
           this.roleInfo[selectItem.class].get = true
           break
       }
@@ -1685,6 +1827,9 @@ export default {
       for(let i=0, l=this.explosionList.length;i<l;i++){
         this.explosionAnimationHandle(this.explosionList[i])
       }
+      for(let i=0, l=this.lightList.length;i<l;i++){
+        this.lightAnimationHandle(this.lightList[i])
+      }
       this.startCreate()
     },
     fpsUnifyHandle(num, decimal, type){
@@ -1789,6 +1934,9 @@ export default {
 }
 .reflection_info{
   background-color: rgba($color: #9900FF, $alpha: 0.2);
+}
+.light_info{
+  background-color: rgba($color: #FF6600, $alpha: 0.2);
 }
 .mobile_other_info{
   width: 170px;

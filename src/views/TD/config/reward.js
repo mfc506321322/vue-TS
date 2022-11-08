@@ -67,12 +67,12 @@ const rewardConfig = [
     type: 'interval',
     title: '子弹频率',
     change: '1', //+-x/
-    effect: 0.25,
-    effectDesc: ' + 0.25',
+    effect: 0.2,
+    effectDesc: ' + 0.2',
     unit: '次/秒',
     icon: 'el-icon-odometer',
     handle: function(item, other){
-      item.atkInterval = Number((item.atkInterval + 0.25).toFixed(2))
+      item.atkInterval = Number((item.atkInterval + 0.2).toFixed(2))
       return item
     }
   },
@@ -82,12 +82,12 @@ const rewardConfig = [
     type: 'damage',
     title: '子弹伤害',
     change: '1', //+-x/
-    effect: 20,
-    effectDesc: ' + 20',
+    effect: 10,
+    effectDesc: ' + 10',
     unit: '点',
     icon: 'el-icon-lightning',
     handle: function(item, other){
-      item.atk += 20
+      item.atk += 10
       return item
     }
   },
@@ -147,12 +147,12 @@ const rewardConfig = [
     type: 'damage',
     title: '环绕弹伤害',
     change: '1', //+-x/
-    effect: 20,
-    effectDesc: ' + 20',
+    effect: 10,
+    effectDesc: ' + 10',
     unit: '点',
     icon: 'el-icon-loading',
     handle: function(item, other){
-      item.passive.damage += 20
+      item.passive.damage += 10
       return item
     }
   },
@@ -194,12 +194,12 @@ const rewardConfig = [
     type: 'damage',
     title: '反射弹伤害',
     change: '1', //+-x/
-    effect: 30,
-    effectDesc: ' + 30',
+    effect: 15,
+    effectDesc: ' + 15',
     unit: '点',
     icon: 'el-icon-sort',
     handle: function(item, other){
-      item.reflection.damage += 30
+      item.reflection.damage += 15
       return item
     }
   },
@@ -247,6 +247,53 @@ const rewardConfig = [
     icon: 'el-icon-finished',
     handle: function(item, other){
       item.reflection.speed = Number((item.reflection.speed + 0.3).toFixed(1))
+      return item
+    }
+  },
+  {
+    id: 17,
+    class: 'light',
+    type: 'damage',
+    title: '耀斑轰击伤害',
+    change: '1', //+-x/
+    effect: 15,
+    effectDesc: ' + 15',
+    unit: '点',
+    icon: 'el-icon-place',
+    handle: function(item, other){
+      item.light.damage += 15
+      return item
+    }
+  },
+  {
+    id: 18,
+    class: 'light',
+    type: 'scope',
+    title: '耀斑轰击范围',
+    change: '1', //+-x/
+    effect: 5,
+    effectDesc: ' + 5',
+    unit: '像素',
+    icon: 'el-icon-orange',
+    handle: function(item, other){
+      item.light.maxScope += 5
+      return item
+    }
+  },
+  {
+    id: 19,
+    class: 'light',
+    type: 'cd',
+    title: '耀斑轰击间隔',
+    change: '2', //+-x/
+    minValue: 0.3,
+    effect: 0.3,
+    effectDesc: ' - 0.3',
+    unit: '秒',
+    icon: 'el-icon-time',
+    handle: function(item, other){
+      if(item.light.cd <= 0.3)return item
+      item.light.cd = Number((item.light.cd - 0.3).toFixed(1))
       return item
     }
   },

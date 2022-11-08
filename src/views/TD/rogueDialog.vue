@@ -128,13 +128,16 @@ export default {
           background-color: rgba($color: #00FFFF, $alpha: 0.1);
         }
         .reply{
-          background-color: rgba($color: #ff4400, $alpha: 0.1);
+          background-color: rgba($color: #ff0000, $alpha: 0.1);
         }
         .passive{
           background-color: rgba($color: #FFCC00, $alpha: 0.1);
         }
         .reflection{
           background-color: rgba($color: #9900FF, $alpha: 0.1);
+        }
+        .light{
+          background-color: rgba($color: #FF6600, $alpha: 0.1);
         }
       }
     }
