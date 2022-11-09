@@ -154,7 +154,7 @@
               '--progressColor':'rgb(255, 220, 0)'
             }"
           ><span>经验: {{roleInfo.exp}} / {{roleInfo.maxExp}}</span></li>
-          <li>剩余敌人数量: {{enemyTotal - killCount}}</li>
+          <li>剩余敌人数量: {{enemyTotal - killCount - roleInfo.underAtkCount}}</li>
           <li>击杀数: {{killCount}}</li>
         </div>
         <li>当前fps: {{fps}}</li>
@@ -327,6 +327,7 @@ export default {
           damage: 40,
           maxScope: 30,
           cd: 3,
+          atkScope: 200
         }
       },
       roleRafId:null,
@@ -418,7 +419,9 @@ export default {
       this.roleInfo.underAtkCount = 0
       this.roleInfo.atkScope = 0
       this.roleInfo.skill.nowCd = 0
-      this.$refs.role.getNode().attrs.fill = this.roleInfo.defaultFill
+      setTimeout(() => {
+        this.$refs.role.getNode().attrs.fill = this.roleInfo.defaultFill
+      })
       // this.centerP = {
       //   x:this.stageBoxConfig.width / 2,
       //   y:this.stageBoxConfig.height / 2
@@ -778,6 +781,8 @@ export default {
       return enemyObj
     },
     enemyAnimationHandle(item){
+      if(!item)return
+      
       let rafId = null,
       offsetVal = 2,
       {
@@ -860,9 +865,9 @@ export default {
               }
             } = this.skillList[i]
             if(item.underSkillAtkIds.includes(id))continue
-            let sXDis = Math.abs(this.skillList[i].config.x - x),
-            sYDis = Math.abs(this.skillList[i].config.y - y),
-            distance = Math.sqrt(Math.pow(sXDis,2) + Math.pow(sYDis,2))
+            let {
+              distance
+            } = this.distanceCalc({x, y}, {...this.skillList[i].config})
 
             if(distance <= radius){
               item.underSkillAtkIds.push(id)
@@ -914,6 +919,8 @@ export default {
       return bulletObj
     },
     bulletAnimationHandle(item, pluralOffset){
+      if(!item)return
+      
       let rafId = null,
       xStep = 0,
       yStep = 0,
@@ -996,13 +1003,11 @@ export default {
 
           for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
             let itm = this.enemyList[i],
-            ex = itm.config.x,
-            ey = itm.config.y,
-            xdis = Math.abs(x - ex),
-            ydis = Math.abs(y - ey),
-            dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
+            {
+              distance
+            } = this.distanceCalc({x, y}, {...itm.config})
 
-            if(dis <= itm.config.radius + radius){
+            if(distance <= itm.config.radius + radius){
               clearBulle()
               itm.hp -= this.roleInfo.atk
 
@@ -1038,6 +1043,8 @@ export default {
       return skillObj
     },
     skillAnimationHandle(item){
+      if(!item)return
+      
       let rafId = null,
       {
         id,
@@ -1107,6 +1114,8 @@ export default {
       return aroundObj
     },
     aroundAnimationHandle(item){
+      if(!item)return
+      
       let rafId = null,
       {
         id,
@@ -1151,13 +1160,11 @@ export default {
 
         for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
           let itm = this.enemyList[i],
-          ex = itm.config.x,
-          ey = itm.config.y,
-          xdis = Math.abs(x - ex),
-          ydis = Math.abs(y - ey),
-          dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
+          {
+            distance
+          } = this.distanceCalc({x, y}, {...itm.config})
 
-          if(dis <= itm.config.radius + radius){
+          if(distance <= itm.config.radius + radius){
             if(itm.underAroundAtkId !== id || this.masterTime - itm.underAroundAtkTime > this.fpsUnifyHandle(20, 0, true)){
               itm.underAroundAtkId = id
               itm.underAroundAtkTime = this.masterTime
@@ -1225,6 +1232,8 @@ export default {
       return explosionObj
     },
     explosionAnimationHandle(item){
+      if(!item)return
+      
       let rafId = null,
       {
         id,
@@ -1264,22 +1273,33 @@ export default {
       animationFn()
     },
     reflectionCreate(){
-      let xStep = Math.random() * 100,
-      yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
+      // let xStep = Math.random() * 100,
+      // yStep = Math.sqrt(Math.pow(100, 2) - Math.pow(xStep, 2))
 
-      if(Math.random() <= 0.5){
-        xStep = -xStep
-      }
-      if(Math.random() <= 0.5){
-        yStep = -yStep
-      }
-      xStep = xStep / this.fps * this.roleInfo.reflection.speed
-      yStep = yStep / this.fps * this.roleInfo.reflection.speed
+      // if(Math.random() <= 0.5){
+      //   xStep = -xStep
+      // }
+      // if(Math.random() <= 0.5){
+      //   yStep = -yStep
+      // }
+      // xStep = xStep / this.fps * this.roleInfo.reflection.speed
+      // yStep = yStep / this.fps * this.roleInfo.reflection.speed
+
+      let closestEnemy = this.closestCalc(this.centerP, this.enemyList)
+      if(!closestEnemy)return null
+      let {
+        oxDis,
+        oyDis,
+        distance
+      } = this.distanceCalc(this.centerP, {...closestEnemy.config}),
+      xStep = -(100 / distance) * oxDis / this.fps * this.roleInfo.reflection.speed,
+      yStep = -(100 / distance) * oyDis / this.fps * this.roleInfo.reflection.speed
 
       let obj = {
         id:new Date * 1 + Math.random() + '',
         createTime:this.masterTime,
-        atkEnemyId:'',
+        atkEnemyId:[],
+        atkTime:0,
         through:0,
         xStep,
         yStep,
@@ -1301,6 +1321,8 @@ export default {
       return obj
     },
     reflectionAnimationHandle(item){
+      if(!item)return
+      
       let rafId = null,
       {
         damage,
@@ -1351,7 +1373,6 @@ export default {
           clearReflection()
         }else{
           let {
-            atkEnemyId,
             config:{
               x,
               y,
@@ -1361,22 +1382,29 @@ export default {
 
           for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
             let itm = this.enemyList[i],
-            ex = itm.config.x,
-            ey = itm.config.y,
-            xdis = Math.abs(x - ex),
-            ydis = Math.abs(y - ey),
-            dis = Math.sqrt(Math.pow(xdis, 2) + Math.pow(ydis, 2))
-
-            if(dis <= itm.config.radius + outerRadius && atkEnemyId !== itm.id){
+            {
+              distance
+            } = this.distanceCalc({x, y}, {...itm.config}),
+            underAtkFn = () => {
               itm.hp -= damage
 
-              item.atkEnemyId = itm.id
+              item.atkTime = this.masterTime
+              item.atkEnemyId.push(itm.id)
               // ++item.through
               // if(item.through > through){
               //   clearReflection()
               // }
-
               this.damageCreate(itm, damage)
+            }
+
+            if(distance <= itm.config.radius + outerRadius){
+              if(item.atkEnemyId.includes(itm.id)){
+                if(this.masterTime - item.atkTime >= 10){
+                  underAtkFn()
+                }
+              }else{
+                underAtkFn()
+              }
               break
             }
           }
@@ -1385,8 +1413,10 @@ export default {
       animationFn()
     },
     lightCreate(){
-      let cacheList = _.cloneDeep(this.enemyList),
-      rdNum = randomValue({min: 0, max: cacheList.length - 1}),
+      let cacheList = this.scopeCalc(this.centerP, this.roleInfo.light.atkScope, this.enemyList)
+      if(cacheList.length < 1)return null
+
+      let rdNum = randomValue({min: 0, max: cacheList.length - 1}),
       rdEnemy = cacheList[rdNum],
       {
         config:{
@@ -1429,6 +1459,8 @@ export default {
       return obj
     },
     lightAnimationHandle(item){
+      if(!item)return
+
       let rafId = null,
       {
         id,
@@ -1479,9 +1511,9 @@ export default {
         for(let i=0, l=this.enemyList.length;i<l;i++){//for循环降低性能开销
           let itm = this.enemyList[i]
           if(itm.underSkillAtkIds.includes(id))continue
-          let sXDis = Math.abs(x - itm.config.x),
-          sYDis = Math.abs(y - itm.config.y),
-          distance = Math.sqrt(Math.pow(sXDis,2) + Math.pow(sYDis,2))
+          let {
+            distance
+          } = this.distanceCalc({x, y}, {...itm.config})
 
           if(distance <= radius){
             itm.underSkillAtkIds.push(id)
@@ -1495,6 +1527,56 @@ export default {
         }
       }
       animationFn()
+    },
+    scopeCalc(center, scope, itemList){
+      let arr = _.cloneDeep(itemList),
+      newArr = arr.filter(item => {
+        let {
+          distance
+        } = this.distanceCalc(center, {...item.config})
+        if(distance <= scope){
+          return true
+        }
+      })
+      return newArr
+    },
+    closestCalc(center, itemList){
+      let arr = _.cloneDeep(itemList),
+      cacheDis = 99999,
+      newItem = null
+
+      arr.forEach(item => {
+        let {
+          distance
+        } = this.distanceCalc(center, {...item.config})
+        if(distance < cacheDis){
+          cacheDis = distance
+          newItem = item
+        }
+      })
+      return newItem
+    },
+    distanceCalc(center, target){
+      let {
+        x,
+        y
+      } = center,
+      tx = target.x,
+      ty = target.y,
+      xDis = Math.abs(x - tx),
+      yDis = Math.abs(y - ty),
+      distance = Math.sqrt(Math.pow(xDis,2) + Math.pow(yDis,2)),
+      oxDis = x - tx,
+      oyDis = y - ty
+
+      let obj = {
+        xDis,
+        yDis,
+        distance,
+        oxDis,
+        oyDis
+      }
+      return obj
     },
     expHandle(enemy){
       this.roleInfo.exp += enemy.exp

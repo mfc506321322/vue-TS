@@ -37,7 +37,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="敌人数量" prop="enemyTotal" v-if="form.gameMode === 'sandbox'">
-          <el-input-number v-model="form.enemyTotal" :min="1" :max="5000" label="敌人数量"></el-input-number>
+          <el-input-number v-model="form.enemyTotal" :min="1" :max="10000" label="敌人数量"></el-input-number>
         </el-form-item>
       </el-form>
     </div>
