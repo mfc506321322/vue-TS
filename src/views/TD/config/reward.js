@@ -26,8 +26,8 @@ const rewardConfig = [
     unit: '像素/秒',
     icon: 'el-icon-d-arrow-right',
     handle: function(item, other){
-      this.roleInfo.originalSpeed += 0.5
-      this.roleInfo.speed = other.fpsUnifyHandle(this.roleInfo.originalSpeed)
+      item.originalSpeed += 0.5
+      item.speed = other.fpsUnifyHandle(item.originalSpeed)
       return item
     }
   },
@@ -294,6 +294,40 @@ const rewardConfig = [
     handle: function(item, other){
       if(item.light.cd <= 0.3)return item
       item.light.cd = Number((item.light.cd - 0.3).toFixed(1))
+      return item
+    }
+  },
+  {
+    id: 20,
+    class: 'treasure',
+    type: 'probability',
+    title: '普通宝箱获得概率',
+    change: '1', //+-x/
+    maxValue: 0.5,
+    effect: 0.02,
+    effectDesc: ' + 2',
+    unit: '%',
+    icon: 'el-icon-star-on',
+    handle: function(item, other){
+      if(item.treasure.probability >= 0.5)return item
+      item.treasure.probability = Number((item.treasure.probability + 0.02).toFixed(2))
+      return item
+    }
+  },
+  {
+    id: 21,
+    class: 'treasure',
+    type: 'specialProbability',
+    title: '特殊宝箱获得概率',
+    change: '1', //+-x/
+    maxValue: 0.1,
+    effect: 0.01,
+    effectDesc: ' + 1',
+    unit: '%',
+    icon: 'el-icon-star-off',
+    handle: function(item, other){
+      if(item.treasure.specialProbability >= 0.1)return item
+      item.treasure.specialProbability = Number((item.treasure.specialProbability + 0.01).toFixed(2))
       return item
     }
   },

@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    :title="special ? '特殊奖励选择' : '奖励选择'"
+    :title="specialReward ? '特殊奖励选择' : '奖励选择'"
     :visible="isShow"
     @open="dialogOpen"
     @close="dialogClose"
@@ -52,11 +52,14 @@ export default {
       type:Object,
       default:() => {}
     },
+    specialReward:{
+      type:Number,
+      default:0
+    }
   },
   data(){
     return {
-      rewardList:[],
-      special:false
+      rewardList:[]
     }
   },
   filters: {},
@@ -69,11 +72,9 @@ export default {
   watch: {},
   methods:{
     dialogOpen(){
-      if(this.infoData.level % 5 === 0){
-        this.special = true
+      if(this.specialReward){
         this.rewardList = rewardConfig
       }else{
-        this.special = false
         do {
           let item = rewardConfig[randomValue({min:0, max:rewardConfig.length -1 })],
           isFind = _.find(this.rewardList, ['title', item.title])

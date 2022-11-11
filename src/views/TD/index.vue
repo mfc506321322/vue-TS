@@ -16,14 +16,18 @@
         '--stageLeft':(-1 * screenRoleX) + 'px'
       }"
     >
-      <v-layer ref="layer_0">
+      <v-layer ref="layer_0" :config="{
+        listening:false
+      }">
         <v-rect
           v-for="(item, idx) in bgList"
           :key="idx"
           :config="item"
         />
       </v-layer>
-      <v-layer ref="layer_1">
+      <v-layer ref="layer_1" :config="{
+        listening:false
+      }">
         <v-circle
           ref="role"
           @dragmove="dragBoundFunc"
@@ -38,7 +42,8 @@
             shadowColor: 'black',
             shadowBlur: 2,
             shadowOffset: { x: 2, y: 2 },
-            shadowOpacity: 0.5
+            shadowOpacity: 0.5,
+            listening:false
           }"
         />
         <v-circle
@@ -46,7 +51,8 @@
             x: centerP.x,
             y: centerP.y,
             radius: 2.5,
-            fill: '#ffffff'
+            fill: '#ffffff',
+            listening:false
           }"
         />
         <div class="enemy_box">
@@ -69,28 +75,19 @@
             />
           </div>
         </div>
+        <v-group ref="treasure_box" class="treasure_box" :config="{
+          listening:false
+        }">
+          <v-star
+            v-for="(item, idx) in treasureList"
+            :key="idx"
+            :config="item.config"
+          />
+        </v-group>
       </v-layer>
-      <v-layer ref="layer_2">
-        <!-- <v-rect
-          ref="shockWave"
-          :config="{
-            x: centerP.x,
-            y: centerP.y,
-            width: 900,
-            height: 50,
-            offset: {
-              x: 0,
-              y: 25
-            },
-            cornerRadius: 25,
-            fillLinearGradientStartPoint: { x: 0, y: 0 },
-            fillLinearGradientEndPoint: { x: 0, y: 50 },
-            fillLinearGradientColorStops: [0, 'red', 0.5,  'yellow', 1, 'red'],
-            shadowBlur: 5,
-            shadowColor: 'red',
-            rotate: 30
-          }"
-        /> -->
+      <v-layer ref="layer_2" :config="{
+        listening:false
+      }">
         <div class="skill_box">
           <v-circle
             v-for="(item, idx) in skillList"
@@ -139,6 +136,8 @@
         <li>子弹数量: {{roleInfo.bulletCount}}</li>
         <li>攻击频率: {{roleInfo.atkInterval}} 次/秒</li>
         <li>键盘移动速度: {{roleInfo.speed * fps}} 像素/秒</li>
+        <li>普通宝箱获得概率: {{roleInfo.treasure.probability | percentageUnit}}</li>
+        <li>特殊宝箱获得概率: {{roleInfo.treasure.specialProbability | percentageUnit}}</li>
         <div :class="isMobile && 'mobile_role_info'">
           <li 
             class="progress_bar"
@@ -156,6 +155,7 @@
           ><span>经验: {{roleInfo.exp}} / {{roleInfo.maxExp}}</span></li>
           <li>剩余敌人数量: {{enemyTotal - killCount - roleInfo.underAtkCount}}</li>
           <li>击杀数: {{killCount}}</li>
+          <li>总击杀数: {{totalKillCount}}</li>
         </div>
         <li>当前fps: {{fps}}</li>
       </ul>
@@ -219,6 +219,7 @@
       :isShow.sync="showRogueDialog"
       @rogueHandle="rogueHandle"
       :infoData="roleInfo"
+      :specialReward="specialReward"
     />
     <startDialog
       :isShow.sync="showStartDialog"
@@ -273,7 +274,8 @@ export default {
       },
       configKonva: {
         width: 800,
-        height: 800
+        height: 800,
+        listening:false
       },
       areaOffset:10,
       centerP:{},
@@ -328,6 +330,15 @@ export default {
           maxScope: 30,
           cd: 3,
           atkScope: 200
+        },
+        treasure:{
+          probability: 0.05,
+          cdCount: 3,
+          guaranteed: 50,
+          specialProbability: 0.02,
+          specialCdCount: 5,
+          specialGuaranteed: 80,
+          cacheKillCount: 0
         }
       },
       roleRafId:null,
@@ -343,9 +354,12 @@ export default {
       explosionList:[],
       lightList:[],
       bgList:[],
+      treasureList:[],
+      specialReward: 0,
       rafIds:[],
       enemyTotal:0,
       killCount:0,
+      totalKillCount:0,
       keyCode:[],
       operatingMode:'2',
       joyStep:{
@@ -415,10 +429,13 @@ export default {
       this.explosionList = []
       this.reflectionList = []
       this.lightList = []
+      this.$refs.treasure_box.getNode().clearCache()
+      this.treasureList = []
       this.keyCode = []
       this.roleInfo.underAtkCount = 0
       this.roleInfo.atkScope = 0
       this.roleInfo.skill.nowCd = 0
+      this.roleInfo.underAnimationTime = 0
       setTimeout(() => {
         this.$refs.role.getNode().attrs.fill = this.roleInfo.defaultFill
       })
@@ -448,6 +465,14 @@ export default {
     screenRoleY(){
       return this.centerP.y - this.stageBoxConfig.height / 2
     },
+  },
+  filters: {
+    percentageUnit:function(value){
+      if(value || value + '' === '0'){
+        return (value * 100).toFixed() + '%'
+      }
+      return ''
+    }
   },
   created(){
     let sWidth = document.body.clientWidth
@@ -480,7 +505,8 @@ export default {
         y: Math.floor(i / bgXlength) * bgWidth,
         width: bgWidth,
         height: bgWidth,
-        fill: Math.floor(i / bgXlength) % 2 === 0 ? i % 2 === 0 ? '#f9f9f9' : '#fff' : i % 2 === 0 ? '#fff' : '#f9f9f9'
+        fill: Math.floor(i / bgXlength) % 2 === 0 ? i % 2 === 0 ? '#f9f9f9' : '#fff' : i % 2 === 0 ? '#fff' : '#f9f9f9',
+        listening:false
       })
     }
   },
@@ -742,7 +768,8 @@ export default {
           shadowColor: 'black',
           shadowBlur: 2,
           shadowOffset: { x: 2, y: 2 },
-          shadowOpacity: 0.5
+          shadowOpacity: 0.5,
+          listening:false
         }
       }
 
@@ -879,7 +906,9 @@ export default {
 
         if(item.hp <= 0){
           this.killCount++
+          this.totalKillCount++
           clearEnemy()
+          this.treasureCreate(item)
           this.expHandle(item)
         }
 
@@ -912,7 +941,8 @@ export default {
           shadowColor: 'black',
           shadowBlur: 2,
           shadowOffset: { x: 2, y: 2 },
-          shadowOpacity: 0.5
+          shadowOpacity: 0.5,
+          listening:false
         }
       }
       this.bulletList.push(bulletObj)
@@ -1036,7 +1066,8 @@ export default {
           y: this.centerP.y,
           radius: 0,
           stroke: 'blue',
-          strokeWidth: 1
+          strokeWidth: 1,
+          listening:false
         }
       }
       this.skillList.push(skillObj)
@@ -1104,7 +1135,8 @@ export default {
           shadowColor: 'black',
           shadowBlur: 2,
           shadowOffset: { x: 2, y: 2 },
-          shadowOpacity: 0.5
+          shadowOpacity: 0.5,
+          listening:false
         }
       }
       if(this.aroundList.length > 0){
@@ -1181,29 +1213,6 @@ export default {
       }
       animationFn()
     },
-    damageCreate(item, damage){
-      let obj = { ...item },
-      {
-        config:{
-          x,
-          y
-        }
-      } = obj
-
-      item['underAnimationTime'] = this.masterTime
-      item.config.fill = this.scintillationColor
-
-      this.damageList.push({
-        id:obj.id + new Date * 1 + Math.random() + '',
-        createTime: this.masterTime,
-        config:{
-          text: '-' + damage,
-          x,
-          y,
-          fill:'red'
-        }
-      })
-    },
     explosionCreate(item){
       let {
         defaultFill,
@@ -1225,7 +1234,8 @@ export default {
           y,
           radius,
           stroke: defaultFill,
-          strokeWidth: 2
+          strokeWidth: 2,
+          listening:false
         }
       }
       this.explosionList.push(explosionObj)
@@ -1313,7 +1323,8 @@ export default {
           shadowColor: 'black',
           shadowBlur: 2,
           shadowOffset: { x: 2, y: 2 },
-          shadowOpacity: 0.5
+          shadowOpacity: 0.5,
+          listening:false
         }
       }
 
@@ -1443,7 +1454,8 @@ export default {
           fillLinearGradientEndPoint: { x: 8, y: 0 },
           fillLinearGradientColorStops: [0, 'red', 0.5,  'yellow', 1, 'red'],
           shadowBlur: 5,
-          shadowColor: '#FF6600'
+          shadowColor: '#FF6600',
+          listening:false
         },
         circle:{
           x,
@@ -1452,7 +1464,8 @@ export default {
           stroke: '#FF6600',
           strokeWidth: 2,
           shadowBlur: 5,
-          shadowColor: '#FF6600'
+          shadowColor: '#FF6600',
+          listening:false
         }
       }
       this.lightList.push(obj)
@@ -1528,6 +1541,143 @@ export default {
       }
       animationFn()
     },
+    treasureCreate(item){
+      let {
+        probability,
+        cdCount,
+        guaranteed,
+        specialProbability,
+        specialCdCount,
+        specialGuaranteed,
+        cacheKillCount
+      } = this.roleInfo.treasure,
+      {
+        x,
+        y
+      } = item.config,
+      rd = Math.random(),
+      obj = {
+        id: new Date * 1 + Math.random() + '',
+        createTime: this.masterTime,
+        specialReward: 0,
+        config:{
+          x,
+          y,
+          numPoints: 5,
+          innerRadius: 5,
+          outerRadius: 10,
+          fill: '#FF9900',
+          stroke: '#FF9900',
+          strokeWidth: 1,
+          shadowColor: 'black',
+          shadowBlur: 2,
+          shadowOffset: { x: 2, y: 2 },
+          shadowOpacity: 0.5,
+          listening:false
+        }
+      },
+      stars = this.$refs.treasure_box.getNode()
+
+      if((rd <= specialProbability && this.totalKillCount - cacheKillCount >= specialCdCount) || this.totalKillCount % specialGuaranteed === 0){
+        obj.config.fill = '#FFFF00'
+        obj.specialReward = 1
+        this.roleInfo.treasure.cacheKillCount = this.totalKillCount
+      }else if((rd <= probability && this.totalKillCount - cacheKillCount >= cdCount) || this.totalKillCount % guaranteed === 0){
+        this.roleInfo.treasure.cacheKillCount = this.totalKillCount
+      }else{
+        return null
+      }
+
+      this.treasureList.push(obj)
+      this.treasureAnimationHandle(obj)
+      this.$nextTick(() => {
+        stars.cache()
+      })
+      return obj
+    },
+    treasureAnimationHandle(item){
+      if(!item)return
+      
+      let rafId = null,
+      {
+        id,
+        specialReward,
+        config:{
+          x,
+          y,
+          outerRadius
+        }
+      } = item
+
+      let animationFn = () => {
+
+        if(rafId){
+          this.rafIds.splice(this.rafIds.indexOf(rafId), 1)
+        }
+        rafId = requestAnimationFrame(animationFn)
+        this.rafIds.push(rafId)
+        item['rafId'] = rafId
+
+        let clearTreasure = () => {
+          let stars = this.$refs.treasure_box.getNode()
+
+          for(let i=0, l=this.rafIds.length;i<l;i++){
+            if(this.rafIds[i] === rafId){
+              cancelAnimationFrame(this.rafIds[i])
+              this.rafIds.splice(i, 1)
+              let itemIndex = _.findIndex(this.treasureList, {id:id})
+              if(itemIndex || itemIndex + '' === '0'){
+                stars.clearCache()
+                this.treasureList.splice(itemIndex, 1)
+                this.$nextTick(() => {
+                  stars.cache()
+                })
+              }
+              break
+            }
+          }
+        }
+
+        let {
+          radius
+        } = this.$refs.role.getNode().attrs,
+        {
+          distance
+        } = this.distanceCalc({x, y}, this.centerP)
+
+        if(distance <= outerRadius + radius){
+          this.specialReward = specialReward
+          clearTreasure()
+          this.pauseHandle('pause')
+          this.showRogueDialog = true
+        }
+      }
+      animationFn()
+    },
+    damageCreate(item, damage){
+      let obj = { ...item },
+      {
+        config:{
+          x,
+          y
+        }
+      } = obj
+
+      item['underAnimationTime'] = this.masterTime
+      item.config.fill = this.scintillationColor
+
+      this.damageList.push({
+        id:obj.id + new Date * 1 + Math.random() + '',
+        createTime: this.masterTime,
+        config:{
+          text: '-' + damage,
+          x,
+          y,
+          fill:'red',
+          listening:false
+        }
+      })
+    },
     scopeCalc(center, scope, itemList){
       let arr = _.cloneDeep(itemList),
       newArr = arr.filter(item => {
@@ -1586,6 +1736,7 @@ export default {
         this.roleInfo.level++
         setTimeout(() => {
           // this.showExpDialog = true
+          this.specialReward = 0
           this.showRogueDialog = true
           setTimeout(() => {
             this.$message({
@@ -1911,6 +2062,9 @@ export default {
       }
       for(let i=0, l=this.lightList.length;i<l;i++){
         this.lightAnimationHandle(this.lightList[i])
+      }
+      for(let i=0, l=this.treasureList.length;i<l;i++){
+        this.treasureAnimationHandle(this.treasureList[i])
       }
       this.startCreate()
     },

@@ -68,7 +68,7 @@
     "enemyTotal": 100,
     "enemyCreateInterval": 0.8,
     "enemyConfig": {
-      "color": "#ff00ff",
+      "color": "#FF00CC",
       "levelWeight": {
         "value": [1, 2, 3, 4, 5],
         "weight": [20, 20, 10, 10, 10]
@@ -84,7 +84,7 @@
     "enemyTotal": 120,
     "enemyCreateInterval": 0.8,
     "enemyConfig": {
-      "color": "#ff00ff",
+      "color": "#FF00CC",
       "levelWeight": {
         "value": [1, 2, 3, 4, 5],
         "weight": [20, 20, 20, 10, 10]
@@ -100,7 +100,7 @@
     "enemyTotal": 140,
     "enemyCreateInterval": 0.75,
     "enemyConfig": {
-      "color": "#ff00ff",
+      "color": "#FF00CC",
       "levelWeight": {
         "value": [1, 2, 3, 4, 5],
         "weight": [10, 20, 20, 20, 10]
@@ -116,7 +116,7 @@
     "enemyTotal": 160,
     "enemyCreateInterval": 0.75,
     "enemyConfig": {
-      "color": "#FF9900",
+      "color": "#FF00CC",
       "levelWeight": {
         "value": [2, 3, 4, 5, 6],
         "weight": [10, 20, 20, 20, 10]
@@ -161,13 +161,45 @@
   },
   {
     "level": 11,
-    "enemyTotal": 50,
-    "enemyCreateInterval": 0.5,
+    "enemyTotal": 220,
+    "enemyCreateInterval": 0.65,
     "enemyConfig": {
       "color": "#FF9900",
       "levelWeight": {
-        "value": [5, 10, 15],
-        "weight": [20, 20, 10]
+        "value": [3, 4, 5, 6, 7],
+        "weight": [10, 10, 20, 20, 20]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 12,
+    "enemyTotal": 240,
+    "enemyCreateInterval": 0.65,
+    "enemyConfig": {
+      "color": "#FF9900",
+      "levelWeight": {
+        "value": [4, 5, 6, 7, 8],
+        "weight": [20, 20, 20, 10, 10]
+      },
+      "areaWeight": {
+        "value": [1, 2, 3, 4],
+        "weight": [10, 10, 10, 10]
+      }
+    }
+  },
+  {
+    "level": 13,
+    "enemyTotal": 1000,
+    "enemyCreateInterval": 0.5,
+    "enemyConfig": {
+      "color": "#DD2248",
+      "levelWeight": {
+        "value": [1, 5, 10, 15],
+        "weight": [10, 20, 20, 10]
       },
       "areaWeight": {
         "value": [1, 2, 3, 4],
