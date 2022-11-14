@@ -332,10 +332,10 @@ export default {
           atkScope: 200
         },
         treasure:{
-          probability: 0.05,
+          probability: 0.025,
           cdCount: 3,
           guaranteed: 50,
-          specialProbability: 0.02,
+          specialProbability: 0.01,
           specialCdCount: 5,
           specialGuaranteed: 80,
           cacheKillCount: 0
@@ -469,7 +469,7 @@ export default {
   filters: {
     percentageUnit:function(value){
       if(value || value + '' === '0'){
-        return (value * 100).toFixed() + '%'
+        return (value * 100).toFixed(1) + '%'
       }
       return ''
     }
@@ -583,10 +583,6 @@ export default {
       this.start()
     },
     start(){
-      if(timer){
-        clearInterval(timer)
-        timer = null
-      }
       this.gameState = 'operation'
       this.rafIds = []
       this.roleRafId = null
@@ -596,18 +592,6 @@ export default {
     startCreate(){
       if(this.gameState !== 'operation')return
       this.roleAnimationHandle()
-      if(this.enemyCount === this.enemyTotal)return
-      timer = setInterval(() => {
-        let obj = this.createEnemy()
-        this.enemyAnimationHandle(obj)
-
-        if(this.enemyCount === this.enemyTotal){
-          clearInterval(timer)
-          timer = null
-          console.log('enemyList', this.enemyCount)
-          return
-        }
-      }, 1000 * this.enemyCreateInterval)
     },
     roleAnimationHandle(){
       this.roleRafId = null
@@ -621,23 +605,6 @@ export default {
           defaultFill,
           underAnimationTime
         } = this.roleInfo
-
-        // this.$refs.shockWave.getNode().rotate(1)
-        // this.$refs.shockWave.getNode().width(this.masterTime)
-
-        // this.roleInfo.atkScope += maxAtkScope / this.fps * atkInterval
-        // if(this.roleInfo.atkScope >= maxAtkScope){
-        //   this.roleInfo.atkScope = 0
-        // }
-
-        // if(this.masterTime % (60 * this.enemyCreateInterval) === 0 && this.enemyCount < this.enemyTotal){
-        //   let obj = this.createEnemy()
-        //   this.enemyAnimationHandle(obj)
-
-        //   if(this.enemyCount === this.enemyTotal){
-        //     console.log('enemyList', this.enemyCount)
-        //   }
-        // }
 
         //角色移动
         if(this.operatingMode === '2' && this.keyCode.length > 0){
@@ -666,6 +633,11 @@ export default {
           this.centerP.x += this.joyStep.xStep
           this.centerP.y += this.joyStep.yStep
           this.borderLimit()
+        }
+
+        if(this.masterTime % Math.ceil(this.fps * this.enemyCreateInterval) === 0 && this.enemyCount < this.enemyTotal){
+          let obj = this.createEnemy()
+          this.enemyAnimationHandle(obj)
         }
 
         //各技能生成
@@ -2016,10 +1988,6 @@ export default {
     pauseHandle(gameState){
       if(gameState === 'pause' && this.gameState !== 'operation')return
       this.gameState = gameState
-      if(timer){
-        clearInterval(timer)
-        timer = null
-      }
       this.enableDrag = false
       cancelAnimationFrame(this.roleRafId)
       this.roleRafId = null

@@ -297,37 +297,58 @@ const rewardConfig = [
       return item
     }
   },
+  // {
+  //   id: 20,
+  //   class: 'treasure',
+  //   type: 'probability',
+  //   title: '普通宝箱获得概率',
+  //   change: '1', //+-x/
+  //   maxValue: 0.1,
+  //   effect: 0.01,
+  //   effectDesc: ' + 1',
+  //   unit: '%',
+  //   icon: 'el-icon-star-on',
+  //   handle: function(item, other){
+  //     if(item.treasure.probability >= 0.1)return item
+  //     item.treasure.probability = Number((item.treasure.probability + 0.01).toFixed(3))
+  //     return item
+  //   }
+  // },
+  // {
+  //   id: 21,
+  //   class: 'treasure',
+  //   type: 'specialProbability',
+  //   title: '特殊宝箱获得概率',
+  //   change: '1', //+-x/
+  //   maxValue: 0.1,
+  //   effect: 0.005,
+  //   effectDesc: ' + 0.5',
+  //   unit: '%',
+  //   icon: 'el-icon-star-off',
+  //   handle: function(item, other){
+  //     if(item.treasure.specialProbability >= 0.1)return item
+  //     item.treasure.specialProbability = Number((item.treasure.specialProbability + 0.005).toFixed(3))
+  //     return item
+  //   }
+  // },
   {
-    id: 20,
+    id: 22,
     class: 'treasure',
     type: 'probability',
-    title: '普通宝箱获得概率',
-    change: '1', //+-x/
-    maxValue: 0.5,
-    effect: 0.02,
-    effectDesc: ' + 2',
-    unit: '%',
-    icon: 'el-icon-star-on',
-    handle: function(item, other){
-      if(item.treasure.probability >= 0.5)return item
-      item.treasure.probability = Number((item.treasure.probability + 0.02).toFixed(2))
-      return item
-    }
-  },
-  {
-    id: 21,
-    class: 'treasure',
-    type: 'specialProbability',
-    title: '特殊宝箱获得概率',
+    title: '幸运',
     change: '1', //+-x/
     maxValue: 0.1,
-    effect: 0.01,
+    effect: 0.005,
     effectDesc: ' + 1',
-    unit: '%',
+    unit: '',
     icon: 'el-icon-star-off',
     handle: function(item, other){
-      if(item.treasure.specialProbability >= 0.1)return item
-      item.treasure.specialProbability = Number((item.treasure.specialProbability + 0.01).toFixed(2))
+      if(item.treasure.probability < 0.1){
+        item.treasure.probability = Number((item.treasure.probability + 0.005).toFixed(3))
+      }
+      if(item.treasure.specialProbability < 0.05){
+        item.treasure.specialProbability = Number((item.treasure.specialProbability + 0.005).toFixed(3))
+      }
       return item
     }
   },
