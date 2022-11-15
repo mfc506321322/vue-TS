@@ -42,6 +42,7 @@
       </el-form>
     </div>
     <div slot="footer" class="dialog_footer">
+      <el-button @click="readArchive">读取存档</el-button>
       <el-button type="primary" @click="updateStartConfigHandle">确定</el-button>
     </div>
   </el-dialog>
@@ -108,6 +109,10 @@ export default {
       this.$emit('updateStartConfigHandle', this.form)
       this.dialogClose()
     },
+    readArchive(){
+      this.$emit('updateStartConfigHandle', this.form, 'read')
+      this.dialogClose()
+    }
   }
 }
 </script>

@@ -337,17 +337,17 @@ const rewardConfig = [
     type: 'probability',
     title: '幸运',
     change: '1', //+-x/
-    maxValue: 0.1,
-    effect: 0.005,
+    maxValue: 0.05,
+    effect: 0.001,
     effectDesc: ' + 1',
     unit: '',
     icon: 'el-icon-star-off',
     handle: function(item, other){
-      if(item.treasure.probability < 0.1){
-        item.treasure.probability = Number((item.treasure.probability + 0.005).toFixed(3))
+      if(item.treasure.probability < 0.05){
+        item.treasure.probability = Number((item.treasure.probability + 0.003).toFixed(3))
       }
-      if(item.treasure.specialProbability < 0.05){
-        item.treasure.specialProbability = Number((item.treasure.specialProbability + 0.005).toFixed(3))
+      if(item.treasure.specialProbability < 0.025){
+        item.treasure.specialProbability = Number((item.treasure.specialProbability + 0.001).toFixed(3))
       }
       return item
     }

@@ -193,9 +193,18 @@
         <span>7.选择升级2秒后自动开始游戏</span>
       </p>
       <div :class="`${isMobile ? lOrRMode === '2' ? 'mobile_function_btn right_function_btn' : 'mobile_function_btn' : ''}`">
-        <el-button size="mini" @click="showSkillInfo = !showSkillInfo">{{showSkillInfo ? '隐藏属性' : '显示属性'}}</el-button>
-        <el-button size="mini" @click="pauseHandle('pause')">暂停</el-button>
-        <el-button size="mini" @click="launchHandle">启动</el-button>
+        <el-dropdown size="medium" trigger="click" @command="handleCommand">
+          <el-button size="mini" type="primary">
+            功能菜单<i class="el-icon-arrow-down el-icon--right"></i>
+          </el-button>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="showSkillInfo">{{showSkillInfo ? '隐藏属性' : '显示属性'}}</el-dropdown-item>
+            <el-dropdown-item command="saveArchive">保存存档</el-dropdown-item>
+            <el-dropdown-item command="readArchive" :disabled="gameState === 'operation'">读取存档</el-dropdown-item>
+            <el-dropdown-item command="pauseHandle">暂停游戏</el-dropdown-item>
+            <el-dropdown-item command="launchHandle">启动游戏</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
       </div>
     </div>
     <VirtualJoy
@@ -332,12 +341,12 @@ export default {
           atkScope: 200
         },
         treasure:{
-          probability: 0.025,
+          probability: 0.015,
           cdCount: 3,
-          guaranteed: 50,
-          specialProbability: 0.01,
+          guaranteed: 60,
+          specialProbability: 0.005,
           specialCdCount: 5,
-          specialGuaranteed: 80,
+          specialGuaranteed: 100,
           cacheKillCount: 0
         }
       },
@@ -514,7 +523,7 @@ export default {
     this.$refs.layer_0.getNode().cache()
   },
   methods:{
-    updateStartConfigHandle(formData){
+    updateStartConfigHandle(formData, type){
       this.gameMode = formData.gameMode
       if(this.isMobile){
         this.keysMode = formData.keysMode
@@ -580,14 +589,18 @@ export default {
         }
       }, 1000)
 
-      this.start()
+      this.start(type)
     },
-    start(){
-      this.gameState = 'operation'
+    start(type){
       this.rafIds = []
       this.roleRafId = null
       this.keyDown()
-      this.startCreate()
+      if(type === 'read'){
+        this.readArchive()
+      }else{
+        this.gameState = 'operation'
+        this.startCreate()
+      }
     },
     startCreate(){
       if(this.gameState !== 'operation')return
@@ -2050,6 +2063,55 @@ export default {
           return Number((num * (this.fps / 60)).toFixed(decimal))
         }
       }
+    },
+    saveArchive(){
+      let archive = _.cloneDeep(this._data)
+      delete archive.bgList
+      delete archive.keyCode
+      delete archive.rafIds
+      delete archive.damageList
+      delete archive.explosionList
+      delete archive.gameState
+      localStorage.setItem('archive', JSON.stringify(archive))
+      this.$message({
+        message:'保存成功',
+        type:'success',
+        center:true
+      })
+    },
+    readArchive(){
+      let archive = JSON.parse(localStorage.getItem('archive'))
+      Object.assign(this._data, archive)
+      this.$refs.treasure_box.getNode().cache()
+      
+      this.gameState = 'pause'
+      this.$message({
+        message: '2秒后开始游戏, 做好准备',
+        type: 'warning',
+        center: true,
+        duration: 2000
+      })
+      setTimeout(() => {
+        this.$message({
+          message: '游戏开始',
+          type: 'success',
+          center: true,
+          duration: 1000
+        })
+        this.launchHandle()
+      }, 2000)
+    },
+    handleCommand(command){
+      switch(command){
+        case 'pauseHandle':
+          this.pauseHandle('pause')
+          break
+        case 'showSkillInfo':
+          this.showSkillInfo = !this.showSkillInfo
+          break
+        default:
+          this[command]()
+      }
     }
   }
 }
@@ -2169,12 +2231,12 @@ export default {
   z-index: 1998;
   bottom: 140px;
   right: 10px;
-  .el-button{
-    padding: 7px;
-  }
-  /deep/ .el-button+.el-button{
-    margin-left: 5px;
-  }
+  // .el-button{
+  //   padding: 7px;
+  // }
+  // /deep/ .el-button+.el-button{
+  //   margin-left: 5px;
+  // }
   &.right_function_btn{
     right: auto;
     left: 10px;
