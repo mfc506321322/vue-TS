@@ -42,7 +42,7 @@
       </el-form>
     </div>
     <div slot="footer" class="dialog_footer">
-      <el-button @click="readArchive">读取存档</el-button>
+      <el-button @click="readArchive" :disabled="disArchive">读取存档</el-button>
       <el-button type="primary" @click="updateStartConfigHandle">确定</el-button>
     </div>
   </el-dialog>
@@ -65,6 +65,7 @@ export default {
   },
   data(){
     return {
+      disArchive:false,
       form:{
         enemyTotal:100,
         operatingMode:'2',
@@ -97,6 +98,7 @@ export default {
   created() {
   },
   mounted() {
+    this.disArchive = !Boolean(localStorage.getItem('archive'))
   },
   watch: {},
   methods:{

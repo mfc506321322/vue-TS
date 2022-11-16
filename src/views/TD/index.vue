@@ -199,10 +199,10 @@
           </el-button>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="showSkillInfo">{{showSkillInfo ? '隐藏属性' : '显示属性'}}</el-dropdown-item>
-            <el-dropdown-item command="saveArchive">保存存档</el-dropdown-item>
-            <el-dropdown-item command="readArchive" :disabled="gameState === 'operation'">读取存档</el-dropdown-item>
-            <el-dropdown-item command="pauseHandle">暂停游戏</el-dropdown-item>
-            <el-dropdown-item command="launchHandle">启动游戏</el-dropdown-item>
+            <el-dropdown-item divided command="saveArchive">保存存档</el-dropdown-item>
+            <el-dropdown-item divided command="readArchive" :disabled="gameState === 'operation'">读取存档</el-dropdown-item>
+            <el-dropdown-item divided command="pauseHandle">暂停游戏</el-dropdown-item>
+            <el-dropdown-item divided command="launchHandle">启动游戏</el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </div>
@@ -459,6 +459,8 @@ export default {
       } = this.mapLevelInfo
       this.enemyTotal = enemyTotal
       this.enemyCreateInterval = enemyCreateInterval
+
+      this.saveArchive(true)
     }
   },
   computed:{
@@ -2064,7 +2066,7 @@ export default {
         }
       }
     },
-    saveArchive(){
+    saveArchive(unMsg){
       let archive = _.cloneDeep(this._data)
       delete archive.bgList
       delete archive.keyCode
@@ -2073,11 +2075,13 @@ export default {
       delete archive.explosionList
       delete archive.gameState
       localStorage.setItem('archive', JSON.stringify(archive))
-      this.$message({
-        message:'保存成功',
-        type:'success',
-        center:true
-      })
+      if(!unMsg){
+        this.$message({
+          message:'保存成功',
+          type:'success',
+          center:true
+        })
+      }
     },
     readArchive(){
       let archive = JSON.parse(localStorage.getItem('archive'))
